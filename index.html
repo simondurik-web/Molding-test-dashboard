@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Roll Tech Operations Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        :root {
+            --primary: #1a365d;
+            --primary-light: #2c5282;
+            --accent: #3182ce;
+            --success: #38a169;
+            --success-light: #68d391;
+            --danger: #e53e3e;
+            --danger-light: #fc8181;
+            --warning: #d69e2e;
+            --purple: #805ad5;
+            --teal: #319795;
+            --orange: #dd6b20;
+            --staged-blue: #4299e1;
+            --bg-dark: #1a202c;
+            --bg-card: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --border: #4a5568;
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #0d1421 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%);
+            padding: 20px 12px; overflow-y: auto; z-index: 1000;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.4); transition: transform 0.3s ease;
+        }
+        .logo { text-align: center; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.15); margin-bottom: 20px; }
+        .logo h1 { font-size: 26px; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #a0aec0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .logo span { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 4px; }
+        .nav-section { margin-bottom: 16px; }
+        .nav-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); margin-bottom: 8px; padding-left: 14px; font-weight: 700; }
+        .nav-item { display: flex; align-items: center; padding: 11px 14px; margin: 3px 0; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 500; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); transform: translateX(4px); }
+        .nav-item.active { background: linear-gradient(135deg, var(--accent) 0%, #4299e1 100%); color: white; box-shadow: 0 4px 15px rgba(49,130,206,0.5); }
+        .nav-item .icon { margin-right: 10px; font-size: 16px; }
+        .nav-item.sub-item { padding-left: 36px; font-size: 11px; opacity: 0.9; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 12px 8px; }
+        .data-info { font-size: 10px; color: var(--text-secondary); padding: 14px 10px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; }
+        .data-info strong { color: var(--text-primary); display: block; margin-bottom: 4px; font-size: 11px; }
+
+        /* Language Toggle */
+        .lang-toggle { display: flex; gap: 4px; background: var(--bg-dark); border-radius: 8px; padding: 3px; margin: 10px 8px; }
+        .lang-btn { flex: 1; padding: 6px 10px; border: none; background: transparent; color: var(--text-secondary); font-size: 11px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+        .lang-btn.active { background: var(--accent); color: white; }
+
+        /* Main Content */
+        .main-content { margin-left: var(--sidebar-width); padding: 20px 24px; min-height: 100vh; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Page Header */
+        .page-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+        .page-header h2 { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .page-header p { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+        .last-updated { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        .last-updated .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Department Cards */
+        .dept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .dept-card { background: linear-gradient(135deg, var(--bg-card) 0%, #374151 100%); border-radius: 16px; padding: 24px; border: 1px solid var(--border); cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .dept-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+        .dept-card.sales::before { background: linear-gradient(90deg, var(--success), var(--teal)); }
+        .dept-card.production::before { background: linear-gradient(90deg, var(--accent), var(--purple)); }
+        .dept-card.qa::before { background: linear-gradient(90deg, var(--warning), var(--orange)); }
+        .dept-card.inventory::before { background: linear-gradient(90deg, var(--teal), var(--accent)); }
+        .dept-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: var(--accent); }
+        .dept-card .icon-large { font-size: 40px; margin-bottom: 12px; }
+        .dept-card h3 { font-size: 20px; margin-bottom: 8px; }
+        .dept-card p { color: var(--text-secondary); font-size: 12px; margin-bottom: 16px; }
+        .dept-card .metrics { display: flex; gap: 20px; flex-wrap: wrap; }
+        .dept-card .metric .value { font-size: 22px; font-weight: 700; }
+        .dept-card .metric .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+        .dept-card.disabled { opacity: 0.5; cursor: not-allowed; }
+        .dept-card.disabled:hover { transform: none; box-shadow: none; border-color: var(--border); }
+        .coming-soon { position: absolute; top: 12px; right: 12px; background: var(--warning); color: #1a202c; padding: 3px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+
+        /* Quick Stats */
+        .quick-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
+        .quick-stat { background: linear-gradient(135deg, var(--bg-card) 0%, #374151 100%); border-radius: 12px; padding: 16px; border: 1px solid var(--border); text-align: center; }
+        .quick-stat .value { font-size: 24px; font-weight: 700; }
+        .quick-stat .value.positive { color: var(--success); }
+        .quick-stat .value.negative { color: var(--danger); }
+        .quick-stat .value.warning { color: var(--warning); }
+        .quick-stat .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, var(--bg-card) 0%, #374151 100%); border-radius: 14px; padding: 18px 20px; border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--teal)); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .stat-card .label { font-size: 10px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.8px; font-weight: 600; }
+        .stat-card .value { font-size: 24px; font-weight: 700; }
+        .stat-card .value.positive { color: var(--success); }
+        .stat-card .value.negative { color: var(--danger); }
+        .stat-card .sub { font-size: 11px; color: var(--text-secondary); margin-top: 6px; }
+
+        /* Info Banners */
+        .info-banner { border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: none; }
+        .info-banner.active { display: flex; align-items: center; gap: 12px; }
+        .info-banner.warning { background: linear-gradient(135deg, #744210 0%, #975a16 100%); border: 1px solid var(--warning); }
+        .info-banner.warning p { color: #fefcbf; }
+        .info-banner.info { background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); border: 1px solid var(--accent); }
+        .info-banner.info p { color: #bee3f8; }
+        .info-banner p { font-size: 12px; margin: 0; }
+        .info-banner .icon { font-size: 20px; }
+
+        /* Toolbar */
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; background: var(--bg-card); padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border); }
+        .toolbar-group { display: flex; align-items: center; gap: 8px; }
+        .toolbar-group label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .toolbar select, .toolbar input[type="date"], .toolbar input[type="text"] { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: white; font-size: 12px; }
+        .toolbar select:focus, .toolbar input:focus { outline: none; border-color: var(--accent); }
+        .toolbar-btn { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: white; font-size: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .toolbar-btn:hover { border-color: var(--accent); background: rgba(49,130,206,0.2); }
+        .toolbar-btn.active { background: var(--accent); border-color: var(--accent); }
+        .toolbar-spacer { flex: 1; }
+
+        /* Category & Status Filters */
+        .category-filters { display: flex; gap: 8px; }
+        .category-btn { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; border: 2px solid; display: flex; align-items: center; gap: 6px; }
+        .category-btn .indicator { width: 8px; height: 8px; border-radius: 50%; }
+        .category-btn.rolltech { border-color: var(--accent); color: var(--accent); background: transparent; }
+        .category-btn.rolltech.active { background: var(--accent); color: white; }
+        .category-btn.rolltech .indicator { background: var(--accent); }
+        .category-btn.molding { border-color: var(--warning); color: var(--warning); background: transparent; }
+        .category-btn.molding.active { background: var(--warning); color: #1a202c; }
+        .category-btn.molding .indicator { background: var(--warning); }
+        .category-btn:not(.active) { opacity: 0.5; }
+        .category-btn:not(.active):hover { opacity: 0.8; }
+
+        .status-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+        .status-btn { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.2s; border: 1px solid; }
+        .status-btn.pending { border-color: var(--warning); color: var(--warning); background: transparent; }
+        .status-btn.pending.active { background: var(--warning); color: #1a202c; }
+        .status-btn.staged { border-color: var(--staged-blue); color: var(--staged-blue); background: transparent; }
+        .status-btn.staged.active { background: var(--staged-blue); color: white; }
+        .status-btn.wip { border-color: var(--teal); color: var(--teal); background: transparent; }
+        .status-btn.wip.active { background: var(--teal); color: white; }
+        .status-btn.approved { border-color: var(--purple); color: var(--purple); background: transparent; }
+        .status-btn.approved.active { background: var(--purple); color: white; }
+        .status-btn:not(.active) { opacity: 0.5; }
+        .status-btn:not(.active):hover { opacity: 0.8; }
+
+        /* Tables */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 12px 10px; text-align: left; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; white-space: nowrap; cursor: pointer; user-select: none; }
+        .data-table th:hover { background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent) 100%); }
+        .data-table th .sort-indicator { margin-left: 4px; opacity: 0.5; font-size: 9px; }
+        .data-table th.sorted .sort-indicator { opacity: 1; color: var(--warning); }
+        .data-table td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 11px; }
+        .data-table tr:hover td { background: rgba(255,255,255,0.04); }
+        .data-table tr.clickable { cursor: pointer; }
+        .data-table tr.clickable:hover td { background: rgba(49,130,206,0.15); }
+        .data-table .positive { color: var(--success); font-weight: 600; }
+        .data-table .negative { color: var(--danger); font-weight: 600; }
+        .data-table .warning-text { color: var(--warning); font-weight: 600; }
+        .scrollable-table { max-height: 600px; overflow-y: auto; overflow-x: auto; border-radius: 10px; }
+        .scrollable-table::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollable-table::-webkit-scrollbar-track { background: var(--bg-dark); }
+        .scrollable-table::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge.shipped { background: linear-gradient(135deg, var(--success) 0%, #2f855a 100%); color: white; }
+        .badge.pending { background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%); color: #1a202c; }
+        .badge.staged { background: linear-gradient(135deg, var(--staged-blue) 0%, #3182ce 100%); color: white; }
+        .badge.wip { background: linear-gradient(135deg, var(--teal) 0%, #2c7a7b 100%); color: white; }
+        .badge.approved { background: linear-gradient(135deg, var(--purple) 0%, #6b46c1 100%); color: white; }
+        .badge.urgent { background: linear-gradient(135deg, var(--danger) 0%, #c53030 100%); color: white; }
+
+        /* Inventory status highlighting */
+        .inv-low { background: rgba(229,62,62,0.15) !important; }
+        .inv-warning { background: rgba(214,158,46,0.15) !important; }
+        .inv-ok { background: rgba(56,161,105,0.08) !important; }
+        .badge.priority-1 { background: var(--danger); color: white; }
+        .badge.priority-2 { background: var(--warning); color: #1a202c; }
+        .badge.priority-3 { background: var(--accent); color: white; }
+        .badge.priority-4 { background: var(--teal); color: white; }
+
+        /* Component cells */
+        .cell-missing { color: var(--danger); font-weight: 600; }
+        .cell-available { color: var(--success); }
+
+        /* Charts */
+        .chart-container { background: linear-gradient(135deg, var(--bg-card) 0%, #374151 100%); border-radius: 14px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .chart-header h3 { font-size: 16px; font-weight: 600; }
+        .chart-wrapper { position: relative; height: 280px; }
+        .chart-wrapper.large { height: 350px; }
+
+        /* Search */
+        .search-box { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: white; font-size: 13px; min-width: 180px; transition: all 0.2s; }
+        .search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.2); }
+
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+        /* Loading */
+        .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Mobile */
+        .mobile-header { display: none; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%); position: sticky; top: 0; z-index: 1001; }
+        .mobile-header h1 { font-size: 18px; }
+        .menu-toggle { background: rgba(255,255,255,0.15); border: none; color: white; font-size: 22px; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
+        .sidebar-overlay.active { display: block; }
+
+        @media (max-width: 1200px) { .quick-stats { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } .quick-stats { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 16px; }
+            .mobile-header { display: flex; }
+            .dept-grid { grid-template-columns: 1fr; }
+            .quick-stats { grid-template-columns: 1fr 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-spacer { display: none; }
+        }
+
+        @media print {
+            body { background: white !important; color: black !important; }
+            .sidebar, .mobile-header, .toolbar { display: none !important; }
+            .main-content { margin-left: 0 !important; padding: 10px !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-header">
+        <div><h1>Roll Tech</h1><span style="font-size:10px;color:var(--text-secondary);">Operations</span></div>
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar">
+        <div class="logo"><h1>Roll Tech</h1><span id="logoSubtitle">Operations Dashboard</span></div>
+        
+        <!-- Language Toggle -->
+        <div class="lang-toggle">
+            <button class="lang-btn active" id="langEN" onclick="setLanguage('en')">English</button>
+            <button class="lang-btn" id="langES" onclick="setLanguage('es')">Español</button>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-item active" data-page="main" onclick="navigateTo('main')"><span class="icon">🏠</span> <span data-i18n="nav.main">Main Dashboard</span></div>
+        </div>
+
+        <div class="nav-divider"></div>
+
+        <div class="nav-section">
+            <div class="nav-section-title" data-i18n="nav.production">Production</div>
+            <div class="nav-item" data-page="production" onclick="navigateTo('production')"><span class="icon">🏭</span> <span data-i18n="nav.orderQueue">Order Queue</span></div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title" data-i18n="nav.salesFinance">Sales & Finance</div>
+            <div class="nav-item" data-page="sales-overview" onclick="navigateTo('sales-overview')"><span class="icon">📊</span> <span data-i18n="nav.plOverview">P/L Overview</span></div>
+            <div class="nav-item sub-item" data-page="sales-parts" onclick="navigateTo('sales-parts')"><span class="icon">🔧</span> <span data-i18n="nav.byPart">By Part Number</span></div>
+            <div class="nav-item sub-item" data-page="sales-customers" onclick="navigateTo('sales-customers')"><span class="icon">👥</span> <span data-i18n="nav.byCustomer">By Customer</span></div>
+            <div class="nav-item sub-item" data-page="sales-dates" onclick="navigateTo('sales-dates')"><span class="icon">📅</span> <span data-i18n="nav.byDate">By Date</span></div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title" data-i18n="nav.comingSoon">Coming Soon</div>
+            <div class="nav-item disabled" style="opacity:0.4;cursor:not-allowed;"><span class="icon">✅</span> <span data-i18n="nav.qa">Quality Assurance</span></div>
+            <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
+        </div>
+
+        <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
+    </div>
+
+    <div class="main-content">
+        <div id="loadingState" class="loading"><div class="spinner"></div><p style="margin-top:18px;color:var(--text-secondary);" data-i18n="loading">Loading data from Google Sheets...</p></div>
+
+        <!-- ==================== MAIN DASHBOARD ==================== -->
+        <div id="main" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="main.title">Operations Dashboard</h2><p data-i18n="main.subtitle">Real-time overview of Roll Tech manufacturing operations</p></div>
+                <div class="last-updated"><span class="dot"></span><span id="lastUpdated">Loading...</span></div>
+            </div>
+
+            <div class="quick-stats" id="quickStats">
+                <div class="quick-stat"><div class="value" id="qsPendingOrders">-</div><div class="label" data-i18n="stats.pendingOrders">Pending Orders</div></div>
+                <div class="quick-stat"><div class="value" id="qsUrgentOrders">-</div><div class="label" data-i18n="stats.urgent">Urgent</div></div>
+                <div class="quick-stat"><div class="value" id="qsTotalQty">-</div><div class="label" data-i18n="stats.totalUnits">Total Units</div></div>
+                <div class="quick-stat"><div class="value positive" id="qsMonthlyRevenue">-</div><div class="label" data-i18n="stats.monthRevenue">Month Revenue</div></div>
+                <div class="quick-stat"><div class="value" id="qsMonthlyPL">-</div><div class="label" data-i18n="stats.monthPL">Month P/L</div></div>
+                <div class="quick-stat"><div class="value warning" id="qsMissingComponents">-</div><div class="label" data-i18n="stats.missingParts">Missing Parts</div></div>
+            </div>
+
+            <div class="dept-grid">
+                <div class="dept-card production" onclick="navigateTo('production')">
+                    <div class="icon-large">🏭</div>
+                    <h3 data-i18n="dept.production">Production Planning</h3>
+                    <p data-i18n="dept.productionDesc">View pending orders, component status, and production queue</p>
+                    <div class="metrics">
+                        <div class="metric"><div class="value" id="deptProdOrders">-</div><div class="label" data-i18n="dept.inQueue">In Queue</div></div>
+                        <div class="metric"><div class="value" id="deptProdUnits">-</div><div class="label" data-i18n="dept.units">Units</div></div>
+                        <div class="metric"><div class="value warning" id="deptProdUrgent">-</div><div class="label" data-i18n="stats.urgent">Urgent</div></div>
+                    </div>
+                </div>
+
+                <div class="dept-card sales" onclick="navigateTo('sales-overview')">
+                    <div class="icon-large">💰</div>
+                    <h3 data-i18n="dept.sales">Sales & P/L Analytics</h3>
+                    <p data-i18n="dept.salesDesc">Revenue, profitability, and customer analysis</p>
+                    <div class="metrics">
+                        <div class="metric"><div class="value positive" id="deptSalesRev">-</div><div class="label" data-i18n="dept.revenue">Revenue</div></div>
+                        <div class="metric"><div class="value" id="deptSalesPL">-</div><div class="label" data-i18n="dept.profit">Profit</div></div>
+                        <div class="metric"><div class="value" id="deptSalesOrders">-</div><div class="label" data-i18n="dept.orders">Orders</div></div>
+                    </div>
+                </div>
+
+                <div class="dept-card qa disabled">
+                    <span class="coming-soon" data-i18n="comingSoon">Coming Soon</span>
+                    <div class="icon-large">✅</div>
+                    <h3 data-i18n="dept.qa">Quality Assurance</h3>
+                    <p data-i18n="dept.qaDesc">Inspection reports, defect tracking, and quality metrics</p>
+                </div>
+
+                <div class="dept-card inventory disabled">
+                    <span class="coming-soon" data-i18n="comingSoon">Coming Soon</span>
+                    <div class="icon-large">📦</div>
+                    <h3 data-i18n="dept.inventory">Inventory Management</h3>
+                    <p data-i18n="dept.inventoryDesc">Stock levels, reorder points, and material tracking</p>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="chart-container">
+                    <div class="chart-header"><h3 data-i18n="chart.ordersByStatus">Orders by Status</h3></div>
+                    <div class="chart-wrapper"><canvas id="mainStatusChart"></canvas></div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-header"><h3 data-i18n="chart.upcomingDeadlines">Upcoming Deadlines (Next 14 Days)</h3></div>
+                    <div class="chart-wrapper"><canvas id="mainDeadlineChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PRODUCTION PAGE ==================== -->
+        <div id="production" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 data-i18n="prod.title">Production Order Queue</h2>
+                    <p data-i18n="prod.subtitle">Pending orders with component and manufacturing details</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back to Dashboard</span></button>
+                    <div class="last-updated"><span class="dot"></span><span id="prodLastUpdated">-</span></div>
+                </div>
+            </div>
+
+            <div class="toolbar" id="prodToolbar">
+                <div class="toolbar-group category-filters">
+                    <label data-i18n="filter.category">Category:</label>
+                    <button class="category-btn rolltech active" id="prodBtnRollTech" onclick="toggleProdCategory('rolltech')">
+                        <span class="indicator"></span> Roll Tech
+                    </button>
+                    <button class="category-btn molding" id="prodBtnMolding" onclick="toggleProdCategory('molding')">
+                        <span class="indicator"></span> Molding
+                    </button>
+                </div>
+                <div class="toolbar-group status-filters">
+                    <label data-i18n="filter.status">Status:</label>
+                    <button class="status-btn pending active" id="prodStatusPending" onclick="toggleProdStatus('pending')"><span data-i18n="status.pending">Pending</span></button>
+                    <button class="status-btn staged active" id="prodStatusStaged" onclick="toggleProdStatus('staged')"><span data-i18n="status.staged">Staged</span></button>
+                    <button class="status-btn wip active" id="prodStatusWip" onclick="toggleProdStatus('wip')"><span data-i18n="status.wip">Work in Progress</span></button>
+                    <button class="status-btn approved" id="prodStatusApproved" onclick="toggleProdStatus('approved')"><span data-i18n="status.approved">Approved</span></button>
+                </div>
+                <div class="toolbar-spacer"></div>
+                <div class="toolbar-group">
+                    <input type="text" class="search-box" id="prodSearch" data-i18n-placeholder="search.orders" placeholder="Search orders..." oninput="filterProdTable()">
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="exportProdToCSV()">📥 <span data-i18n="btn.export">Export</span></button>
+                    <button class="toolbar-btn" onclick="refreshProdData()">🔄 <span data-i18n="btn.refresh">Refresh</span></button>
+                </div>
+            </div>
+
+            <div class="info-banner warning" id="prodMissingBanner">
+                <span class="icon">⚠️</span>
+                <p><strong id="prodMissingCount">0</strong> <span data-i18n="prod.missingMsg">orders have missing components (tire, hub, or bearings). These are highlighted in the table below.</span></p>
+            </div>
+
+            <div class="stats-grid" id="prodStats">
+                <div class="stat-card"><div class="label" data-i18n="stats.totalOrders">Total Orders</div><div class="value" id="prodTotalOrders">-</div><div class="sub" id="prodTotalUnits">- units</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.urgentP1">Urgent (Priority 1)</div><div class="value negative" id="prodUrgentCount">-</div><div class="sub" data-i18n="stats.urgentSub">Requires immediate attention</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.dueThisWeek">Due This Week</div><div class="value warning" id="prodDueWeek">-</div><div class="sub" id="prodDueWeekUnits">- units</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.readyToShip">Ready to Ship</div><div class="value positive" id="prodReadyShip">-</div><div class="sub" data-i18n="stats.componentsComplete">Components complete</div></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 data-i18n="prod.queueTitle">Production Queue</h3>
+                    <span style="color:var(--text-secondary);font-size:12px;" id="prodTableCount">- orders</span>
+                </div>
+                <div class="scrollable-table">
+                    <table class="data-table" id="prodTable">
+                        <thead>
+                            <tr id="prodTableHeader">
+                                <!-- Headers will be generated dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody id="prodTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== INVENTORY PAGE ==================== -->
+        <div id="inventory" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 data-i18n="inv.title">Inventory Management</h2>
+                    <p data-i18n="inv.subtitle">Component inventory levels and production needs</p>
+                </div>
+                <div class="last-updated"><div class="dot"></div><span id="invLastUpdated">-</span></div>
+            </div>
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <input type="text" class="search-box" id="invSearch" placeholder="Search items..." oninput="filterInvTable()">
+                </div>
+                <div class="toolbar-group">
+                    <label>Filter:</label>
+                    <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')">All</button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠️ Low Stock</button>
+                    <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 Needs Production</button>
+                </div>
+                <div class="toolbar-spacer"></div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="exportInvCSV()">📥 Export</button>
+                    <button class="toolbar-btn" onclick="loadDashboard()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label">Total Items</div><div class="value" id="invStatTotal">-</div><div class="sub" id="invStatTypes">- product types</div></div>
+                <div class="stat-card"><div class="label">Low Stock Items</div><div class="value" style="color:var(--danger);" id="invStatLow">-</div><div class="sub">Below minimum</div></div>
+                <div class="stat-card"><div class="label">Needs Production</div><div class="value" style="color:var(--warning);" id="invStatNeeded">-</div><div class="sub">Parts to be made > 0</div></div>
+                <div class="stat-card"><div class="label">Adequate Stock</div><div class="value" style="color:var(--success);" id="invStatOk">-</div><div class="sub">Above minimum</div></div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-header"><h3>Inventory Status</h3><span style="color:var(--text-secondary);font-size:12px;" id="invTableCount">- items</span></div>
+                <div class="scrollable-table">
+                    <table class="data-table" id="invTable">
+                        <thead><tr>
+                            <th data-sort="product" onclick="sortInvTable('product')">Product Type <span class="sort-indicator">▼</span></th>
+                            <th data-sort="partNumber" onclick="sortInvTable('partNumber')">Part Number <span class="sort-indicator">▼</span></th>
+                            <th data-sort="fusionQty" onclick="sortInvTable('fusionQty')">Fusion Qty <span class="sort-indicator">▼</span></th>
+                            <th data-sort="minimum" onclick="sortInvTable('minimum')">Minimum <span class="sort-indicator">▼</span></th>
+                            <th data-sort="manualTarget" onclick="sortInvTable('manualTarget')">Manual Target <span class="sort-indicator">▼</span></th>
+                            <th data-sort="qtyNeeded" onclick="sortInvTable('qtyNeeded')">Qty Needed <span class="sort-indicator">▼</span></th>
+                            <th data-sort="partsToBeMade" onclick="sortInvTable('partsToBeMade')">Parts to Make <span class="sort-indicator">▼</span></th>
+                            <th data-sort="moldType" onclick="sortInvTable('moldType')">Mold Type <span class="sort-indicator">▼</span></th>
+                            <th>Status</th>
+                        </tr></thead>
+                        <tbody id="invTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SALES OVERVIEW PAGE ==================== -->
+        <div id="sales-overview" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 data-i18n="sales.title">P/L Overview</h2>
+                    <p data-i18n="sales.subtitle">Complete profit and loss analysis for Roll Tech operations</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back to Dashboard</span></button>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="toolbar-group category-filters">
+                    <label data-i18n="filter.category">Category:</label>
+                    <button class="category-btn rolltech active" id="salesBtnRollTech" onclick="toggleSalesCategory('rolltech')">
+                        <span class="indicator"></span> Roll Tech
+                    </button>
+                    <button class="category-btn molding" id="salesBtnMolding" onclick="toggleSalesCategory('molding')">
+                        <span class="indicator"></span> Molding
+                    </button>
+                </div>
+                <div class="toolbar-spacer"></div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="exportSalesCSV()">📥 <span data-i18n="btn.export">Export</span></button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label" data-i18n="sales.totalRevenue">Total Revenue</div><div class="value" id="salesStatRevenue">-</div><div class="sub" id="salesStatOrderCount">- orders</div></div>
+                <div class="stat-card"><div class="label" data-i18n="sales.totalPL">Total Profit/Loss</div><div class="value" id="salesStatPL">-</div><div class="sub" id="salesStatMargin">Margin: -%</div></div>
+                <div class="stat-card"><div class="label" data-i18n="sales.shippedPL">Shipped P/L</div><div class="value" id="salesStatShippedPL">-</div><div class="sub" id="salesStatShippedCount">- shipped</div></div>
+                <div class="stat-card"><div class="label" data-i18n="sales.forecastPL">Forecasted P/L</div><div class="value" id="salesStatForecastPL">-</div><div class="sub" id="salesStatForecastCount">- pending</div></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header"><h3 data-i18n="chart.monthlyTrend">Monthly P/L Trend</h3></div>
+                <div class="chart-wrapper large"><canvas id="salesTrendChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ==================== SALES BY PARTS PAGE ==================== -->
+        <div id="sales-parts" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="parts.title">P/L by Part Number</h2></div>
+                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← <span data-i18n="btn.backToOverview">Back to P/L Overview</span></button>
+            </div>
+            <div class="chart-container">
+                <div class="chart-header"><h3 data-i18n="parts.chartTitle">Parts P/L Analysis</h3></div>
+                <div class="chart-wrapper large"><canvas id="partsBarChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ==================== SALES BY CUSTOMERS PAGE ==================== -->
+        <div id="sales-customers" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="customers.title">P/L by Customer</h2></div>
+                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← <span data-i18n="btn.backToOverview">Back to P/L Overview</span></button>
+            </div>
+            <div class="chart-container">
+                <div class="chart-header"><h3 data-i18n="customers.chartTitle">Customer P/L Distribution</h3></div>
+                <div class="chart-wrapper large"><canvas id="customersChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ==================== SALES BY DATE PAGE ==================== -->
+        <div id="sales-dates" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 data-i18n="dates.title">P/L by Date</h2>
+                    <p data-i18n="dates.subtitle">Monthly profit and loss breakdown with date range filtering</p>
+                </div>
+                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← <span data-i18n="btn.backToOverview">Back to P/L Overview</span></button>
+            </div>
+
+            <div class="toolbar">
+                <div class="toolbar-group category-filters">
+                    <label data-i18n="filter.category">Category:</label>
+                    <button class="category-btn rolltech active" id="datesBtnRollTech" onclick="toggleDatesCategory('rolltech')">
+                        <span class="indicator"></span> Roll Tech
+                    </button>
+                    <button class="category-btn molding" id="datesBtnMolding" onclick="toggleDatesCategory('molding')">
+                        <span class="indicator"></span> Molding
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="dates.from">From:</label>
+                    <input type="date" id="datesFromDate" onchange="applyDateFilter()">
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="dates.to">To:</label>
+                    <input type="date" id="datesToDate" onchange="applyDateFilter()">
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="applyDateFilter()">📅 <span data-i18n="dates.apply">Apply</span></button>
+                    <button class="toolbar-btn" onclick="resetDateFilter()">🔄 <span data-i18n="dates.reset">Reset</span></button>
+                </div>
+                <div class="toolbar-spacer"></div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="btn.export">Export</span></button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label" data-i18n="dates.orders">Orders</div><div class="value" id="datesStatOrders">-</div><div class="sub" id="datesStatUnits">- units</div></div>
+                <div class="stat-card"><div class="label" data-i18n="dates.revenue">Revenue</div><div class="value" id="datesStatRevenue">-</div><div class="sub" id="datesStatAvgOrder">Avg: -</div></div>
+                <div class="stat-card"><div class="label" data-i18n="dates.pl">P/L</div><div class="value" id="datesStatPL">-</div><div class="sub" id="datesStatMargin">Margin: -%</div></div>
+                <div class="stat-card"><div class="label" data-i18n="dates.margin">Margin</div><div class="value" id="datesStatMarginPct">-</div><div class="sub" id="datesStatMonths">- months</div></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header"><h3 data-i18n="dates.chartTitle">Monthly P/L Breakdown</h3></div>
+                <div class="chart-wrapper large"><canvas id="datesBarChart"></canvas></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 data-i18n="dates.month">Monthly Details</h3>
+                    <span style="color:var(--text-secondary);font-size:12px;" id="datesTableCount">- months</span>
+                </div>
+                <div class="scrollable-table">
+                    <table class="data-table" id="datesTable">
+                        <thead>
+                            <tr>
+                                <th data-i18n="dates.month">Month</th>
+                                <th data-i18n="dates.orders">Orders</th>
+                                <th data-i18n="dates.revenue">Revenue</th>
+                                <th data-i18n="dates.pl">P/L</th>
+                                <th data-i18n="dates.margin">Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="datesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Month → Customers Drilldown -->
+            <div id="monthCustomerDrilldown" class="drilldown-section">
+                <div class="drilldown-header">
+                    <div><h3 id="monthDrilldownTitle">Period Details</h3></div>
+                    <button class="close-btn" onclick="closeMonthDrilldown()">✕ Close</button>
+                </div>
+                <div class="summary-row" id="monthDrilldownSummary"></div>
+                <div class="scrollable-table">
+                    <table class="data-table"><thead><tr>
+                        <th>Customer</th><th>Orders</th><th>Quantity</th><th>Revenue</th><th>P/L</th><th>Margin</th>
+                    </tr></thead><tbody id="monthCustomerTableBody"></tbody></table>
+                </div>
+            </div>
+            
+            <!-- Month → Customer → Orders Drilldown -->
+            <div id="monthCustomerOrdersDrilldown" class="drilldown-section">
+                <div class="drilldown-header">
+                    <div>
+                        <div class="breadcrumb">Period: <span id="bcMonth"></span> › Customer: <span id="bcMonthCust"></span></div>
+                        <h3 id="monthCustomerOrdersTitle">Orders</h3>
+                    </div>
+                    <div><button class="back-btn" onclick="backToMonthCustomers()">← Back</button><button class="close-btn" onclick="closeAllMonthDrilldowns()">✕ Close All</button></div>
+                </div>
+                <div class="summary-row" id="monthCustomerOrdersSummary"></div>
+                <div class="scrollable-table">
+                    <table class="data-table"><thead><tr>
+                        <th>Part</th><th>PO #</th><th>Status</th><th>Date</th><th>Qty</th><th>Unit Price</th><th>Profit/Part</th><th>P/L</th><th>Revenue</th>
+                    </tr></thead><tbody id="monthCustomerOrdersBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // INTERNATIONALIZATION (i18n)
+        // ============================================================
+        const translations = {
+            en: {
+                'logoSubtitle': 'Operations Dashboard',
+                'nav.main': 'Main Dashboard',
+                'nav.production': 'PRODUCTION',
+                'nav.orderQueue': 'Order Queue',
+                'nav.salesFinance': 'SALES & FINANCE',
+                'nav.plOverview': 'P/L Overview',
+                'nav.byPart': 'By Part Number',
+                'nav.byCustomer': 'By Customer',
+                'nav.byDate': 'By Date',
+                'nav.comingSoon': 'COMING SOON',
+                'nav.qa': 'Quality Assurance',
+                'nav.inventory': 'Inventory',
+                'loading': 'Loading data from Google Sheets...',
+                'main.title': 'Operations Dashboard',
+                'main.subtitle': 'Real-time overview of Roll Tech manufacturing operations',
+                'stats.pendingOrders': 'Pending Orders',
+                'stats.urgent': 'Urgent',
+                'stats.totalUnits': 'Total Units',
+                'stats.monthRevenue': 'Month Revenue',
+                'stats.monthPL': 'Month P/L',
+                'stats.missingParts': 'Missing Parts',
+                'stats.totalOrders': 'Total Orders',
+                'stats.urgentP1': 'Urgent',
+                'stats.urgentSub': 'Requires immediate attention',
+                'stats.dueThisWeek': 'Due This Week',
+                'stats.readyToShip': 'Ready to Ship',
+                'stats.componentsComplete': 'Components complete',
+                'dept.production': 'Production Planning',
+                'dept.productionDesc': 'View pending orders, component status, and production queue',
+                'dept.inQueue': 'In Queue',
+                'dept.units': 'Units',
+                'dept.sales': 'Sales & P/L Analytics',
+                'dept.salesDesc': 'Revenue, profitability, and customer analysis',
+                'dept.revenue': 'Revenue',
+                'dept.profit': 'Profit',
+                'dept.orders': 'Orders',
+                'dept.qa': 'Quality Assurance',
+                'dept.qaDesc': 'Inspection reports, defect tracking, and quality metrics',
+                'dept.inventory': 'Inventory Management',
+                'dept.inventoryDesc': 'Stock levels, reorder points, and material tracking',
+                'comingSoon': 'Coming Soon',
+                'chart.ordersByStatus': 'Orders by Status',
+                'chart.upcomingDeadlines': 'Upcoming Deadlines (Next 14 Days)',
+                'chart.monthlyTrend': 'Monthly P/L Trend',
+                'prod.title': 'Production Order Queue',
+                'prod.subtitle': 'Pending orders with component and manufacturing details',
+                'prod.queueTitle': 'Production Queue',
+                'prod.missingMsg': 'orders have missing components (tire, hub, or bearings). These are highlighted in the table below.',
+                'btn.backToDashboard': 'Back to Dashboard',
+                'btn.backToOverview': 'Back to P/L Overview',
+                'btn.export': 'Export',
+                'btn.refresh': 'Refresh',
+                'filter.category': 'Category:',
+                'filter.status': 'Status:',
+                'status.pending': 'Pending',
+                'status.staged': 'Staged',
+                'status.wip': 'Work in Progress',
+                'status.approved': 'Approved',
+                'status.shipped': 'Shipped',
+                'search.orders': 'Search orders...',
+                'sales.title': 'P/L Overview',
+                'sales.subtitle': 'Complete profit and loss analysis for Roll Tech operations',
+                'sales.totalRevenue': 'Total Revenue',
+                'sales.totalPL': 'Total Profit/Loss',
+                'sales.shippedPL': 'Shipped P/L',
+                'sales.forecastPL': 'Forecasted P/L',
+                'parts.title': 'P/L by Part Number',
+                'parts.chartTitle': 'Parts P/L Analysis',
+                'customers.title': 'P/L by Customer',
+                'customers.chartTitle': 'Customer P/L Distribution',
+                'dates.title': 'P/L by Date',
+                'dates.subtitle': 'Monthly profit and loss breakdown with date range filtering',
+                'dates.chartTitle': 'Monthly P/L Breakdown',
+                'dates.from': 'From:',
+                'dates.to': 'To:',
+                'dates.apply': 'Apply',
+                'dates.reset': 'Reset',
+                'dates.month': 'Month',
+                'dates.orders': 'Orders',
+                'dates.revenue': 'Revenue',
+                'dates.pl': 'P/L',
+                'dates.margin': 'Margin',
+                'col.line': 'Line',
+                'col.priority': 'Priority',
+                'col.daysUntil': 'Days Until',
+                'col.requestDate': 'Request Date',
+                'col.customer': 'Customer',
+                'col.ifNum': 'IF #',
+                'col.part': 'Part #',
+                'col.qty': 'Qty',
+                'col.packaging': 'Packaging',
+                'col.tire': 'Tire',
+                'col.hub': 'Hub',
+                'col.hubMold': 'Hub Mold',
+                'col.bearings': 'Bearings',
+                'col.status': 'Status',
+                'col.assigned': 'Assigned To',
+                'missing': 'Missing'
+            },
+            es: {
+                'logoSubtitle': 'Panel de Operaciones',
+                'nav.main': 'Panel Principal',
+                'nav.production': 'PRODUCCIÓN',
+                'nav.orderQueue': 'Cola de Pedidos',
+                'nav.salesFinance': 'VENTAS Y FINANZAS',
+                'nav.plOverview': 'Resumen P/L',
+                'nav.byPart': 'Por Número de Parte',
+                'nav.byCustomer': 'Por Cliente',
+                'nav.byDate': 'Por Fecha',
+                'nav.comingSoon': 'PRÓXIMAMENTE',
+                'nav.qa': 'Control de Calidad',
+                'nav.inventory': 'Inventario',
+                'loading': 'Cargando datos de Google Sheets...',
+                'main.title': 'Panel de Operaciones',
+                'main.subtitle': 'Vista en tiempo real de las operaciones de manufactura de Roll Tech',
+                'stats.pendingOrders': 'Pedidos Pendientes',
+                'stats.urgent': 'Urgente',
+                'stats.totalUnits': 'Unidades Totales',
+                'stats.monthRevenue': 'Ingresos del Mes',
+                'stats.monthPL': 'P/L del Mes',
+                'stats.missingParts': 'Partes Faltantes',
+                'stats.totalOrders': 'Total de Pedidos',
+                'stats.urgentP1': 'Urgente',
+                'stats.urgentSub': 'Requiere atención inmediata',
+                'stats.dueThisWeek': 'Vence Esta Semana',
+                'stats.readyToShip': 'Listo para Enviar',
+                'stats.componentsComplete': 'Componentes completos',
+                'dept.production': 'Planificación de Producción',
+                'dept.productionDesc': 'Ver pedidos pendientes, estado de componentes y cola de producción',
+                'dept.inQueue': 'En Cola',
+                'dept.units': 'Unidades',
+                'dept.sales': 'Ventas y Análisis P/L',
+                'dept.salesDesc': 'Ingresos, rentabilidad y análisis de clientes',
+                'dept.revenue': 'Ingresos',
+                'dept.profit': 'Ganancia',
+                'dept.orders': 'Pedidos',
+                'dept.qa': 'Control de Calidad',
+                'dept.qaDesc': 'Reportes de inspección, seguimiento de defectos y métricas de calidad',
+                'dept.inventory': 'Gestión de Inventario',
+                'dept.inventoryDesc': 'Niveles de stock, puntos de reorden y seguimiento de materiales',
+                'comingSoon': 'Próximamente',
+                'chart.ordersByStatus': 'Pedidos por Estado',
+                'chart.upcomingDeadlines': 'Próximos Vencimientos (14 Días)',
+                'chart.monthlyTrend': 'Tendencia Mensual P/L',
+                'prod.title': 'Cola de Pedidos de Producción',
+                'prod.subtitle': 'Pedidos pendientes con detalles de componentes y manufactura',
+                'prod.queueTitle': 'Cola de Producción',
+                'prod.missingMsg': 'pedidos tienen componentes faltantes (llanta, hub o baleros). Estos están resaltados en la tabla.',
+                'btn.backToDashboard': 'Volver al Panel',
+                'btn.backToOverview': 'Volver a Resumen P/L',
+                'btn.export': 'Exportar',
+                'btn.refresh': 'Actualizar',
+                'filter.category': 'Categoría:',
+                'filter.status': 'Estado:',
+                'status.pending': 'Pendiente',
+                'status.staged': 'En Staging',
+                'status.wip': 'En Progreso',
+                'status.approved': 'Aprobado',
+                'status.shipped': 'Enviado',
+                'search.orders': 'Buscar pedidos...',
+                'sales.title': 'Resumen P/L',
+                'sales.subtitle': 'Análisis completo de ganancias y pérdidas para operaciones de Roll Tech',
+                'sales.totalRevenue': 'Ingresos Totales',
+                'sales.totalPL': 'Ganancia/Pérdida Total',
+                'sales.shippedPL': 'P/L Enviado',
+                'sales.forecastPL': 'P/L Proyectado',
+                'parts.title': 'P/L por Número de Parte',
+                'parts.chartTitle': 'Análisis P/L por Parte',
+                'customers.title': 'P/L por Cliente',
+                'customers.chartTitle': 'Distribución P/L por Cliente',
+                'dates.title': 'P/L por Fecha',
+                'dates.subtitle': 'Desglose mensual de ganancias y pérdidas con filtro de rango de fechas',
+                'dates.chartTitle': 'Desglose Mensual P/L',
+                'dates.from': 'Desde:',
+                'dates.to': 'Hasta:',
+                'dates.apply': 'Aplicar',
+                'dates.reset': 'Restablecer',
+                'dates.month': 'Mes',
+                'dates.orders': 'Pedidos',
+                'dates.revenue': 'Ingresos',
+                'dates.pl': 'P/L',
+                'dates.margin': 'Margen',
+                'col.line': 'Línea',
+                'col.priority': 'Prioridad',
+                'col.daysUntil': 'Días Restantes',
+                'col.requestDate': 'Fecha de Solicitud',
+                'col.customer': 'Cliente',
+                'col.ifNum': 'IF #',
+                'col.part': 'Parte #',
+                'col.qty': 'Cant',
+                'col.packaging': 'Empaque',
+                'col.tire': 'Llanta',
+                'col.hub': 'Hub',
+                'col.hubMold': 'Molde del Hub',
+                'col.bearings': 'Baleros',
+                'col.status': 'Estado',
+                'col.assigned': 'Asignado a',
+                'missing': 'Faltante'
+            }
+        };
+        
+        let currentLang = 'en';
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('langEN').classList.toggle('active', lang === 'en');
+            document.getElementById('langES').classList.toggle('active', lang === 'es');
+            
+            // Update all translatable elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+            
+            // Update subtitle
+            document.getElementById('logoSubtitle').textContent = translations[lang]['logoSubtitle'];
+            
+            // Re-render tables with new language
+            if (currentPage === 'production') {
+                renderProdTable();
+            }
+        }
+        
+        function t(key) {
+            return translations[currentLang][key] || key;
+        }
+
+        // ============================================================
+        // CONFIGURATION
+        // ============================================================
+        const SHEET_ID = '1bK0Ne-vX3i5wGoqyAklnyFDUNdE-WaN4Xs5XjggBSXw';
+        const MAIN_DATA_GID = '290032634';
+        const FUSION_EXPORT_GID = '1805754553';
+        const PROD_DATA_TOTALS_GID = '148810546';
+        
+        // Column mappings - matching actual spreadsheet columns from Main Data tab
+        const COL = {
+            CATEGORY: 'Category',
+            REQUEST_DATE: 'Date of Request',
+            PRIORITY: 'Priority Level',
+            URGENT: 'Urgent Override',
+            LINE: 'Line',
+            CUSTOMER: 'Customer',
+            IF_NUM: 'IF #',
+            IF_STATUS: 'IF Status in Fusion',
+            PART: 'Part #',
+            NUM_PACKAGES: 'Number of packages (Numero de paquetes)',
+            PACKAGING: 'Packaging (tipo de empaquetado)',
+            PARTS_PER_PKG: 'Parts per package (Partes por paquete)',
+            QTY: 'Order Qty',
+            INVENTORY: 'Fusion inventory (Inventario en Fusion)',
+            TIRE: 'Tire',
+            HUB: 'Hub',
+            HUB_MOLD: 'Hub Mold',
+            BEARINGS: 'Bearings',
+            ASSIGNED: 'Assigned to',
+            STATUS: 'Work order Internal Status',
+            DAYS_UNTIL: 'Days until promise date',
+            SHIPPED_DATE: 'Shipped Date',
+            REQUESTED_DATE: 'Requested Completion Date',
+            REVENUE: 'Revenue',
+            PL: 'P/L',
+            PL_TOTAL: 'P/L total',
+            VARIABLE_COST: 'Variable Cost',
+            TOTAL_COST: 'Total Cost'
+        };
+        
+        // Alternative column names for flexibility - check multiple possible names
+        const COL_ALTS = {
+            CATEGORY: ['Category', 'Categoria', 'Categoría'],
+            REQUEST_DATE: ['Date of Request', 'Fecha de Entrega', 'Requested Completion Date', 'Promise Date', 'Fecha de Solicitud'],
+            PRIORITY: ['Priority Level', 'Prioridad', 'Priority', 'Nivel de Prioridad'],
+            LINE: ['Line', 'Linea', 'Línea'],
+            CUSTOMER: ['Customer', 'Cliente'],
+            PART: ['Part #', 'Numero de parte', 'RT Part #', 'Part Number', 'Número de parte'],
+            QTY: ['Order Qty', 'Cantidad de la orden', 'Qty', 'Quantity', 'Numero de paquetes', 'Number of packages'],
+            PACKAGING: ['Packaging (tipo de empaquetado)', 'tipo de empaquetado', 'Packaging', 'Empaque'],
+            TIRE: ['Tire', 'Tire (Llanta)', 'Llanta', 'Tyre'],
+            HUB: ['Hub', 'Centro', 'Cubo'],
+            HUB_MOLD: ['Hub Mold', 'Hub Mold (Molde del Hub)', 'Molde del Hub', 'Hub mold', 'Mold'],
+            BEARINGS: ['Bearings', 'Bearings (Balero)', 'Balero', 'Baleros', 'Bearing'],
+            ASSIGNED: ['Assigned to', 'Assigned to: (Asignado a:)', 'Asignado a:', 'Asignado a', 'Assigned'],
+            STATUS: ['Work order Internal Status', 'Work order Status', 'Status', 'Estado', 'Internal Status'],
+            DAYS_UNTIL: ['Days until promise date', 'Dias faltantes', 'Days until', 'Days', 'Días faltantes', 'Days remaining'],
+            INVENTORY: ['Fusion inventory (Inventario en Fusion)', 'Inventario en Fusion', 'Inventory', 'Inventario'],
+            IF_NUM: ['IF #', 'IF#', 'IF Number', 'IF Num', 'IF'],
+            PL: ['P/L', 'P/L total', 'PL', 'Profit/Loss', 'Profit Loss'],
+            REVENUE: ['Revenue', 'Total Sell Price', 'Sales', 'Ingresos']
+        };
+        
+        // Get value with flexible column name matching
+        function getVal(row, key) {
+            // Helper to normalize strings for comparison
+            const normalize = s => s.toLowerCase().replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            // First try the direct column name (exact match)
+            if (row[COL[key]] !== undefined && row[COL[key]] !== null) return row[COL[key]];
+            
+            // Then try alternatives (exact match)
+            const alts = COL_ALTS[key];
+            if (alts) {
+                for (const alt of alts) {
+                    if (row[alt] !== undefined && row[alt] !== null) return row[alt];
+                }
+            }
+            
+            // Try case-insensitive and normalized matching on all row keys
+            const targetNames = alts ? [COL[key], ...alts] : [COL[key]];
+            for (const target of targetNames) {
+                if (!target) continue;
+                const targetNorm = normalize(target);
+                for (const k of Object.keys(row)) {
+                    const kNorm = normalize(k);
+                    // Exact match (normalized)
+                    if (kNorm === targetNorm) {
+                        return row[k];
+                    }
+                }
+            }
+            
+            // Try partial matching as last resort
+            for (const target of targetNames) {
+                if (!target) continue;
+                const targetNorm = normalize(target);
+                for (const k of Object.keys(row)) {
+                    const kNorm = normalize(k);
+                    // Partial match - check if one contains the other
+                    if (kNorm.includes(targetNorm) || targetNorm.includes(kNorm)) {
+                        if (row[k] !== undefined && row[k] !== null) return row[k];
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        // State
+        let allData = [];
+        let prodData = [];
+        let salesData = [];
+        let inventoryData = [];
+        let invFilter = 'all';
+        let invSort = { field: 'partNumber', asc: true };
+        let charts = {};
+        let currentPage = 'main';
+        let debugHeaders = []; // Store headers for debugging
+        
+        // Production filters
+        let prodFilters = {
+            categories: { rolltech: true, molding: false },
+            statuses: { pending: true, staged: true, wip: true, approved: false }
+        };
+        
+        // Sales filters
+        let salesFilters = {
+            categories: { rolltech: true, molding: false }
+        };
+        
+        // Dates filters
+        let datesFilters = {
+            categories: { rolltech: true, molding: false },
+            fromDate: null,
+            toDate: null
+        };
+        let datesData = [];
+        
+        // Sort state
+        let prodSort = { field: 'daysUntil', asc: true };
+        
+        // ============================================================
+        // UTILITIES
+        // ============================================================
+        const formatCurrency = v => v == null || isNaN(v) ? '$0.00' : new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(v);
+        const formatNumber = v => v == null || isNaN(v) ? '0' : new Intl.NumberFormat('en-US').format(Math.round(v));
+        const parseNumber = v => { if (!v || v === '') return 0; if (typeof v === 'number') return v; let c = String(v).replace(/[$,%\s]/g,''); if (c.startsWith('(') && c.endsWith(')')) c = '-' + c.slice(1,-1); return parseFloat(c) || 0; };
+        const parseDate = d => { if (!d) return null; if (d.includes('/')) { const p = d.split('/'); if (p.length >= 3) return new Date(p[2].length===2?'20'+p[2]:p[2], p[0]-1, p[1]); } return new Date(d); };
+        
+        // isEmpty - check if truly empty (NOT counting "NA" or "-" as empty since those are valid values)
+        const isEmpty = v => v === null || v === undefined || v === '';
+        
+        // Check if a component is missing (empty string only, NA means not applicable which is fine)
+        const isMissingComponent = v => v === null || v === undefined || v === '' || v === '-';
+        
+        const hasMissingCostData = row => isEmpty(row[COL.VARIABLE_COST]) || isEmpty(row[COL.TOTAL_COST]) || (isEmpty(row[COL.PL]) && isEmpty(row[COL.PL_TOTAL]));
+        
+        // Get P/L value (check both P/L and P/L total columns)
+        const getPLValue = row => {
+            if (!isEmpty(row[COL.PL])) return parseNumber(row[COL.PL]);
+            if (!isEmpty(row[COL.PL_TOTAL])) return parseNumber(row[COL.PL_TOTAL]);
+            return 0;
+        };
+        
+        const getCategory = row => {
+            const cat = (getVal(row, 'CATEGORY') || '').toLowerCase();
+            if (cat.includes('roll tech')) return 'rolltech';
+            if (cat.includes('molding')) return 'molding';
+            return 'other';
+        };
+        
+        const getStatus = row => {
+            const status = (getVal(row, 'STATUS') || '').toLowerCase();
+            if (status.includes('pending')) return 'pending';
+            if (status.includes('staged')) return 'staged';
+            if (status.includes('work in progress') || status.includes('wip')) return 'wip';
+            if (status.includes('shipped')) return 'shipped';
+            if (status.includes('approved')) return 'approved';
+            return status;
+        };
+        
+        const getStatusBadge = status => {
+            const s = (status || '').toLowerCase();
+            if (s.includes('shipped')) return `<span class="badge shipped">${t('status.shipped')}</span>`;
+            if (s.includes('pending')) return `<span class="badge pending">${t('status.pending')}</span>`;
+            if (s.includes('staged')) return `<span class="badge staged">${t('status.staged')}</span>`;
+            if (s.includes('work in progress') || s.includes('wip')) return `<span class="badge wip">${t('status.wip')}</span>`;
+            if (s.includes('approved')) return `<span class="badge approved">${t('status.approved')}</span>`;
+            return `<span class="badge">${status || '-'}</span>`;
+        };
+        
+        const getPriorityBadge = (priority, urgent) => {
+            const p = parseNumber(priority);
+            const isUrgent = (urgent || '').toLowerCase() === 'urgent';
+            if (isUrgent) return '<span class="badge urgent">URGENT</span>';
+            if (p === 1) return '<span class="badge priority-1">P1</span>';
+            if (p === 2) return '<span class="badge priority-2">P2</span>';
+            if (p === 3) return '<span class="badge priority-3">P3</span>';
+            if (p === 4) return '<span class="badge priority-4">P4</span>';
+            return `<span class="badge">P${p || '-'}</span>`;
+        };
+        
+        // Format component cell - show value, "NA" is valid (means not applicable)
+        const formatComponent = (value) => {
+            if (isMissingComponent(value)) {
+                return `<span class="cell-missing">${t('missing')}</span>`;
+            }
+            // NA means not applicable - show in gray but not as missing
+            if (value === 'NA' || value === 'N/A') {
+                return `<span style="color:var(--text-secondary);">NA</span>`;
+            }
+            return `<span class="cell-available">${value}</span>`;
+        };
+        
+        // ============================================================
+        // DATA LOADING
+        // ============================================================
+        async function fetchSheetData(gid) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`;
+            const res = await fetch(url);
+            const text = await res.text();
+            const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+            
+            // Clean up headers - remove newlines and extra whitespace
+            const headers = json.table.cols.map(c => {
+                let h = c.label || '';
+                // Replace newlines and multiple spaces with single space
+                h = h.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+                return h;
+            });
+            
+            console.log('=== ALL SHEET HEADERS (cleaned) ===');
+            headers.forEach((h, i) => { if(h) console.log(`Col ${i}: "${h}"`); });
+            console.log('=== Looking for key columns ===');
+            headers.forEach((h, i) => {
+                const hLower = h.toLowerCase();
+                if (hLower.includes('tire') || hLower.includes('llanta')) console.log(`TIRE candidate: Col ${i}: "${h}"`);
+                if (hLower.includes('hub') && hLower.includes('mold')) console.log(`HUB MOLD candidate: Col ${i}: "${h}"`);
+                if (hLower.includes('days') || hLower.includes('dias')) console.log(`DAYS candidate: Col ${i}: "${h}"`);
+                if (hLower.includes('bearing') || hLower.includes('balero')) console.log(`BEARINGS candidate: Col ${i}: "${h}"`);
+            });
+            
+            debugHeaders = headers;
+            return json.table.rows.map(r => {
+                const obj = {};
+                headers.forEach((h, i) => {
+                    if (h && r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v;
+                });
+                return obj;
+            });
+        }
+        
+        async function loadDashboard() {
+            try {
+                const raw = await fetchSheetData(MAIN_DATA_GID);
+                
+                // Find a Roll Tech row for debugging
+                const sampleRow = raw.find(r => (getVal(r, 'CATEGORY') || '').toLowerCase().includes('roll tech'));
+                if (sampleRow) {
+                    console.log('=== SAMPLE ROLL TECH ROW ===');
+                    console.log('All keys:', Object.keys(sampleRow));
+                    console.log('Line:', getVal(sampleRow, 'LINE'));
+                    console.log('Tire:', getVal(sampleRow, 'TIRE'));
+                    console.log('Hub:', getVal(sampleRow, 'HUB'));
+                    console.log('Hub Mold:', getVal(sampleRow, 'HUB_MOLD'));
+                    console.log('Bearings:', getVal(sampleRow, 'BEARINGS'));
+                    console.log('Days Until:', getVal(sampleRow, 'DAYS_UNTIL'));
+                    console.log('Status:', getVal(sampleRow, 'STATUS'));
+                    console.log('Full row:', sampleRow);
+                }
+                
+                allData = raw.filter(r => {
+                    const cat = getCategory(r);
+                    return (cat === 'rolltech' || cat === 'molding') && getVal(r, 'PART');
+                });
+                
+                if (allData.length === 0) {
+                    allData = raw.filter(r => getVal(r, 'PART'));
+                }
+                
+                // Load inventory data
+                await loadInventoryData();
+                
+                applyAllFilters();
+                
+                const now = new Date();
+                document.getElementById('lastUpdated').textContent = `Updated: ${now.toLocaleTimeString()}`;
+                document.getElementById('prodLastUpdated').textContent = now.toLocaleTimeString();
+                const invLastUpdated = document.getElementById('invLastUpdated');
+                if (invLastUpdated) invLastUpdated.textContent = now.toLocaleTimeString();
+                document.getElementById('dataInfo').innerHTML = `<strong>Data Loaded</strong>${allData.length} orders<br>${inventoryData.length} inventory items<br>${now.toLocaleTimeString()}`;
+                
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('main').classList.add('active');
+                
+                updateMainDashboard();
+                
+            } catch (e) {
+                console.error('Load error:', e);
+                document.getElementById('loadingState').innerHTML = `<h3 style="color:var(--danger);">⚠️ Error</h3><p style="color:var(--text-secondary);">${e.message}</p><button onclick="location.reload()" style="padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;margin-top:12px;">Retry</button>`;
+            }
+        }
+        
+        async function loadInventoryData() {
+            try {
+                // Load Fusion Export data
+                const fusionData = await fetchSheetData(FUSION_EXPORT_GID);
+                console.log('Fusion Export sample:', fusionData[0]);
+                console.log('Fusion Export columns:', fusionData[0] ? Object.keys(fusionData[0]) : 'no data');
+                
+                // Load Production Data Totals
+                const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                console.log('Production Data Totals sample:', prodTotalsData[0]);
+                console.log('Production Data Totals columns:', prodTotalsData[0] ? Object.keys(prodTotalsData[0]) : 'no data');
+                
+                // Create lookup from Production Data Totals by Part Number
+                const prodTotalsMap = {};
+                prodTotalsData.forEach(row => {
+                    // Clean up part number - remove hidden characters
+                    let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
+                    if (partNum) {
+                        prodTotalsMap[partNum] = {
+                            product: row['Product'] || '',
+                            qtyNeeded: parseNumber(row['Quantity Needed']),
+                            minimums: parseNumber(row['Minimums']),
+                            manualTarget: parseNumber(row['Manual target']),
+                            moldType: row['Mold type'] || '',
+                            fusionInventory: parseNumber(row['Fusion Inventory']),
+                            partsToBeMade: parseNumber(row['Parts to be made'])
+                        };
+                    }
+                });
+                
+                // Merge Fusion Export with Production Data Totals
+                const mergedData = [];
+                const seenParts = new Set();
+                
+                // First add all items from Fusion Export
+                fusionData.forEach(row => {
+                    let partNum = (row['itemNumber'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
+                    if (!partNum) return;
+                    
+                    seenParts.add(partNum);
+                    const prodData = prodTotalsMap[partNum] || {};
+                    
+                    // Target column from Fusion Export is the minimum
+                    const fusionTarget = parseNumber(row['Target']);
+                    
+                    mergedData.push({
+                        partNumber: partNum,
+                        product: prodData.product || '',
+                        fusionQty: parseNumber(row['Real number value']),
+                        minimum: prodData.minimums || fusionTarget || 0,
+                        manualTarget: prodData.manualTarget || 0,
+                        qtyNeeded: prodData.qtyNeeded || 0,
+                        partsToBeMade: prodData.partsToBeMade || 0,
+                        moldType: prodData.moldType || ''
+                    });
+                });
+                
+                // Add any items from Production Data Totals not in Fusion Export
+                prodTotalsData.forEach(row => {
+                    let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
+                    if (partNum && !seenParts.has(partNum)) {
+                        const data = prodTotalsMap[partNum];
+                        mergedData.push({
+                            partNumber: partNum,
+                            product: data.product || '',
+                            fusionQty: data.fusionInventory || 0,
+                            minimum: data.minimums || 0,
+                            manualTarget: data.manualTarget || 0,
+                            qtyNeeded: data.qtyNeeded || 0,
+                            partsToBeMade: data.partsToBeMade || 0,
+                            moldType: data.moldType || ''
+                        });
+                    }
+                });
+                
+                inventoryData = mergedData;
+                console.log('Inventory items loaded:', inventoryData.length);
+                
+            } catch (e) {
+                console.error('Inventory load error:', e);
+                inventoryData = [];
+            }
+        }
+        
+        function applyAllFilters() {
+            prodData = allData.filter(r => {
+                const cat = getCategory(r);
+                const status = getStatus(r);
+                if (!prodFilters.categories[cat]) return false;
+                if (status === 'shipped') return false;
+                if (!prodFilters.statuses[status] && status !== 'other') return false;
+                return true;
+            });
+            
+            salesData = allData.filter(r => {
+                const cat = getCategory(r);
+                return salesFilters.categories[cat];
+            });
+        }
+        
+        // ============================================================
+        // NAVIGATION
+        // ============================================================
+        function navigateTo(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(page).classList.add('active');
+            document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+            
+            currentPage = page;
+            
+            switch(page) {
+                case 'main': updateMainDashboard(); break;
+                case 'production': updateProductionPage(); break;
+                case 'inventory': updateInventoryPage(); break;
+                case 'sales-overview': updateSalesOverview(); break;
+                case 'sales-parts': updateSalesPartsPage(); break;
+                case 'sales-customers': updateSalesCustomersPage(); break;
+                case 'sales-dates': updateSalesDatesPage(); break;
+            }
+            
+            document.querySelector('.sidebar').classList.remove('open');
+            document.querySelector('.sidebar-overlay').classList.remove('active');
+        }
+        
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+        
+        // ============================================================
+        // MAIN DASHBOARD
+        // ============================================================
+        function updateMainDashboard() {
+            const rollTechData = allData.filter(r => getCategory(r) === 'rolltech');
+            const pendingOrders = rollTechData.filter(r => getStatus(r) !== 'shipped');
+            
+            // URGENT = only orders marked as "Urgent" in Urgent Override column, NOT P1
+            const urgentOrders = pendingOrders.filter(r => (getVal(r, 'URGENT') || '').toLowerCase() === 'urgent');
+            
+            const totalQty = pendingOrders.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
+            
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const monthData = rollTechData.filter(r => {
+                const d = r[COL.SHIPPED_DATE] || r[COL.REQUESTED_DATE];
+                if (!d) return false;
+                let month;
+                if (d.includes('/')) {
+                    const parts = d.split('/');
+                    month = `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+                } else {
+                    month = d.substring(0, 7);
+                }
+                return month === currentMonth;
+            });
+            const monthRevenue = monthData.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
+            const monthPL = monthData.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
+            
+            // Missing components - only count if actually empty (not NA)
+            const missingComponents = pendingOrders.filter(r => {
+                const tire = getVal(r, 'TIRE');
+                const hub = getVal(r, 'HUB');
+                const bearings = getVal(r, 'BEARINGS');
+                return isMissingComponent(tire) || isMissingComponent(hub) || isMissingComponent(bearings);
+            }).length;
+            
+            document.getElementById('qsPendingOrders').textContent = formatNumber(pendingOrders.length);
+            document.getElementById('qsUrgentOrders').textContent = formatNumber(urgentOrders.length);
+            document.getElementById('qsUrgentOrders').className = `value ${urgentOrders.length > 0 ? 'negative' : ''}`;
+            document.getElementById('qsTotalQty').textContent = formatNumber(totalQty);
+            document.getElementById('qsMonthlyRevenue').textContent = formatCurrency(monthRevenue);
+            document.getElementById('qsMonthlyPL').textContent = formatCurrency(monthPL);
+            document.getElementById('qsMonthlyPL').className = `value ${monthPL >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('qsMissingComponents').textContent = formatNumber(missingComponents);
+            
+            document.getElementById('deptProdOrders').textContent = formatNumber(pendingOrders.length);
+            document.getElementById('deptProdUnits').textContent = formatNumber(totalQty);
+            document.getElementById('deptProdUrgent').textContent = formatNumber(urgentOrders.length);
+            
+            const salesTotal = rollTechData.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
+            const salesPL = rollTechData.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
+            document.getElementById('deptSalesRev').textContent = formatCurrency(salesTotal);
+            document.getElementById('deptSalesPL').textContent = formatCurrency(salesPL);
+            document.getElementById('deptSalesPL').className = `value ${salesPL >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('deptSalesOrders').textContent = formatNumber(rollTechData.length);
+            
+            renderMainStatusChart(pendingOrders);
+            renderMainDeadlineChart(pendingOrders);
+        }
+        
+        function renderMainStatusChart(data) {
+            const statusCounts = {};
+            data.forEach(r => {
+                const status = getStatus(r);
+                statusCounts[status] = (statusCounts[status] || 0) + 1;
+            });
+            
+            const labels = Object.keys(statusCounts).map(s => t(`status.${s}`) || s);
+            const values = Object.values(statusCounts);
+            const colors = Object.keys(statusCounts).map(s => {
+                if (s === 'pending') return '#d69e2e';
+                if (s === 'staged') return '#4299e1';
+                if (s === 'wip') return '#319795';
+                if (s === 'approved') return '#805ad5';
+                return '#a0aec0';
+            });
+            
+            if (charts.mainStatus) charts.mainStatus.destroy();
+            charts.mainStatus = new Chart(document.getElementById('mainStatusChart'), {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#a0aec0', font: { size: 11 } } } }
+                }
+            });
+        }
+        
+        function renderMainDeadlineChart(data) {
+            const deadlines = {};
+            for (let i = -7; i <= 14; i++) deadlines[i] = 0;
+            
+            data.forEach(r => {
+                const days = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                if (days >= -7 && days <= 14) deadlines[days]++;
+            });
+            
+            const labels = Object.keys(deadlines).map(d => {
+                const n = parseInt(d);
+                if (n < 0) return `${Math.abs(n)}d ${currentLang === 'es' ? 'atrasado' : 'overdue'}`;
+                if (n === 0) return currentLang === 'es' ? 'Hoy' : 'Today';
+                return `${n}d`;
+            });
+            const values = Object.values(deadlines);
+            const colors = Object.keys(deadlines).map(d => {
+                const n = parseInt(d);
+                if (n < 0) return 'rgba(229,62,62,0.8)';
+                if (n <= 2) return 'rgba(214,158,46,0.8)';
+                return 'rgba(49,130,206,0.8)';
+            });
+            
+            if (charts.mainDeadline) charts.mainDeadline.destroy();
+            charts.mainDeadline = new Chart(document.getElementById('mainDeadlineChart'), {
+                type: 'bar',
+                data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: '#a0aec0', font: { size: 9 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+        
+        // ============================================================
+        // PRODUCTION PAGE
+        // ============================================================
+        function toggleProdCategory(cat) {
+            prodFilters.categories[cat] = !prodFilters.categories[cat];
+            if (!prodFilters.categories.rolltech && !prodFilters.categories.molding) {
+                prodFilters.categories[cat] = true;
+                return;
+            }
+            document.getElementById('prodBtnRollTech').classList.toggle('active', prodFilters.categories.rolltech);
+            document.getElementById('prodBtnMolding').classList.toggle('active', prodFilters.categories.molding);
+            applyAllFilters();
+            updateProductionPage();
+        }
+        
+        function toggleProdStatus(status) {
+            prodFilters.statuses[status] = !prodFilters.statuses[status];
+            document.getElementById(`prodStatus${status.charAt(0).toUpperCase() + status.slice(1)}`).classList.toggle('active', prodFilters.statuses[status]);
+            applyAllFilters();
+            updateProductionPage();
+        }
+        
+        function updateProductionPage() {
+            const totalQty = prodData.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
+            
+            // URGENT = only orders marked as "Urgent" in Urgent Override column, NOT P1
+            const urgentCount = prodData.filter(r => (getVal(r, 'URGENT') || '').toLowerCase() === 'urgent').length;
+            
+            const dueWeek = prodData.filter(r => {
+                const days = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                return days <= 7 && days >= 0;
+            });
+            const dueWeekQty = dueWeek.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
+            
+            // Ready to ship = has all components (NA is acceptable, only empty string is missing)
+            const readyToShip = prodData.filter(r => {
+                const tire = getVal(r, 'TIRE');
+                const hub = getVal(r, 'HUB');
+                const bearings = getVal(r, 'BEARINGS');
+                return !isMissingComponent(tire) && !isMissingComponent(hub) && !isMissingComponent(bearings);
+            }).length;
+            
+            // Missing components - only count if actually empty (not NA)
+            const missingOrders = prodData.filter(r => {
+                const tire = getVal(r, 'TIRE');
+                const hub = getVal(r, 'HUB');
+                const bearings = getVal(r, 'BEARINGS');
+                return isMissingComponent(tire) || isMissingComponent(hub) || isMissingComponent(bearings);
+            });
+            
+            document.getElementById('prodTotalOrders').textContent = formatNumber(prodData.length);
+            document.getElementById('prodTotalUnits').textContent = `${formatNumber(totalQty)} ${currentLang === 'es' ? 'unidades' : 'units'}`;
+            document.getElementById('prodUrgentCount').textContent = formatNumber(urgentCount);
+            document.getElementById('prodDueWeek').textContent = formatNumber(dueWeek.length);
+            document.getElementById('prodDueWeekUnits').textContent = `${formatNumber(dueWeekQty)} ${currentLang === 'es' ? 'unidades' : 'units'}`;
+            document.getElementById('prodReadyShip').textContent = formatNumber(readyToShip);
+            
+            if (missingOrders.length > 0) {
+                document.getElementById('prodMissingCount').textContent = missingOrders.length;
+                document.getElementById('prodMissingBanner').classList.add('active');
+            } else {
+                document.getElementById('prodMissingBanner').classList.remove('active');
+            }
+            
+            renderProdTableHeader();
+            renderProdTable();
+        }
+        
+        function renderProdTableHeader() {
+            const headers = [
+                { key: 'line', label: t('col.line'), sortable: true },
+                { key: 'priority', label: t('col.priority'), sortable: true },
+                { key: 'daysUntil', label: t('col.daysUntil'), sortable: true },
+                { key: 'requestDate', label: t('col.requestDate'), sortable: true },
+                { key: 'customer', label: t('col.customer'), sortable: true },
+                { key: 'ifNum', label: t('col.ifNum'), sortable: true },
+                { key: 'part', label: t('col.part'), sortable: true },
+                { key: 'qty', label: t('col.qty'), sortable: true },
+                { key: 'packaging', label: t('col.packaging'), sortable: false },
+                { key: 'tire', label: t('col.tire'), sortable: false },
+                { key: 'hub', label: t('col.hub'), sortable: false },
+                { key: 'hubMold', label: t('col.hubMold'), sortable: false },
+                { key: 'bearings', label: t('col.bearings'), sortable: false },
+                { key: 'status', label: t('col.status'), sortable: true },
+                { key: 'assigned', label: t('col.assigned'), sortable: false }
+            ];
+            
+            const thead = document.getElementById('prodTableHeader');
+            thead.innerHTML = headers.map(h => 
+                `<th ${h.sortable ? `onclick="sortProdTable('${h.key}')"` : ''}>${h.label} ${h.sortable ? '<span class="sort-indicator">↕</span>' : ''}</th>`
+            ).join('');
+        }
+        
+        function renderProdTable() {
+            let sorted = [...prodData].sort((a, b) => {
+                let va, vb;
+                switch(prodSort.field) {
+                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                    case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
+                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                    case 'requestDate': va = parseDate(getVal(a, 'REQUEST_DATE')) || new Date(0); vb = parseDate(getVal(b, 'REQUEST_DATE')) || new Date(0); break;
+                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
+                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
+                    case 'status': va = getVal(a, 'STATUS') || ''; vb = getVal(b, 'STATUS') || ''; break;
+                    default: va = a[prodSort.field]; vb = b[prodSort.field];
+                }
+                if (typeof va === 'string') return prodSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                return prodSort.asc ? va - vb : vb - va;
+            });
+            
+            const search = (document.getElementById('prodSearch').value || '').toLowerCase();
+            if (search) {
+                sorted = sorted.filter(r => 
+                    (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) ||
+                    (getVal(r, 'PART') || '').toLowerCase().includes(search) ||
+                    (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) ||
+                    (getVal(r, 'LINE') || '').toString().includes(search)
+                );
+            }
+            
+            document.getElementById('prodTableCount').textContent = `${sorted.length} ${currentLang === 'es' ? 'pedidos' : 'orders'}`;
+            
+            const tbody = document.getElementById('prodTableBody');
+            tbody.innerHTML = sorted.map(r => {
+                const tire = getVal(r, 'TIRE');
+                const hub = getVal(r, 'HUB');
+                const hubMold = getVal(r, 'HUB_MOLD');
+                const bearings = getVal(r, 'BEARINGS');
+                // Only highlight as missing if actually empty (not NA)
+                const isMissing = isMissingComponent(tire) || isMissingComponent(hub) || isMissingComponent(bearings);
+                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
+                
+                return `<tr class="clickable" style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
+                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
+                    <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
+                    <td class="${daysClass}">${daysUntil || '-'}</td>
+                    <td>${getVal(r, 'REQUEST_DATE') || '-'}</td>
+                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
+                    <td>${getVal(r, 'IF_NUM') || '-'}</td>
+                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
+                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
+                    <td>${getVal(r, 'PACKAGING') || '-'}</td>
+                    <td>${formatComponent(tire)}</td>
+                    <td>${formatComponent(hub)}</td>
+                    <td>${hubMold || '-'}</td>
+                    <td>${formatComponent(bearings)}</td>
+                    <td>${getStatusBadge(getVal(r, 'STATUS'))}</td>
+                    <td>${getVal(r, 'ASSIGNED') || '-'}</td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function sortProdTable(field) {
+            if (prodSort.field === field) {
+                prodSort.asc = !prodSort.asc;
+            } else {
+                prodSort.field = field;
+                prodSort.asc = true;
+            }
+            renderProdTable();
+        }
+        
+        function filterProdTable() {
+            renderProdTable();
+        }
+        
+        function refreshProdData() {
+            loadDashboard();
+        }
+        
+        function exportProdToCSV() {
+            const headers = [t('col.line'), t('col.priority'), t('col.daysUntil'), t('col.requestDate'), t('col.customer'), t('col.ifNum'), t('col.part'), t('col.qty'), t('col.packaging'), t('col.tire'), t('col.hub'), t('col.hubMold'), t('col.bearings'), t('col.status'), t('col.assigned')];
+            const rows = prodData.map(r => [
+                getVal(r, 'LINE'), getVal(r, 'PRIORITY'), getVal(r, 'DAYS_UNTIL'), getVal(r, 'REQUEST_DATE'),
+                getVal(r, 'CUSTOMER'), getVal(r, 'IF_NUM'), getVal(r, 'PART'), getVal(r, 'QTY'), getVal(r, 'PACKAGING'),
+                getVal(r, 'TIRE'), r[COL.HUB], getVal(r, 'HUB_MOLD'), getVal(r, 'BEARINGS'),
+                getVal(r, 'STATUS'), getVal(r, 'ASSIGNED')
+            ].map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(','));
+            
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `production_queue_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+        
+        // ============================================================
+        // INVENTORY PAGE
+        // ============================================================
+        function setInvFilter(filter) {
+            invFilter = filter;
+            document.getElementById('invFilterAll').classList.toggle('active', filter === 'all');
+            document.getElementById('invFilterLow').classList.toggle('active', filter === 'low');
+            document.getElementById('invFilterNeeded').classList.toggle('active', filter === 'needed');
+            renderInvTable();
+        }
+        
+        function updateInventoryPage() {
+            const lowStock = inventoryData.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
+            const needsProduction = inventoryData.filter(i => i.partsToBeMade > 0);
+            const okStock = inventoryData.filter(i => i.fusionQty >= i.minimum || i.minimum === 0);
+            const productTypes = [...new Set(inventoryData.map(i => i.product).filter(p => p))];
+            
+            document.getElementById('invStatTotal').textContent = formatNumber(inventoryData.length);
+            document.getElementById('invStatTypes').textContent = `${productTypes.length} product types`;
+            document.getElementById('invStatLow').textContent = formatNumber(lowStock.length);
+            document.getElementById('invStatNeeded').textContent = formatNumber(needsProduction.length);
+            document.getElementById('invStatOk').textContent = formatNumber(okStock.length);
+            
+            setInvFilter('all');
+        }
+        
+        function sortInvTable(field) {
+            if (invSort.field === field) invSort.asc = !invSort.asc;
+            else { invSort.field = field; invSort.asc = true; }
+            renderInvTable();
+        }
+        
+        function renderInvTable() {
+            let data = [...inventoryData];
+            
+            // Apply filter
+            if (invFilter === 'low') {
+                data = data.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
+            } else if (invFilter === 'needed') {
+                data = data.filter(i => i.partsToBeMade > 0);
+            }
+            
+            // Sort
+            data.sort((a, b) => {
+                let va = a[invSort.field], vb = b[invSort.field];
+                if (typeof va === 'string') return invSort.asc ? (va || '').localeCompare(vb || '') : (vb || '').localeCompare(va || '');
+                return invSort.asc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
+            });
+            
+            document.getElementById('invTableCount').textContent = `${data.length} items`;
+            const tbody = document.getElementById('invTableBody');
+            tbody.innerHTML = data.map(i => {
+                const isLow = i.fusionQty < i.minimum && i.minimum > 0;
+                const needsMake = i.partsToBeMade > 0;
+                const rowClass = isLow ? 'inv-low' : (needsMake ? 'inv-warning' : '');
+                const statusBadge = isLow ? '<span class="badge" style="background:var(--danger);color:white;">LOW</span>' :
+                                   (needsMake ? '<span class="badge" style="background:var(--warning);color:#1a202c;">MAKE</span>' :
+                                   '<span class="badge" style="background:var(--success);color:white;">OK</span>');
+                return `<tr class="${rowClass}">
+                    <td>${i.product || '-'}</td>
+                    <td><strong>${i.partNumber}</strong></td>
+                    <td>${formatNumber(i.fusionQty)}</td>
+                    <td>${formatNumber(i.minimum)}</td>
+                    <td>${formatNumber(i.manualTarget)}</td>
+                    <td>${formatNumber(i.qtyNeeded)}</td>
+                    <td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>
+                    <td>${i.moldType || '-'}</td>
+                    <td>${statusBadge}</td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function filterInvTable() {
+            const search = document.getElementById('invSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#invTableBody tr');
+            rows.forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+            });
+        }
+        
+        function exportInvCSV() {
+            const headers = ['Product Type','Part Number','Fusion Qty','Minimum','Manual Target','Qty Needed','Parts to Make','Mold Type'];
+            const rows = inventoryData.map(i => [
+                i.product, i.partNumber, i.fusionQty, i.minimum, i.manualTarget, i.qtyNeeded, i.partsToBeMade, i.moldType
+            ].map(v => `"${v || ''}"`).join(','));
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `inventory_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+        
+        // ============================================================
+        // SALES PAGES
+        // ============================================================
+        function toggleSalesCategory(cat) {
+            salesFilters.categories[cat] = !salesFilters.categories[cat];
+            if (!salesFilters.categories.rolltech && !salesFilters.categories.molding) {
+                salesFilters.categories[cat] = true;
+                return;
+            }
+            document.getElementById('salesBtnRollTech').classList.toggle('active', salesFilters.categories.rolltech);
+            document.getElementById('salesBtnMolding').classList.toggle('active', salesFilters.categories.molding);
+            applyAllFilters();
+            updateSalesOverview();
+        }
+        
+        function updateSalesOverview() {
+            let totalRevenue = 0, totalPL = 0, shippedPL = 0, forecastPL = 0, shippedCount = 0, forecastCount = 0;
+            
+            salesData.forEach(r => {
+                totalRevenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) {
+                    const pl = getPLValue(r);
+                    totalPL += pl;
+                    if (getStatus(r) === 'shipped') { shippedPL += pl; shippedCount++; }
+                    else { forecastPL += pl; forecastCount++; }
+                } else {
+                    if (getStatus(r) === 'shipped') shippedCount++;
+                    else forecastCount++;
+                }
+            });
+            
+            const margin = totalRevenue ? ((totalPL / totalRevenue) * 100).toFixed(2) : 0;
+            
+            document.getElementById('salesStatRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('salesStatOrderCount').textContent = `${salesData.length} ${currentLang === 'es' ? 'pedidos' : 'orders'}`;
+            document.getElementById('salesStatPL').textContent = formatCurrency(totalPL);
+            document.getElementById('salesStatPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('salesStatMargin').textContent = `Margin: ${margin}%`;
+            document.getElementById('salesStatShippedPL').textContent = formatCurrency(shippedPL);
+            document.getElementById('salesStatShippedPL').className = `value ${shippedPL >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('salesStatShippedCount').textContent = `${shippedCount} ${currentLang === 'es' ? 'enviados' : 'shipped'}`;
+            document.getElementById('salesStatForecastPL').textContent = formatCurrency(forecastPL);
+            document.getElementById('salesStatForecastPL').className = `value ${forecastPL >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('salesStatForecastCount').textContent = `${forecastCount} ${currentLang === 'es' ? 'pendientes' : 'pending'}`;
+            
+            renderSalesTrendChart();
+        }
+        
+        function renderSalesTrendChart() {
+            const monthStats = {};
+            salesData.forEach(r => {
+                const d = r[COL.SHIPPED_DATE] || r[COL.REQUESTED_DATE];
+                if (!d) return;
+                let month;
+                if (d.includes('/')) {
+                    const parts = d.split('/');
+                    month = `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+                } else {
+                    month = d.substring(0, 7);
+                }
+                if (!monthStats[month]) monthStats[month] = { shipped: 0, forecast: 0 };
+                if (!hasMissingCostData(r)) {
+                    const pl = getPLValue(r);
+                    if (getStatus(r) === 'shipped') monthStats[month].shipped += pl;
+                    else monthStats[month].forecast += pl;
+                }
+            });
+            
+            const sorted = Object.entries(monthStats).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
+            
+            if (charts.salesTrend) charts.salesTrend.destroy();
+            charts.salesTrend = new Chart(document.getElementById('salesTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: sorted.map(s => s[0]),
+                    datasets: [
+                        { label: currentLang === 'es' ? 'Enviado' : 'Shipped', data: sorted.map(s => s[1].shipped), borderColor: '#38a169', backgroundColor: 'rgba(56,161,105,0.1)', fill: true, tension: 0.3 },
+                        { label: currentLang === 'es' ? 'Proyectado' : 'Forecasted', data: sorted.map(s => s[1].forecast), borderColor: '#d69e2e', backgroundColor: 'rgba(214,158,46,0.1)', fill: true, tension: 0.3, borderDash: [5, 5] }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#a0aec0' } } },
+                    scales: {
+                        y: { ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: '#a0aec0' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+        
+        function exportSalesCSV() {
+            const csv = salesData.map(r => [getVal(r, 'PART'), getVal(r, 'CUSTOMER'), getVal(r, 'QTY'), r[COL.REVENUE], r[COL.PL]].join(',')).join('\n');
+            const blob = new Blob(['Part,Customer,Qty,Revenue,P/L\n' + csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sales_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+        
+        function updateSalesPartsPage() {
+            const partStats = {};
+            salesData.forEach(r => {
+                const p = getVal(r, 'PART');
+                if (!partStats[p]) partStats[p] = { pl: 0 };
+                if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r);
+            });
+            
+            const sorted = Object.entries(partStats).sort((a, b) => b[1].pl - a[1].pl).slice(0, 30);
+            
+            if (charts.partsBar) charts.partsBar.destroy();
+            charts.partsBar = new Chart(document.getElementById('partsBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(s => s[0]),
+                    datasets: [{ data: sorted.map(s => s[1].pl), backgroundColor: sorted.map(s => s[1].pl >= 0 ? 'rgba(56,161,105,0.8)' : 'rgba(229,62,62,0.8)') }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: '#a0aec0', font: { size: 9 }, maxRotation: 90 }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+        
+        function updateSalesCustomersPage() {
+            const custStats = {};
+            salesData.forEach(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (!custStats[c]) custStats[c] = { pl: 0 };
+                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
+            });
+            
+            const sorted = Object.entries(custStats).sort((a, b) => b[1].pl - a[1].pl).slice(0, 10);
+            const colors = ['#38a169', '#319795', '#3182ce', '#805ad5', '#d53f8c', '#dd6b20', '#d69e2e', '#e53e3e', '#718096', '#4a5568'];
+            
+            if (charts.customers) charts.customers.destroy();
+            charts.customers = new Chart(document.getElementById('customersChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: sorted.map(s => s[0].substring(0, 25)),
+                    datasets: [{ data: sorted.map(s => Math.abs(s[1].pl)), backgroundColor: colors }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#a0aec0', font: { size: 10 } } } }
+                }
+            });
+        }
+        
+        // ============================================================
+        // SALES BY DATE PAGE
+        // ============================================================
+        function toggleDatesCategory(cat) {
+            datesFilters.categories[cat] = !datesFilters.categories[cat];
+            if (!datesFilters.categories.rolltech && !datesFilters.categories.molding) {
+                datesFilters.categories[cat] = true;
+                return;
+            }
+            document.getElementById('datesBtnRollTech').classList.toggle('active', datesFilters.categories.rolltech);
+            document.getElementById('datesBtnMolding').classList.toggle('active', datesFilters.categories.molding);
+            applyDatesFilters();
+            updateSalesDatesPage();
+        }
+        
+        function applyDateFilter() {
+            const fromInput = document.getElementById('datesFromDate').value;
+            const toInput = document.getElementById('datesToDate').value;
+            datesFilters.fromDate = fromInput ? new Date(fromInput) : null;
+            datesFilters.toDate = toInput ? new Date(toInput) : null;
+            applyDatesFilters();
+            updateSalesDatesPage();
+        }
+        
+        function resetDateFilter() {
+            document.getElementById('datesFromDate').value = '';
+            document.getElementById('datesToDate').value = '';
+            datesFilters.fromDate = null;
+            datesFilters.toDate = null;
+            applyDatesFilters();
+            updateSalesDatesPage();
+        }
+        
+        function applyDatesFilters() {
+            datesData = allData.filter(r => {
+                const cat = getCategory(r);
+                if (!datesFilters.categories[cat]) return false;
+                
+                // Date filtering
+                if (datesFilters.fromDate || datesFilters.toDate) {
+                    const status = getStatus(r);
+                    const dateStr = status === 'shipped' ? r[COL.SHIPPED_DATE] : (r[COL.REQUESTED_DATE] || getVal(r, 'REQUEST_DATE'));
+                    if (!dateStr) return false;
+                    const rowDate = parseDate(dateStr);
+                    if (!rowDate) return false;
+                    if (datesFilters.fromDate && rowDate < datesFilters.fromDate) return false;
+                    if (datesFilters.toDate && rowDate > datesFilters.toDate) return false;
+                }
+                return true;
+            });
+        }
+        
+        function updateSalesDatesPage() {
+            // Initialize filters if needed
+            if (datesData.length === 0) {
+                applyDatesFilters();
+            }
+            
+            // Calculate monthly stats
+            const monthStats = {};
+            let totalOrders = 0, totalUnits = 0, totalRevenue = 0, totalPL = 0;
+            
+            datesData.forEach(r => {
+                const status = getStatus(r);
+                const dateStr = status === 'shipped' ? r[COL.SHIPPED_DATE] : (r[COL.REQUESTED_DATE] || getVal(r, 'REQUEST_DATE'));
+                if (!dateStr) return;
+                
+                let month;
+                if (dateStr.includes('/')) {
+                    const parts = dateStr.split('/');
+                    month = `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+                } else {
+                    month = dateStr.substring(0, 7);
+                }
+                
+                if (!monthStats[month]) {
+                    monthStats[month] = { orders: 0, units: 0, revenue: 0, pl: 0 };
+                }
+                
+                monthStats[month].orders++;
+                monthStats[month].units += parseNumber(getVal(r, 'QTY'));
+                monthStats[month].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) {
+                    monthStats[month].pl += getPLValue(r);
+                }
+                
+                totalOrders++;
+                totalUnits += parseNumber(getVal(r, 'QTY'));
+                totalRevenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) totalPL += getPLValue(r);
+            });
+            
+            const margin = totalRevenue > 0 ? ((totalPL / totalRevenue) * 100) : 0;
+            const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+            const monthCount = Object.keys(monthStats).length;
+            
+            // Update stats cards
+            document.getElementById('datesStatOrders').textContent = formatNumber(totalOrders);
+            document.getElementById('datesStatUnits').textContent = `${formatNumber(totalUnits)} ${currentLang === 'es' ? 'unidades' : 'units'}`;
+            document.getElementById('datesStatRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('datesStatAvgOrder').textContent = `Avg: ${formatCurrency(avgOrder)}`;
+            document.getElementById('datesStatPL').textContent = formatCurrency(totalPL);
+            document.getElementById('datesStatPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('datesStatMargin').textContent = `Margin: ${margin.toFixed(1)}%`;
+            document.getElementById('datesStatMarginPct').textContent = `${margin.toFixed(1)}%`;
+            document.getElementById('datesStatMarginPct').className = `value ${margin >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('datesStatMonths').textContent = `${monthCount} ${currentLang === 'es' ? 'meses' : 'months'}`;
+            
+            // Sort months
+            const sortedMonths = Object.entries(monthStats).sort((a, b) => a[0].localeCompare(b[0]));
+            
+            // Render chart
+            if (charts.datesBar) charts.datesBar.destroy();
+            charts.datesBar = new Chart(document.getElementById('datesBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedMonths.map(s => {
+                        const [year, mon] = s[0].split('-');
+                        const monthNames = currentLang === 'es' 
+                            ? ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+                            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        return `${monthNames[parseInt(mon) - 1]} ${year}`;
+                    }),
+                    datasets: [
+                        {
+                            label: currentLang === 'es' ? 'Ingresos' : 'Revenue',
+                            data: sortedMonths.map(s => s[1].revenue),
+                            backgroundColor: 'rgba(49,130,206,0.7)',
+                            borderColor: '#3182ce',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'P/L',
+                            data: sortedMonths.map(s => s[1].pl),
+                            backgroundColor: sortedMonths.map(s => s[1].pl >= 0 ? 'rgba(56,161,105,0.7)' : 'rgba(229,62,62,0.7)'),
+                            borderColor: sortedMonths.map(s => s[1].pl >= 0 ? '#38a169' : '#e53e3e'),
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#a0aec0' } }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { callback: v => formatCurrency(v), color: '#a0aec0' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#a0aec0', font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+            
+            // Render table
+            document.getElementById('datesTableCount').textContent = `${sortedMonths.length} ${currentLang === 'es' ? 'meses' : 'months'}`;
+            const tbody = document.getElementById('datesTableBody');
+            tbody.innerHTML = sortedMonths.reverse().map(([month, stats]) => {
+                const [year, mon] = month.split('-');
+                const monthNames = currentLang === 'es' 
+                    ? ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+                    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthName = `${monthNames[parseInt(mon) - 1]} ${year}`;
+                const rowMargin = stats.revenue > 0 ? ((stats.pl / stats.revenue) * 100).toFixed(1) : 0;
+                
+                return `<tr class="clickable" data-month="${month}" data-monthname="${monthName}">
+                    <td><strong>${monthName}</strong></td>
+                    <td>${formatNumber(stats.orders)}</td>
+                    <td>${formatCurrency(stats.revenue)}</td>
+                    <td class="${stats.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(stats.pl)}</td>
+                    <td class="${parseFloat(rowMargin) >= 0 ? 'positive' : 'negative'}">${rowMargin}%</td>
+                </tr>`;
+            }).join('');
+            
+            // Add click handlers for drill-down
+            tbody.querySelectorAll('tr.clickable').forEach(row => {
+                row.addEventListener('click', () => {
+                    tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+                    row.classList.add('selected');
+                    showMonthCustomerBreakdown(row.dataset.month, row.dataset.monthname);
+                });
+            });
+        }
+        
+        // State for dates drill-down
+        let selectedMonth = null;
+        let selectedMonthName = '';
+        let selectedMonthCustomer = null;
+        
+        function showMonthCustomerBreakdown(month, monthName) {
+            selectedMonth = month;
+            selectedMonthName = monthName;
+            
+            // Get all orders for this month
+            const monthOrders = datesData.filter(r => {
+                const status = getStatus(r);
+                const dateStr = status === 'shipped' ? r[COL.SHIPPED_DATE] : (r[COL.REQUESTED_DATE] || getVal(r, 'REQUEST_DATE'));
+                if (!dateStr) return false;
+                
+                let orderMonth;
+                if (dateStr.includes('/')) {
+                    const parts = dateStr.split('/');
+                    orderMonth = `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+                } else {
+                    orderMonth = dateStr.substring(0, 7);
+                }
+                return orderMonth === month;
+            });
+            
+            // Group by customer
+            const customers = {};
+            monthOrders.forEach(o => {
+                const c = getVal(o, 'CUSTOMER') || 'Unknown';
+                if (!customers[c]) customers[c] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
+                customers[c].orders++;
+                customers[c].qty += parseNumber(getVal(o, 'QTY'));
+                customers[c].revenue += parseNumber(o[COL.REVENUE]);
+                if (!hasMissingCostData(o)) customers[c].pl += getPLValue(o);
+            });
+            
+            const totalQty = monthOrders.reduce((s, o) => s + parseNumber(getVal(o, 'QTY')), 0);
+            const totalRev = monthOrders.reduce((s, o) => s + parseNumber(o[COL.REVENUE]), 0);
+            const totalPL = monthOrders.filter(o => !hasMissingCostData(o)).reduce((s, o) => s + getPLValue(o), 0);
+            
+            document.getElementById('monthDrilldownTitle').textContent = `Period: ${monthName} | ${monthOrders.length} orders`;
+            document.getElementById('monthDrilldownSummary').innerHTML = `
+                <div class="summary-item"><div class="label">Orders</div><div class="value">${monthOrders.length}</div></div>
+                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
+                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
+                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>`;
+            
+            const tbody = document.getElementById('monthCustomerTableBody');
+            const sorted = Object.entries(customers).sort((a,b) => a[1].pl - b[1].pl);
+            tbody.innerHTML = sorted.map(([c, s]) => {
+                const margin = s.revenue ? ((s.pl / s.revenue) * 100).toFixed(2) : 0;
+                return `<tr class="clickable" data-customer="${c}">
+                    <td class="clickable-cell">${c}</td>
+                    <td>${s.orders}</td>
+                    <td>${formatNumber(s.qty)}</td>
+                    <td>${formatCurrency(s.revenue)}</td>
+                    <td class="${s.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(s.pl)}</td>
+                    <td class="${parseFloat(margin) >= 0 ? 'positive' : 'negative'}">${margin}%</td>
+                </tr>`;
+            }).join('');
+            
+            tbody.querySelectorAll('tr.clickable').forEach(row => {
+                row.addEventListener('click', () => {
+                    tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+                    row.classList.add('selected');
+                    showMonthCustomerOrders(row.dataset.customer);
+                });
+            });
+            
+            document.getElementById('monthCustomerDrilldown').classList.add('active');
+            document.getElementById('monthCustomerOrdersDrilldown').classList.remove('active');
+            document.getElementById('monthCustomerDrilldown').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showMonthCustomerOrders(customer) {
+            selectedMonthCustomer = customer;
+            
+            // Get all orders for this month and customer
+            const orders = datesData.filter(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (c !== customer) return false;
+                
+                const status = getStatus(r);
+                const dateStr = status === 'shipped' ? r[COL.SHIPPED_DATE] : (r[COL.REQUESTED_DATE] || getVal(r, 'REQUEST_DATE'));
+                if (!dateStr) return false;
+                
+                let orderMonth;
+                if (dateStr.includes('/')) {
+                    const parts = dateStr.split('/');
+                    orderMonth = `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+                } else {
+                    orderMonth = dateStr.substring(0, 7);
+                }
+                return orderMonth === selectedMonth;
+            });
+            
+            const totalQty = orders.reduce((s, o) => s + parseNumber(getVal(o, 'QTY')), 0);
+            const totalRev = orders.reduce((s, o) => s + parseNumber(o[COL.REVENUE]), 0);
+            const totalPL = orders.filter(o => !hasMissingCostData(o)).reduce((s, o) => s + getPLValue(o), 0);
+            
+            document.getElementById('bcMonth').textContent = selectedMonthName;
+            document.getElementById('bcMonthCust').textContent = customer;
+            document.getElementById('monthCustomerOrdersTitle').textContent = `${orders.length} orders for ${customer}`;
+            document.getElementById('monthCustomerOrdersSummary').innerHTML = `
+                <div class="summary-item"><div class="label">Orders</div><div class="value">${orders.length}</div></div>
+                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
+                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
+                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>`;
+            
+            const tbody = document.getElementById('monthCustomerOrdersBody');
+            tbody.innerHTML = orders.map(o => {
+                const pl = getPLValue(o);
+                const ppp = parseNumber(getVal(o, 'PROFIT_PER_PART'));
+                const status = getStatus(o);
+                const dateStr = status === 'shipped' ? o[COL.SHIPPED_DATE] : (o[COL.REQUESTED_DATE] || getVal(o, 'REQUEST_DATE')) || '-';
+                return `<tr>
+                    <td>${getVal(o, 'PART') || '-'}</td>
+                    <td>${getVal(o, 'PO') || '-'}</td>
+                    <td>${getStatusBadge(getVal(o, 'STATUS'))}</td>
+                    <td>${dateStr}</td>
+                    <td>${formatNumber(parseNumber(getVal(o, 'QTY')))}</td>
+                    <td>${formatCurrency(parseNumber(o[COL.UNIT_PRICE] || getVal(o, 'UNIT_PRICE')))}</td>
+                    <td class="${ppp >= 0 ? 'positive' : 'negative'}">${formatCurrency(ppp)}</td>
+                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>
+                    <td>${formatCurrency(parseNumber(o[COL.REVENUE]))}</td>
+                </tr>`;
+            }).join('');
+            
+            document.getElementById('monthCustomerOrdersDrilldown').classList.add('active');
+            document.getElementById('monthCustomerOrdersDrilldown').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function backToMonthCustomers() {
+            document.getElementById('monthCustomerOrdersDrilldown').classList.remove('active');
+            selectedMonthCustomer = null;
+        }
+        
+        function closeMonthDrilldown() {
+            document.getElementById('monthCustomerDrilldown').classList.remove('active');
+            document.getElementById('monthCustomerOrdersDrilldown').classList.remove('active');
+            selectedMonth = null;
+            selectedMonthName = '';
+            selectedMonthCustomer = null;
+            document.querySelectorAll('#datesTableBody tr').forEach(r => r.classList.remove('selected'));
+        }
+        
+        function closeAllMonthDrilldowns() { closeMonthDrilldown(); }
+        
+        function exportDatesCSV() {
+            const monthStats = {};
+            datesData.forEach(r => {
+                const status = getStatus(r);
+                const dateStr = status === 'shipped' ? r[COL.SHIPPED_DATE] : (r[COL.REQUESTED_DATE] || getVal(r, 'REQUEST_DATE'));
+                if (!dateStr) return;
+                let month;
+                if (dateStr.includes('/')) {
+                    const parts = dateStr.split('/');
+                    month = `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+                } else {
+                    month = dateStr.substring(0, 7);
+                }
+                if (!monthStats[month]) monthStats[month] = { orders: 0, units: 0, revenue: 0, pl: 0 };
+                monthStats[month].orders++;
+                monthStats[month].units += parseNumber(getVal(r, 'QTY'));
+                monthStats[month].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) monthStats[month].pl += getPLValue(r);
+            });
+            
+            const sorted = Object.entries(monthStats).sort((a, b) => a[0].localeCompare(b[0]));
+            const headers = ['Month', 'Orders', 'Units', 'Revenue', 'P/L', 'Margin'];
+            const rows = sorted.map(([month, stats]) => {
+                const margin = stats.revenue > 0 ? ((stats.pl / stats.revenue) * 100).toFixed(2) : 0;
+                return [month, stats.orders, stats.units, stats.revenue.toFixed(2), stats.pl.toFixed(2), margin + '%'].join(',');
+            });
+            
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pl_by_date_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
