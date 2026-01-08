@@ -840,7 +840,7 @@
                 'bom.components': 'Components',
                 'bom.itemDetails': 'Item Details',
                 'bom.profitTarget': 'Profit Target',
-                'bom.salesTarget': 'Sales Target'
+                'bom.salesTarget': 'Sales Target',
                 'dates.month': 'Month',
                 'dates.orders': 'Orders',
                 'dates.revenue': 'Revenue',
@@ -1330,11 +1330,11 @@
                     allData = raw.filter(r => getVal(r, 'PART'));
                 }
                 
-                // Load inventory data
-                await loadInventoryData();
+                // Load inventory data (non-blocking)
+                loadInventoryData().catch(e => console.warn('Inventory load failed:', e));
                 
-                // Load BOM data
-                await loadBOMData();
+                // Load BOM data (non-blocking)
+                loadBOMData().catch(e => console.warn('BOM load failed:', e));
                 
                 applyAllFilters();
                 
