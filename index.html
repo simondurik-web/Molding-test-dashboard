@@ -80,9 +80,6 @@
         .dept-card .metrics { display: flex; gap: 20px; flex-wrap: wrap; }
         .dept-card .metric .value { font-size: 22px; font-weight: 700; }
         .dept-card .metric .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
-        .dept-card.disabled { opacity: 0.5; cursor: not-allowed; }
-        .dept-card.disabled:hover { transform: none; box-shadow: none; border-color: var(--border); }
-        .coming-soon { position: absolute; top: 12px; right: 12px; background: var(--warning); color: #1a202c; padding: 3px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
         .quick-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
         .quick-stat { background: linear-gradient(135deg, var(--bg-card) 0%, #374151 100%); border-radius: 12px; padding: 16px; border: 1px solid var(--border); text-align: center; }
         .quick-stat .value { font-size: 24px; font-weight: 700; }
@@ -103,6 +100,8 @@
         .info-banner.active { display: flex; align-items: center; gap: 12px; }
         .info-banner.warning { background: linear-gradient(135deg, #744210 0%, #975a16 100%); border: 1px solid var(--warning); }
         .info-banner.warning p { color: #fefcbf; }
+        .info-banner.danger { background: linear-gradient(135deg, #742a2a 0%, #9b2c2c 100%); border: 1px solid var(--danger); }
+        .info-banner.danger p { color: #fed7d7; }
         .info-banner.info { background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); border: 1px solid var(--accent); }
         .info-banner.info p { color: #bee3f8; }
         .info-banner p { font-size: 12px; margin: 0; }
@@ -146,6 +145,8 @@
         .data-table th.sorted .sort-indicator { opacity: 1; color: var(--warning); }
         .data-table td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 11px; }
         .data-table tr:hover td { background: rgba(255,255,255,0.04); }
+        .data-table tr.clickable { cursor: pointer; }
+        .data-table tr.clickable:hover td { background: rgba(49,130,206,0.15); }
         .data-table .positive { color: var(--success); font-weight: 600; }
         .data-table .negative { color: var(--danger); font-weight: 600; }
         .data-table .warning-text { color: var(--warning); font-weight: 600; }
@@ -159,6 +160,7 @@
         .badge.staged { background: linear-gradient(135deg, var(--staged-blue) 0%, #3182ce 100%); color: white; }
         .badge.wip { background: linear-gradient(135deg, var(--teal) 0%, #2c7a7b 100%); color: white; }
         .badge.urgent { background: linear-gradient(135deg, var(--danger) 0%, #c53030 100%); color: white; }
+        .badge.forecast { background: linear-gradient(135deg, var(--purple) 0%, #6b46c1 100%); color: white; }
         .badge.priority-1 { background: var(--danger); color: white; }
         .badge.priority-2 { background: var(--warning); color: #1a202c; }
         .badge.priority-3 { background: var(--accent); color: white; }
@@ -181,18 +183,24 @@
         .menu-toggle { background: rgba(255,255,255,0.15); border: none; color: white; font-size: 22px; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; }
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
         .sidebar-overlay.active { display: block; }
-        @media (max-width: 1200px) { .quick-stats { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } .quick-stats { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; padding: 16px; }
-            .mobile-header { display: flex; }
-            .dept-grid { grid-template-columns: 1fr; }
-            .quick-stats { grid-template-columns: 1fr 1fr; }
-            .toolbar { flex-direction: column; align-items: stretch; }
-            .toolbar-spacer { display: none; }
-        }
+        .watchlist-star { cursor: pointer; font-size: 14px; color: var(--text-secondary); transition: all 0.2s; }
+        .watchlist-star:hover { color: var(--warning); transform: scale(1.2); }
+        .watchlist-star.active { color: var(--warning); }
+        .drilldown-section { display: none; margin-top: 20px; background: var(--bg-card); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
+        .drilldown-section.active { display: block; }
+        .drilldown-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .drilldown-header h3 { font-size: 18px; }
+        .breadcrumb { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+        .close-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+        .close-btn:hover { border-color: var(--danger); color: var(--danger); }
+        .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 8px; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .summary-row { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+        .summary-item { background: var(--bg-dark); padding: 12px 16px; border-radius: 8px; }
+        .summary-item .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+        .summary-item .value { font-size: 18px; font-weight: 700; }
+        .price-history-container { background: var(--bg-dark); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .price-history-container canvas { max-height: 200px; }
         .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
         .tab { padding: 10px 20px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
         .tab:hover { border-color: var(--accent); }
@@ -222,26 +230,26 @@
         .inv-low { background: rgba(229,62,62,0.15) !important; }
         .inv-warning { background: rgba(214,158,46,0.15) !important; }
         .inv-ok { background: rgba(56,161,105,0.08) !important; }
-        .drilldown-section { display: none; margin-top: 20px; background: var(--bg-card); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
-        .drilldown-section.active { display: block; }
-        .drilldown-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-        .drilldown-header h3 { font-size: 18px; }
-        .breadcrumb { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
-        .close-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
-        .close-btn:hover { border-color: var(--danger); color: var(--danger); }
-        .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 8px; }
-        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .summary-row { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
-        .summary-item { background: var(--bg-dark); padding: 12px 16px; border-radius: 8px; }
-        .summary-item .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
-        .summary-item .value { font-size: 18px; font-weight: 700; }
-        @media (max-width: 768px) { .bom-grid { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } }
+        @media (max-width: 1200px) { .quick-stats { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } .quick-stats { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 16px; }
+            .mobile-header { display: flex; }
+            .dept-grid { grid-template-columns: 1fr; }
+            .quick-stats { grid-template-columns: 1fr 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-spacer { display: none; }
+            .bom-grid { grid-template-columns: 1fr; }
+            .tabs { flex-wrap: wrap; }
+        }
     </style>
 </head>
 <body>
     <div class="mobile-header">
         <div><h1>Roll Tech</h1><span style="font-size:10px;color:var(--text-secondary);">Operations</span></div>
-        <button class="menu-toggle" onclick="toggleSidebar()">â˜°</button>
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
     </div>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
@@ -249,30 +257,30 @@
         <div class="logo"><h1>Roll Tech</h1><span id="logoSubtitle">Operations Dashboard</span></div>
         <div class="lang-toggle">
             <button class="lang-btn active" id="langEN" onclick="setLanguage('en')">English</button>
-            <button class="lang-btn" id="langES" onclick="setLanguage('es')">EspaÃ±ol</button>
+            <button class="lang-btn" id="langES" onclick="setLanguage('es')">Español</button>
         </div>
         <div class="nav-section">
-            <div class="nav-item active" data-page="main" onclick="navigateTo('main')"><span class="icon">ðŸ </span> <span data-i18n="nav.main">Main Dashboard</span></div>
+            <div class="nav-item active" data-page="main" onclick="navigateTo('main')"><span class="icon">🏠</span> <span data-i18n="nav.main">Main Dashboard</span></div>
         </div>
         <div class="nav-divider"></div>
         <div class="nav-section">
             <div class="nav-section-title" data-i18n="nav.production">Production</div>
-            <div class="nav-item" data-page="orders-data" onclick="navigateTo('orders-data')"><span class="icon">ðŸ“‹</span> <span data-i18n="nav.ordersData">Orders Data</span></div>
-            <div class="nav-item sub-item" data-page="orders-queue" onclick="navigateTo('orders-queue')"><span class="icon">ðŸ”§</span> <span data-i18n="nav.ordersQueue">Need to Make</span></div>
-            <div class="nav-item sub-item" data-page="orders-staged" onclick="navigateTo('orders-staged')"><span class="icon">ðŸ“¦</span> <span data-i18n="nav.ordersStaged">Ready to Ship</span></div>
-            <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">ðŸšš</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
-            <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">ðŸ“¦</span> <span data-i18n="nav.inventory">Inventory</span></div>
+            <div class="nav-item" data-page="orders-data" onclick="navigateTo('orders-data')"><span class="icon">📋</span> <span data-i18n="nav.ordersData">Orders Data</span></div>
+            <div class="nav-item sub-item" data-page="orders-queue" onclick="navigateTo('orders-queue')"><span class="icon">🔧</span> <span data-i18n="nav.ordersQueue">Need to Make</span></div>
+            <div class="nav-item sub-item" data-page="orders-staged" onclick="navigateTo('orders-staged')"><span class="icon">📦</span> <span data-i18n="nav.ordersStaged">Ready to Ship</span></div>
+            <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">🚚</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
+            <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
         </div>
         <div class="nav-section">
-            <div class="nav-section-title" data-i18n="nav.salesFinance">Sales & Finance</div>
-            <div class="nav-item" data-page="sales-overview" onclick="navigateTo('sales-overview')"><span class="icon">ðŸ“Š</span> <span data-i18n="nav.plOverview">P/L Overview</span></div>
-            <div class="nav-item sub-item" data-page="sales-parts" onclick="navigateTo('sales-parts')"><span class="icon">ðŸ”§</span> <span data-i18n="nav.byPart">By Part Number</span></div>
-            <div class="nav-item sub-item" data-page="sales-customers" onclick="navigateTo('sales-customers')"><span class="icon">ðŸ‘¥</span> <span data-i18n="nav.byCustomer">By Customer</span></div>
-            <div class="nav-item sub-item" data-page="sales-dates" onclick="navigateTo('sales-dates')"><span class="icon">ðŸ“…</span> <span data-i18n="nav.byDate">By Date</span></div>
+            <div class="nav-section-title" data-i18n="nav.salesFinance">Sales &amp; Finance</div>
+            <div class="nav-item" data-page="sales-overview" onclick="navigateTo('sales-overview')"><span class="icon">📊</span> <span data-i18n="nav.plOverview">P/L Overview</span></div>
+            <div class="nav-item sub-item" data-page="sales-parts" onclick="navigateTo('sales-parts')"><span class="icon">🔧</span> <span data-i18n="nav.byPart">By Part Number</span></div>
+            <div class="nav-item sub-item" data-page="sales-customers" onclick="navigateTo('sales-customers')"><span class="icon">👥</span> <span data-i18n="nav.byCustomer">By Customer</span></div>
+            <div class="nav-item sub-item" data-page="sales-dates" onclick="navigateTo('sales-dates')"><span class="icon">📅</span> <span data-i18n="nav.byDate">By Date</span></div>
         </div>
         <div class="nav-section">
             <div class="nav-section-title" data-i18n="nav.billOfMaterials">Bill of Materials</div>
-            <div class="nav-item" data-page="bom" onclick="navigateTo('bom')"><span class="icon">ðŸ“‹</span> <span data-i18n="nav.bomExplorer">BOM Explorer</span></div>
+            <div class="nav-item" data-page="bom" onclick="navigateTo('bom')"><span class="icon">📋</span> <span data-i18n="nav.bomExplorer">BOM Explorer</span></div>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
     </div>
@@ -296,7 +304,7 @@
             </div>
             <div class="dept-grid">
                 <div class="dept-card production" onclick="navigateTo('orders-queue')">
-                    <div class="icon-large">ðŸ­</div>
+                    <div class="icon-large">🏭</div>
                     <h3 data-i18n="dept.production">Production Planning</h3>
                     <p data-i18n="dept.productionDesc">View orders to make, component status, and production queue</p>
                     <div class="metrics">
@@ -306,8 +314,8 @@
                     </div>
                 </div>
                 <div class="dept-card sales" onclick="navigateTo('sales-overview')">
-                    <div class="icon-large">ðŸ’°</div>
-                    <h3 data-i18n="dept.sales">Sales & P/L Analytics</h3>
+                    <div class="icon-large">💰</div>
+                    <h3 data-i18n="dept.sales">Sales &amp; P/L Analytics</h3>
                     <p data-i18n="dept.salesDesc">Revenue, profitability, and customer analysis</p>
                     <div class="metrics">
                         <div class="metric"><div class="value positive" id="deptSalesRev">-</div><div class="label" data-i18n="dept.revenue">Revenue</div></div>
@@ -316,7 +324,7 @@
                     </div>
                 </div>
                 <div class="dept-card inventory" onclick="navigateTo('inventory')">
-                    <div class="icon-large">ðŸ“¦</div>
+                    <div class="icon-large">📦</div>
                     <h3 data-i18n="dept.inventory">Inventory Management</h3>
                     <p data-i18n="dept.inventoryDesc">Stock levels, reorder points, and material tracking</p>
                 </div>
@@ -338,7 +346,7 @@
             <div class="page-header">
                 <div><h2 data-i18n="ordersData.title">All Orders Data</h2><p data-i18n="ordersData.subtitle">Complete order database with all statuses</p></div>
                 <div style="display:flex;gap:10px;align-items:center;">
-                    <button class="toolbar-btn" onclick="navigateTo('main')">â† <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
                     <div class="last-updated"><span class="dot"></span><span id="ordersDataLastUpdated">-</span></div>
                 </div>
             </div>
@@ -357,7 +365,7 @@
                 </div>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersDataSearch" placeholder="Search..." oninput="filterOrdersDataTable()">
-                <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 Export</button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="ordersDataTotalOrders">-</div><div class="sub" id="ordersDataTotalUnits">- units</div></div>
@@ -378,7 +386,7 @@
             <div class="page-header">
                 <div><h2 data-i18n="ordersQueue.title">Orders Queue - Need to Make</h2><p data-i18n="ordersQueue.subtitle">Orders pending production (Pending + Approved status)</p></div>
                 <div style="display:flex;gap:10px;align-items:center;">
-                    <button class="toolbar-btn" onclick="navigateTo('main')">â† Back</button>
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← Back</button>
                     <div class="last-updated"><span class="dot"></span><span id="ordersQueueLastUpdated">-</span></div>
                 </div>
             </div>
@@ -390,10 +398,10 @@
                 </div>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersQueueSearch" placeholder="Search..." oninput="filterOrdersQueueTable()">
-                <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()">📥 Export</button>
             </div>
             <div class="info-banner warning" id="ordersQueueMissingBanner">
-                <span class="icon">âš ï¸</span>
+                <span class="icon">⚠️</span>
                 <p><strong id="ordersQueueMissingCount">0</strong> <span data-i18n="prod.missingMsg">orders have missing components.</span></p>
             </div>
             <div class="stats-grid">
@@ -414,7 +422,7 @@
         <div id="orders-staged" class="page">
             <div class="page-header">
                 <div><h2 data-i18n="ordersStaged.title">Staged Orders - Ready to Ship</h2></div>
-                <button class="toolbar-btn" onclick="navigateTo('main')">â† Back</button>
+                <button class="toolbar-btn" onclick="navigateTo('main')">← Back</button>
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
@@ -424,7 +432,7 @@
                 </div>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersStagedSearch" placeholder="Search..." oninput="filterOrdersStagedTable()">
-                <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 Export</button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Staged Orders</div><div class="value" id="ordersStagedTotalOrders">-</div><div class="sub" id="ordersStagedTotalUnits">- units</div></div>
@@ -444,7 +452,7 @@
         <div id="orders-shipped" class="page">
             <div class="page-header">
                 <div><h2 data-i18n="ordersShipped.title">Shipped Orders History</h2></div>
-                <button class="toolbar-btn" onclick="navigateTo('main')">â† Back</button>
+                <button class="toolbar-btn" onclick="navigateTo('main')">← Back</button>
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
@@ -458,10 +466,10 @@
                 <div class="toolbar-group">
                     <label>To:</label><input type="date" id="ordersShippedToDate" onchange="applyShippedDateFilter()">
                 </div>
-                <button class="toolbar-btn" onclick="resetShippedDateFilter()">ðŸ”„ Reset</button>
+                <button class="toolbar-btn" onclick="resetShippedDateFilter()">🔄 Reset</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersShippedSearch" placeholder="Search..." oninput="filterOrdersShippedTable()">
-                <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 Export</button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Shipped Orders</div><div class="value" id="ordersShippedTotalOrders">-</div><div class="sub" id="ordersShippedTotalUnits">- units</div></div>
@@ -486,11 +494,11 @@
                 <input type="text" class="search-box" id="invSearch" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')">All</button>
-                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">âš ï¸ Low Stock</button>
-                    <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">ðŸ”§ Needs Production</button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠️ Low Stock</button>
+                    <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 Needs Production</button>
                 </div>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportInvCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportInvCSV()">📥 Export</button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Total Items</div><div class="value" id="invStatTotal">-</div><div class="sub" id="invStatTypes">- product types</div></div>
@@ -523,7 +531,11 @@
         <div id="sales-overview" class="page">
             <div class="page-header">
                 <div><h2 data-i18n="sales.title">P/L Overview</h2></div>
-                <button class="toolbar-btn" onclick="navigateTo('main')">â† Back</button>
+                <button class="toolbar-btn" onclick="navigateTo('main')">← Back</button>
+            </div>
+            <div class="info-banner danger" id="salesCriticalBanner">
+                <span class="icon">🚨</span>
+                <p><strong>Critical Loss Parts:</strong> <span id="salesCriticalText">-</span></p>
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
@@ -532,13 +544,23 @@
                     <button class="category-btn molding" id="salesBtnMolding" onclick="toggleSalesCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportSalesCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportSalesCSV()">📥 Export</button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Total Revenue</div><div class="value" id="salesStatRevenue">-</div><div class="sub" id="salesStatOrderCount">- orders</div></div>
                 <div class="stat-card"><div class="label">Total P/L</div><div class="value" id="salesStatPL">-</div><div class="sub" id="salesStatMargin">Margin: -%</div></div>
                 <div class="stat-card"><div class="label">Shipped P/L</div><div class="value" id="salesStatShippedPL">-</div><div class="sub" id="salesStatShippedCount">- shipped</div></div>
                 <div class="stat-card"><div class="label">Forecasted P/L</div><div class="value" id="salesStatForecastPL">-</div><div class="sub" id="salesStatForecastCount">- pending</div></div>
+            </div>
+            <div class="grid-2">
+                <div class="chart-container">
+                    <div class="chart-header"><h3>Top 10 P/L Impact</h3></div>
+                    <div class="chart-wrapper large"><canvas id="salesLossesChart"></canvas></div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-header"><h3>Customer P/L Distribution (Top 8)</h3></div>
+                    <div class="chart-wrapper large"><canvas id="salesCustomerPieChart"></canvas></div>
+                </div>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h3>Monthly P/L Trend</h3></div>
@@ -602,7 +624,7 @@
                 <div class="drilldown-header">
                     <div>
                         <div class="breadcrumb">Parts › <span id="partsOrdersBreadcrumbPart">-</span> › <span id="partsOrdersBreadcrumbCustomer">-</span></div>
-                        <h3>Orders & Price History</h3>
+                        <h3>Orders &amp; Price History</h3>
                     </div>
                     <div>
                         <button class="back-btn" onclick="backToPartsCustomers()">← Back</button>
@@ -779,7 +801,7 @@
                 <div><h2 data-i18n="bom.title">BOM Explorer</h2></div>
             </div>
             <div class="info-banner info active">
-                <span class="icon">â„¹ï¸</span>
+                <span class="icon">ℹ️</span>
                 <p><strong>Note:</strong> BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</p>
             </div>
             <div class="tabs">
@@ -890,15 +912,15 @@
             es: {
                 'logoSubtitle': 'Panel de Operaciones',
                 'nav.main': 'Panel Principal',
-                'nav.production': 'PRODUCCIÃ“N',
-                'nav.ordersData': 'Datos de Ã“rdenes',
+                'nav.production': 'PRODUCCIÓN',
+                'nav.ordersData': 'Datos de Órdenes',
                 'nav.ordersQueue': 'Por Fabricar',
                 'nav.ordersStaged': 'Listo para Enviar',
                 'nav.ordersShipped': 'Enviados',
                 'nav.inventory': 'Inventario',
                 'nav.salesFinance': 'VENTAS Y FINANZAS',
                 'nav.plOverview': 'Resumen P/L',
-                'nav.byPart': 'Por NÃºmero de Parte',
+                'nav.byPart': 'Por Número de Parte',
                 'nav.byCustomer': 'Por Cliente',
                 'nav.byDate': 'Por Fecha',
                 'nav.billOfMaterials': 'LISTA DE MATERIALES',
@@ -919,30 +941,30 @@
                 'status.readyToShip': 'Listo para Enviar',
                 'status.shipped': 'Enviado',
                 'status.urgent': 'URGENTE',
-                'dept.production': 'PlanificaciÃ³n de ProducciÃ³n',
-                'dept.productionDesc': 'Ver Ã³rdenes a fabricar y estado de componentes',
+                'dept.production': 'Planificación de Producción',
+                'dept.productionDesc': 'Ver órdenes a fabricar y estado de componentes',
                 'dept.needToMake': 'Por Fabricar',
                 'dept.units': 'Unidades',
-                'dept.sales': 'Ventas y AnÃ¡lisis P/L',
-                'dept.salesDesc': 'Ingresos, rentabilidad y anÃ¡lisis de clientes',
+                'dept.sales': 'Ventas y Análisis P/L',
+                'dept.salesDesc': 'Ingresos, rentabilidad y análisis de clientes',
                 'dept.revenue': 'Ingresos',
                 'dept.profit': 'Ganancia',
                 'dept.orders': 'Pedidos',
-                'dept.inventory': 'GestiÃ³n de Inventario',
+                'dept.inventory': 'Gestión de Inventario',
                 'dept.inventoryDesc': 'Niveles de stock y seguimiento de materiales',
-                'chart.ordersByStatus': 'Ã“rdenes por Estado',
-                'chart.upcomingDeadlines': 'PrÃ³ximos Vencimientos (14 DÃ­as)',
-                'ordersData.title': 'Todos los Datos de Ã“rdenes',
-                'ordersData.subtitle': 'Base de datos completa de Ã³rdenes',
-                'ordersQueue.title': 'Cola de Ã“rdenes - Por Fabricar',
-                'ordersQueue.subtitle': 'Ã“rdenes pendientes de producciÃ³n',
-                'ordersStaged.title': 'Ã“rdenes en Staging - Listas para Enviar',
-                'ordersShipped.title': 'Historial de Ã“rdenes Enviadas',
-                'prod.missingMsg': 'Ã³rdenes tienen componentes faltantes.',
+                'chart.ordersByStatus': 'Órdenes por Estado',
+                'chart.upcomingDeadlines': 'Próximos Vencimientos (14 Días)',
+                'ordersData.title': 'Todos los Datos de Órdenes',
+                'ordersData.subtitle': 'Base de datos completa de órdenes',
+                'ordersQueue.title': 'Cola de Órdenes - Por Fabricar',
+                'ordersQueue.subtitle': 'Órdenes pendientes de producción',
+                'ordersStaged.title': 'Órdenes en Staging - Listas para Enviar',
+                'ordersShipped.title': 'Historial de Órdenes Enviadas',
+                'prod.missingMsg': 'órdenes tienen componentes faltantes.',
                 'btn.backToDashboard': 'Volver',
-                'col.line': 'LÃ­nea',
+                'col.line': 'Línea',
                 'col.priority': 'Prioridad',
-                'col.daysUntil': 'DÃ­as Restantes',
+                'col.daysUntil': 'Días Restantes',
                 'col.requestDate': 'Fecha de Solicitud',
                 'col.customer': 'Cliente',
                 'col.ifNum': 'IF #',
@@ -955,12 +977,12 @@
                 'col.bearings': 'Baleros',
                 'col.status': 'Estado',
                 'col.assigned': 'Asignado a',
-                'col.shippedDate': 'Fecha de EnvÃ­o',
+                'col.shippedDate': 'Fecha de Envío',
                 'col.revenue': 'Ingresos',
                 'col.pl': 'P/L',
                 'missing': 'Faltante',
                 'sales.title': 'Resumen P/L',
-                'inv.title': 'GestiÃ³n de Inventario',
+                'inv.title': 'Gestión de Inventario',
                 'bom.title': 'Explorador BOM'
             }
         };
@@ -976,7 +998,6 @@
                 if (translations[lang][key]) el.textContent = translations[lang][key];
             });
             document.getElementById('logoSubtitle').textContent = translations[lang]['logoSubtitle'];
-            // Re-render current page
             if (currentPage.startsWith('orders-')) {
                 if (currentPage === 'orders-data') updateOrdersDataPage();
                 else if (currentPage === 'orders-queue') updateOrdersQueuePage();
@@ -1005,6 +1026,7 @@
             LINE: 'Line',
             CUSTOMER: 'Customer',
             IF_NUM: 'IF #',
+            PO_NUM: 'Customer PO',
             PART: 'Part #',
             QTY: 'Order Qty',
             PACKAGING: 'Packaging (tipo de empaquetado)',
@@ -1017,6 +1039,7 @@
             DAYS_UNTIL: 'Days until promise date',
             SHIPPED_DATE: 'Shipped Date',
             REQUESTED_DATE: 'Requested Completion Date',
+            UNIT_PRICE: 'Unit Price',
             REVENUE: 'Revenue',
             PL: 'P/L',
             PL_TOTAL: 'P/L total',
@@ -1041,8 +1064,10 @@
             STATUS: ['Work order Internal Status', 'Work order Status', 'Status', 'Estado'],
             DAYS_UNTIL: ['Days until promise date', 'Dias faltantes', 'Days until', 'Days remaining'],
             IF_NUM: ['IF #', 'IF#', 'IF Number'],
+            PO_NUM: ['Customer PO', 'PO#', 'PO Number', 'Customer PO#'],
             PL: ['P/L', 'P/L total', 'PL', 'Profit/Loss'],
-            REVENUE: ['Revenue', 'Total Sell Price', 'Sales']
+            REVENUE: ['Revenue', 'Total Sell Price', 'Sales'],
+            UNIT_PRICE: ['Unit Price', 'Price', 'Sell Price']
         };
         
         function getVal(row, key) {
@@ -1065,7 +1090,9 @@
             return null;
         }
         
-        // State
+        // ============================================================
+        // STATE VARIABLES
+        // ============================================================
         let allData = [];
         let inventoryData = [];
         let bomFinalData = [], bomSubData = [], bomIndividualData = [];
@@ -1079,7 +1106,9 @@
         let ordersQueueFilters = { categories: { rolltech: true, molding: false } };
         let ordersStagedFilters = { categories: { rolltech: true, molding: false } };
         let ordersShippedFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null };
-        let salesFilters = { categories: { rolltech: true, molding: false } };
+        let salesFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null };
+        let partsFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null, watchlistOnly: false };
+        let customersFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null, watchlistOnly: false };
         let datesFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null };
         
         // Sort states
@@ -1087,8 +1116,19 @@
         let ordersQueueSort = { field: 'daysUntil', asc: true };
         let ordersStagedSort = { field: 'customer', asc: true };
         let ordersShippedSort = { field: 'shippedDate', asc: false };
+        let partsSort = { field: 'pl', asc: false };
+        let customersSort = { field: 'pl', asc: false };
         let invFilter = 'all';
         let invSort = { field: 'partNumber', asc: true };
+        
+        // Drilldown state
+        let currentDrilldownPart = null;
+        let currentDrilldownCustomer = null;
+        let currentDrilldownMonth = null;
+        
+        // Watchlist (localStorage)
+        let watchlistParts = JSON.parse(localStorage.getItem('rolltech_watchlist_parts') || '[]');
+        let watchlistCustomers = JSON.parse(localStorage.getItem('rolltech_watchlist_customers') || '[]');
 
         // ============================================================
         // UTILITIES
@@ -1102,6 +1142,73 @@
         const hasMissingCostData = row => isEmpty(row[COL.VARIABLE_COST]) || isEmpty(row[COL.TOTAL_COST]) || (isEmpty(row[COL.PL]) && isEmpty(row[COL.PL_TOTAL]));
         const getPLValue = row => { if (!isEmpty(row[COL.PL])) return parseNumber(row[COL.PL]); if (!isEmpty(row[COL.PL_TOTAL])) return parseNumber(row[COL.PL_TOTAL]); return 0; };
         
+        // Date attribution helpers (NEW in v5)
+        function getAttributionDate(row) {
+            const status = getStatus(row);
+            if (status === 'shipped') return row[COL.SHIPPED_DATE];
+            return row[COL.REQUESTED_DATE] || getVal(row, 'REQUEST_DATE');
+        }
+        
+        function getMonthKey(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                return `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+            }
+            return dateStr.substring(0, 7);
+        }
+        
+        function formatMonthLabel(monthKey) {
+            if (!monthKey) return '-';
+            const [year, month] = monthKey.split('-');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${months[parseInt(month) - 1]} ${year}`;
+        }
+        
+        function getUnitPrice(row) {
+            const unitPrice = parseNumber(row[COL.UNIT_PRICE]);
+            if (unitPrice > 0) return unitPrice;
+            const revenue = parseNumber(row[COL.REVENUE]);
+            const qty = parseNumber(getVal(row, 'QTY'));
+            return qty > 0 ? revenue / qty : 0;
+        }
+        
+        function getProfitPerPart(row) {
+            const pl = getPLValue(row);
+            const qty = parseNumber(getVal(row, 'QTY'));
+            return qty > 0 ? pl / qty : 0;
+        }
+        
+        function getContributionBadge(margin) {
+            if (margin < -10) return '<span class="badge" style="background:var(--danger);">CRITICAL</span>';
+            if (margin < 0) return '<span class="badge" style="background:var(--warning);color:#1a202c;">LOW</span>';
+            if (margin < 15) return '<span class="badge" style="background:var(--accent);">TARGET</span>';
+            return '<span class="badge" style="background:var(--success);">PROFITABLE</span>';
+        }
+        
+        // Watchlist functions
+        function toggleWatchlistPart(part) {
+            const idx = watchlistParts.indexOf(part);
+            if (idx > -1) watchlistParts.splice(idx, 1);
+            else watchlistParts.push(part);
+            localStorage.setItem('rolltech_watchlist_parts', JSON.stringify(watchlistParts));
+            updateSalesPartsPage();
+        }
+        
+        function toggleWatchlistCustomer(customer) {
+            const idx = watchlistCustomers.indexOf(customer);
+            if (idx > -1) watchlistCustomers.splice(idx, 1);
+            else watchlistCustomers.push(customer);
+            localStorage.setItem('rolltech_watchlist_customers', JSON.stringify(watchlistCustomers));
+            updateSalesCustomersPage();
+        }
+        
+        function isInWatchlist(type, value) {
+            if (type === 'part') return watchlistParts.includes(value);
+            if (type === 'customer') return watchlistCustomers.includes(value);
+            return false;
+        }
+        
         const getCategory = row => {
             const cat = (getVal(row, 'CATEGORY') || '').toLowerCase();
             if (cat.includes('roll tech')) return 'rolltech';
@@ -1109,7 +1216,6 @@
             return 'other';
         };
         
-        // UPDATED: Maps both "Pending" AND "Approved" to 'pending' (Need to Make)
         const getStatus = row => {
             const status = (getVal(row, 'STATUS') || '').toLowerCase();
             if (status.includes('pending') || status.includes('approved')) return 'pending';
@@ -1119,7 +1225,6 @@
             return status;
         };
         
-        // UPDATED: Uses translated labels
         const getStatusBadge = status => {
             const s = (status || '').toLowerCase();
             if (s.includes('shipped') || s === 'shipped') return `<span class="badge shipped">${t('status.shipped')}</span>`;
@@ -1129,7 +1234,6 @@
             return `<span class="badge">${status || '-'}</span>`;
         };
         
-        // UPDATED: Uses translated "URGENT" label
         const getPriorityBadge = (priority, urgent) => {
             const p = parseNumber(priority);
             const isUrgent = (urgent || '').toLowerCase() === 'urgent';
@@ -1184,7 +1288,7 @@
                 updateMainDashboard();
             } catch (e) {
                 console.error('Load error:', e);
-                document.getElementById('loadingState').innerHTML = `<h3 style="color:var(--danger);">âš ï¸ Error</h3><p>${e.message}</p><button onclick="location.reload()" style="padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;margin-top:12px;">Retry</button>`;
+                document.getElementById('loadingState').innerHTML = `<h3 style="color:var(--danger);">⚠️ Error</h3><p>${e.message}</p><button onclick="location.reload()" style="padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;margin-top:12px;">Retry</button>`;
             }
         }
         
@@ -1270,6 +1374,12 @@
             document.getElementById(page).classList.add('active');
             document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
             currentPage = page;
+            
+            // Close all drilldowns when navigating
+            closeAllPartsDrilldowns();
+            closeAllCustomersDrilldowns();
+            closeAllDatesDrilldowns();
+            
             switch(page) {
                 case 'main': updateMainDashboard(); break;
                 case 'orders-data': updateOrdersDataPage(); break;
@@ -1372,455 +1482,7 @@
         }
 
         // ============================================================
-        // ORDERS DATA PAGE (All orders with status filters)
-        // ============================================================
-        function toggleOrdersDataCategory(cat) {
-            ordersDataFilters.categories[cat] = !ordersDataFilters.categories[cat];
-            if (!ordersDataFilters.categories.rolltech && !ordersDataFilters.categories.molding) { ordersDataFilters.categories[cat] = true; return; }
-            document.getElementById('ordersDataBtnRollTech').classList.toggle('active', ordersDataFilters.categories.rolltech);
-            document.getElementById('ordersDataBtnMolding').classList.toggle('active', ordersDataFilters.categories.molding);
-            updateOrdersDataPage();
-        }
-        
-        function toggleOrdersDataStatus(status) {
-            ordersDataFilters.statuses[status] = !ordersDataFilters.statuses[status];
-            document.getElementById(`ordersDataStatus${status.charAt(0).toUpperCase() + status.slice(1)}`).classList.toggle('active', ordersDataFilters.statuses[status]);
-            updateOrdersDataPage();
-        }
-        
-        function updateOrdersDataPage() {
-            const data = allData.filter(r => {
-                const cat = getCategory(r);
-                const status = getStatus(r);
-                if (!ordersDataFilters.categories[cat]) return false;
-                if (!ordersDataFilters.statuses[status]) return false;
-                return true;
-            });
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const needToMake = data.filter(r => getStatus(r) === 'pending').length;
-            const making = data.filter(r => getStatus(r) === 'wip').length;
-            const readyToShip = data.filter(r => getStatus(r) === 'staged').length;
-            
-            document.getElementById('ordersDataTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersDataTotalUnits').textContent = `${formatNumber(totalQty)} units`;
-            document.getElementById('ordersDataNeedToMake').textContent = formatNumber(needToMake);
-            document.getElementById('ordersDataMaking').textContent = formatNumber(making);
-            document.getElementById('ordersDataReadyToShip').textContent = formatNumber(readyToShip);
-            document.getElementById('ordersDataLastUpdated').textContent = new Date().toLocaleTimeString();
-            
-            renderOrdersDataTableHeader();
-            renderOrdersDataTable(data);
-        }
-        
-        function renderOrdersDataTableHeader() {
-            const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
-                { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'customer', label: t('col.customer') },
-                { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
-                { key: 'tire', label: t('col.tire') }, { key: 'hub', label: t('col.hub') },
-                { key: 'bearings', label: t('col.bearings') }, { key: 'status', label: t('col.status') }
-            ];
-            document.getElementById('ordersDataTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersDataTable('${h.key}')">${h.label} <span class="sort-indicator">â†•</span></th>`).join('');
-        }
-        
-        function renderOrdersDataTable(data) {
-            let sorted = [...data].sort((a, b) => {
-                let va, vb;
-                switch(ordersDataSort.field) {
-                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
-                    case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
-                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
-                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
-                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
-                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
-                    case 'status': va = getStatus(a); vb = getStatus(b); break;
-                    default: va = a[ordersDataSort.field]; vb = b[ordersDataSort.field];
-                }
-                if (typeof va === 'string') return ordersDataSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
-                return ordersDataSort.asc ? va - vb : vb - va;
-            });
-            
-            const search = (document.getElementById('ordersDataSearch').value || '').toLowerCase();
-            if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
-            }
-            
-            document.getElementById('ordersDataTableCount').textContent = `${sorted.length} orders`;
-            const tbody = document.getElementById('ordersDataTableBody');
-            tbody.innerHTML = sorted.map(r => {
-                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
-                const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
-                const isMissing = isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS'));
-                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
-                    <td class="${daysClass}">${daysUntil || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td>${formatComponent(getVal(r, 'TIRE'))}</td>
-                    <td>${formatComponent(getVal(r, 'HUB'))}</td>
-                    <td>${formatComponent(getVal(r, 'BEARINGS'))}</td>
-                    <td>${getStatusBadge(getStatus(r))}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function sortOrdersDataTable(field) {
-            if (ordersDataSort.field === field) ordersDataSort.asc = !ordersDataSort.asc;
-            else { ordersDataSort.field = field; ordersDataSort.asc = true; }
-            updateOrdersDataPage();
-        }
-        
-        function filterOrdersDataTable() { updateOrdersDataPage(); }
-        
-        function exportOrdersDataToCSV() {
-            const data = allData.filter(r => ordersDataFilters.categories[getCategory(r)] && ordersDataFilters.statuses[getStatus(r)]);
-            const headers = ['Line','Priority','Days Until','Customer','Part','Qty','Tire','Hub','Bearings','Status'];
-            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'PRIORITY'),getVal(r,'DAYS_UNTIL'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'BEARINGS'),getStatus(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_data.csv');
-        }
-
-        // ============================================================
-        // ORDERS QUEUE PAGE (Need to Make = Pending + Approved)
-        // ============================================================
-        function toggleOrdersQueueCategory(cat) {
-            ordersQueueFilters.categories[cat] = !ordersQueueFilters.categories[cat];
-            if (!ordersQueueFilters.categories.rolltech && !ordersQueueFilters.categories.molding) { ordersQueueFilters.categories[cat] = true; return; }
-            document.getElementById('ordersQueueBtnRollTech').classList.toggle('active', ordersQueueFilters.categories.rolltech);
-            document.getElementById('ordersQueueBtnMolding').classList.toggle('active', ordersQueueFilters.categories.molding);
-            updateOrdersQueuePage();
-        }
-        
-        function updateOrdersQueuePage() {
-            // Queue = only "pending" status (which includes both Pending and Approved from spreadsheet)
-            const data = allData.filter(r => {
-                const cat = getCategory(r);
-                const status = getStatus(r);
-                return ordersQueueFilters.categories[cat] && status === 'pending';
-            });
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const urgentCount = data.filter(r => (getVal(r, 'URGENT') || '').toLowerCase() === 'urgent').length;
-            const dueWeek = data.filter(r => { const d = parseNumber(getVal(r, 'DAYS_UNTIL')); return d >= 0 && d <= 7; });
-            const dueWeekQty = dueWeek.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const componentsReady = data.filter(r => !isMissingComponent(getVal(r,'TIRE')) && !isMissingComponent(getVal(r,'HUB')) && !isMissingComponent(getVal(r,'BEARINGS'))).length;
-            const missingOrders = data.filter(r => isMissingComponent(getVal(r,'TIRE')) || isMissingComponent(getVal(r,'HUB')) || isMissingComponent(getVal(r,'BEARINGS')));
-            
-            document.getElementById('ordersQueueTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersQueueTotalUnits').textContent = `${formatNumber(totalQty)} units`;
-            document.getElementById('ordersQueueUrgentCount').textContent = formatNumber(urgentCount);
-            document.getElementById('ordersQueueDueWeek').textContent = formatNumber(dueWeek.length);
-            document.getElementById('ordersQueueDueWeekUnits').textContent = `${formatNumber(dueWeekQty)} units`;
-            document.getElementById('ordersQueueComponentsReady').textContent = formatNumber(componentsReady);
-            document.getElementById('ordersQueueLastUpdated').textContent = new Date().toLocaleTimeString();
-            
-            if (missingOrders.length > 0) {
-                document.getElementById('ordersQueueMissingCount').textContent = missingOrders.length;
-                document.getElementById('ordersQueueMissingBanner').classList.add('active');
-            } else {
-                document.getElementById('ordersQueueMissingBanner').classList.remove('active');
-            }
-            
-            renderOrdersQueueTableHeader();
-            renderOrdersQueueTable(data);
-        }
-        
-        function renderOrdersQueueTableHeader() {
-            const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
-                { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'requestDate', label: t('col.requestDate') },
-                { key: 'customer', label: t('col.customer') }, { key: 'ifNum', label: t('col.ifNum') },
-                { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
-                { key: 'packaging', label: t('col.packaging') }, { key: 'tire', label: t('col.tire') },
-                { key: 'hub', label: t('col.hub') }, { key: 'hubMold', label: t('col.hubMold') },
-                { key: 'bearings', label: t('col.bearings') }, { key: 'assigned', label: t('col.assigned') }
-            ];
-            document.getElementById('ordersQueueTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersQueueTable('${h.key}')">${h.label} <span class="sort-indicator">â†•</span></th>`).join('');
-        }
-        
-        function renderOrdersQueueTable(data) {
-            let sorted = [...data].sort((a, b) => {
-                let va, vb;
-                switch(ordersQueueSort.field) {
-                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
-                    case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
-                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
-                    case 'requestDate': va = parseDate(getVal(a, 'REQUEST_DATE')) || new Date(0); vb = parseDate(getVal(b, 'REQUEST_DATE')) || new Date(0); break;
-                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
-                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
-                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
-                    default: va = getVal(a, ordersQueueSort.field) || ''; vb = getVal(b, ordersQueueSort.field) || '';
-                }
-                if (typeof va === 'string') return ordersQueueSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
-                return ordersQueueSort.asc ? va - vb : vb - va;
-            });
-            
-            const search = (document.getElementById('ordersQueueSearch').value || '').toLowerCase();
-            if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'LINE') || '').toString().includes(search));
-            }
-            
-            document.getElementById('ordersQueueTableCount').textContent = `${sorted.length} orders`;
-            const tbody = document.getElementById('ordersQueueTableBody');
-            tbody.innerHTML = sorted.map(r => {
-                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
-                const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
-                const isMissing = isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS'));
-                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
-                    <td class="${daysClass}">${daysUntil || '-'}</td>
-                    <td>${getVal(r, 'REQUEST_DATE') || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td>${getVal(r, 'IF_NUM') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                    <td>${formatComponent(getVal(r, 'TIRE'))}</td>
-                    <td>${formatComponent(getVal(r, 'HUB'))}</td>
-                    <td>${getVal(r, 'HUB_MOLD') || '-'}</td>
-                    <td>${formatComponent(getVal(r, 'BEARINGS'))}</td>
-                    <td>${getVal(r, 'ASSIGNED') || '-'}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function sortOrdersQueueTable(field) {
-            if (ordersQueueSort.field === field) ordersQueueSort.asc = !ordersQueueSort.asc;
-            else { ordersQueueSort.field = field; ordersQueueSort.asc = true; }
-            updateOrdersQueuePage();
-        }
-        
-        function filterOrdersQueueTable() { updateOrdersQueuePage(); }
-        
-        function exportOrdersQueueToCSV() {
-            const data = allData.filter(r => ordersQueueFilters.categories[getCategory(r)] && getStatus(r) === 'pending');
-            const headers = ['Line','Priority','Days Until','Request Date','Customer','IF#','Part','Qty','Packaging','Tire','Hub','Hub Mold','Bearings','Assigned'];
-            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'PRIORITY'),getVal(r,'DAYS_UNTIL'),getVal(r,'REQUEST_DATE'),getVal(r,'CUSTOMER'),getVal(r,'IF_NUM'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'HUB_MOLD'),getVal(r,'BEARINGS'),getVal(r,'ASSIGNED')].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_queue.csv');
-        }
-
-        // ============================================================
-        // ORDERS STAGED PAGE (Ready to Ship)
-        // ============================================================
-        function toggleOrdersStagedCategory(cat) {
-            ordersStagedFilters.categories[cat] = !ordersStagedFilters.categories[cat];
-            if (!ordersStagedFilters.categories.rolltech && !ordersStagedFilters.categories.molding) { ordersStagedFilters.categories[cat] = true; return; }
-            document.getElementById('ordersStagedBtnRollTech').classList.toggle('active', ordersStagedFilters.categories.rolltech);
-            document.getElementById('ordersStagedBtnMolding').classList.toggle('active', ordersStagedFilters.categories.molding);
-            updateOrdersStagedPage();
-        }
-        
-        function updateOrdersStagedPage() {
-            const data = allData.filter(r => {
-                const cat = getCategory(r);
-                const status = getStatus(r);
-                return ordersStagedFilters.categories[cat] && status === 'staged';
-            });
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRevenue = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const avgValue = data.length > 0 ? totalRevenue / data.length : 0;
-            const customers = new Set(data.map(r => getVal(r, 'CUSTOMER'))).size;
-            
-            document.getElementById('ordersStagedTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersStagedTotalUnits').textContent = `${formatNumber(totalQty)} units`;
-            document.getElementById('ordersStagedRevenue').textContent = formatCurrency(totalRevenue);
-            document.getElementById('ordersStagedAvgValue').textContent = formatCurrency(avgValue);
-            document.getElementById('ordersStagedCustomers').textContent = formatNumber(customers);
-            
-            renderOrdersStagedTableHeader();
-            renderOrdersStagedTable(data);
-        }
-        
-        function renderOrdersStagedTableHeader() {
-            const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'customer', label: t('col.customer') },
-                { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
-                { key: 'packaging', label: t('col.packaging') }, { key: 'revenue', label: t('col.revenue') },
-                { key: 'requestDate', label: t('col.requestDate') }, { key: 'assigned', label: t('col.assigned') }
-            ];
-            document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersStagedTable('${h.key}')">${h.label} <span class="sort-indicator">â†•</span></th>`).join('');
-        }
-        
-        function renderOrdersStagedTable(data) {
-            let sorted = [...data].sort((a, b) => {
-                let va, vb;
-                switch(ordersStagedSort.field) {
-                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
-                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
-                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
-                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
-                    case 'revenue': va = parseNumber(a[COL.REVENUE]); vb = parseNumber(b[COL.REVENUE]); break;
-                    default: va = getVal(a, ordersStagedSort.field) || ''; vb = getVal(b, ordersStagedSort.field) || '';
-                }
-                if (typeof va === 'string') return ordersStagedSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
-                return ordersStagedSort.asc ? va - vb : vb - va;
-            });
-            
-            const search = (document.getElementById('ordersStagedSearch').value || '').toLowerCase();
-            if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
-            }
-            
-            document.getElementById('ordersStagedTableCount').textContent = `${sorted.length} orders`;
-            const tbody = document.getElementById('ordersStagedTableBody');
-            tbody.innerHTML = sorted.map(r => `<tr>
-                <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
-                <td>${getVal(r, 'REQUEST_DATE') || '-'}</td>
-                <td>${getVal(r, 'ASSIGNED') || '-'}</td>
-            </tr>`).join('');
-        }
-        
-        function sortOrdersStagedTable(field) {
-            if (ordersStagedSort.field === field) ordersStagedSort.asc = !ordersStagedSort.asc;
-            else { ordersStagedSort.field = field; ordersStagedSort.asc = true; }
-            updateOrdersStagedPage();
-        }
-        
-        function filterOrdersStagedTable() { updateOrdersStagedPage(); }
-        
-        function exportOrdersStagedToCSV() {
-            const data = allData.filter(r => ordersStagedFilters.categories[getCategory(r)] && getStatus(r) === 'staged');
-            const headers = ['Line','Customer','Part','Qty','Packaging','Revenue','Request Date','Assigned'];
-            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),r[COL.REVENUE],getVal(r,'REQUEST_DATE'),getVal(r,'ASSIGNED')].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_staged.csv');
-        }
-
-        // ============================================================
-        // ORDERS SHIPPED PAGE (History with date filter)
-        // ============================================================
-        function toggleOrdersShippedCategory(cat) {
-            ordersShippedFilters.categories[cat] = !ordersShippedFilters.categories[cat];
-            if (!ordersShippedFilters.categories.rolltech && !ordersShippedFilters.categories.molding) { ordersShippedFilters.categories[cat] = true; return; }
-            document.getElementById('ordersShippedBtnRollTech').classList.toggle('active', ordersShippedFilters.categories.rolltech);
-            document.getElementById('ordersShippedBtnMolding').classList.toggle('active', ordersShippedFilters.categories.molding);
-            updateOrdersShippedPage();
-        }
-        
-        function applyShippedDateFilter() {
-            const fromInput = document.getElementById('ordersShippedFromDate').value;
-            const toInput = document.getElementById('ordersShippedToDate').value;
-            ordersShippedFilters.fromDate = fromInput ? new Date(fromInput) : null;
-            ordersShippedFilters.toDate = toInput ? new Date(toInput) : null;
-            updateOrdersShippedPage();
-        }
-        
-        function resetShippedDateFilter() {
-            document.getElementById('ordersShippedFromDate').value = '';
-            document.getElementById('ordersShippedToDate').value = '';
-            ordersShippedFilters.fromDate = null;
-            ordersShippedFilters.toDate = null;
-            updateOrdersShippedPage();
-        }
-        
-        function updateOrdersShippedPage() {
-            const data = allData.filter(r => {
-                const cat = getCategory(r);
-                const status = getStatus(r);
-                if (!ordersShippedFilters.categories[cat] || status !== 'shipped') return false;
-                
-                if (ordersShippedFilters.fromDate || ordersShippedFilters.toDate) {
-                    const dateStr = r[COL.SHIPPED_DATE];
-                    if (!dateStr) return false;
-                    const rowDate = parseDate(dateStr);
-                    if (!rowDate) return false;
-                    if (ordersShippedFilters.fromDate && rowDate < ordersShippedFilters.fromDate) return false;
-                    if (ordersShippedFilters.toDate && rowDate > ordersShippedFilters.toDate) return false;
-                }
-                return true;
-            });
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRevenue = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            const margin = totalRevenue > 0 ? ((totalPL / totalRevenue) * 100).toFixed(1) : 0;
-            const customers = new Set(data.map(r => getVal(r, 'CUSTOMER'))).size;
-            
-            document.getElementById('ordersShippedTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersShippedTotalUnits').textContent = `${formatNumber(totalQty)} units`;
-            document.getElementById('ordersShippedRevenue').textContent = formatCurrency(totalRevenue);
-            document.getElementById('ordersShippedPL').textContent = formatCurrency(totalPL);
-            document.getElementById('ordersShippedPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('ordersShippedMargin').textContent = `Margin: ${margin}%`;
-            document.getElementById('ordersShippedCustomers').textContent = formatNumber(customers);
-            
-            renderOrdersShippedTableHeader();
-            renderOrdersShippedTable(data);
-        }
-        
-        function renderOrdersShippedTableHeader() {
-            const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'shippedDate', label: t('col.shippedDate') },
-                { key: 'customer', label: t('col.customer') }, { key: 'part', label: t('col.part') },
-                { key: 'qty', label: t('col.qty') }, { key: 'revenue', label: t('col.revenue') },
-                { key: 'pl', label: t('col.pl') }
-            ];
-            document.getElementById('ordersShippedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersShippedTable('${h.key}')">${h.label} <span class="sort-indicator">â†•</span></th>`).join('');
-        }
-        
-        function renderOrdersShippedTable(data) {
-            let sorted = [...data].sort((a, b) => {
-                let va, vb;
-                switch(ordersShippedSort.field) {
-                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
-                    case 'shippedDate': va = parseDate(a[COL.SHIPPED_DATE]) || new Date(0); vb = parseDate(b[COL.SHIPPED_DATE]) || new Date(0); break;
-                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
-                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
-                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
-                    case 'revenue': va = parseNumber(a[COL.REVENUE]); vb = parseNumber(b[COL.REVENUE]); break;
-                    case 'pl': va = getPLValue(a); vb = getPLValue(b); break;
-                    default: va = a[ordersShippedSort.field] || ''; vb = b[ordersShippedSort.field] || '';
-                }
-                if (typeof va === 'string') return ordersShippedSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
-                return ordersShippedSort.asc ? va - vb : vb - va;
-            });
-            
-            const search = (document.getElementById('ordersShippedSearch').value || '').toLowerCase();
-            if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
-            }
-            
-            document.getElementById('ordersShippedTableCount').textContent = `${sorted.length} orders`;
-            const tbody = document.getElementById('ordersShippedTableBody');
-            tbody.innerHTML = sorted.map(r => {
-                const pl = getPLValue(r);
-                return `<tr>
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${r[COL.SHIPPED_DATE] || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
-                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function sortOrdersShippedTable(field) {
-            if (ordersShippedSort.field === field) ordersShippedSort.asc = !ordersShippedSort.asc;
-            else { ordersShippedSort.field = field; ordersShippedSort.asc = true; }
-            updateOrdersShippedPage();
-        }
-        
-        function filterOrdersShippedTable() { updateOrdersShippedPage(); }
-        
-        function exportOrdersShippedToCSV() {
-            const data = allData.filter(r => ordersShippedFilters.categories[getCategory(r)] && getStatus(r) === 'shipped');
-            const headers = ['Line','Shipped Date','Customer','Part','Qty','Revenue','P/L'];
-            const rows = data.map(r => [getVal(r,'LINE'),r[COL.SHIPPED_DATE],getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),r[COL.REVENUE],getPLValue(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_shipped.csv');
-        }
-
-        // ============================================================
-        // UTILITY FUNCTION
+        // Download CSV Utility
         // ============================================================
         function downloadCSV(csv, filename) {
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -1831,348 +1493,167 @@
             a.click();
         }
 
-        // ============================================================
-        // INVENTORY PAGE
-        // ============================================================
-        function setInvFilter(filter) {
-            invFilter = filter;
-            document.getElementById('invFilterAll').classList.toggle('active', filter === 'all');
-            document.getElementById('invFilterLow').classList.toggle('active', filter === 'low');
-            document.getElementById('invFilterNeeded').classList.toggle('active', filter === 'needed');
-            renderInvTable();
-        }
-        
-        function updateInventoryPage() {
-            const lowStock = inventoryData.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
-            const needsProduction = inventoryData.filter(i => i.partsToBeMade > 0);
-            const okStock = inventoryData.filter(i => i.fusionQty >= i.minimum || i.minimum === 0);
-            const productTypes = [...new Set(inventoryData.map(i => i.product).filter(p => p))];
-            
-            document.getElementById('invStatTotal').textContent = formatNumber(inventoryData.length);
-            document.getElementById('invStatTypes').textContent = `${productTypes.length} product types`;
-            document.getElementById('invStatLow').textContent = formatNumber(lowStock.length);
-            document.getElementById('invStatNeeded').textContent = formatNumber(needsProduction.length);
-            document.getElementById('invStatOk').textContent = formatNumber(okStock.length);
-            
-            setInvFilter('all');
-        }
-        
-        function sortInvTable(field) {
-            if (invSort.field === field) invSort.asc = !invSort.asc;
-            else { invSort.field = field; invSort.asc = true; }
-            renderInvTable();
-        }
-        
-        function renderInvTable() {
-            let data = [...inventoryData];
-            const searchTerm = (document.getElementById('invSearch')?.value || '').toLowerCase();
-            
-            if (invFilter === 'low') data = data.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
-            else if (invFilter === 'needed') data = data.filter(i => i.partsToBeMade > 0);
-            
-            if (searchTerm) {
-                data = data.filter(i => (i.partNumber || '').toLowerCase().includes(searchTerm) || (i.product || '').toLowerCase().includes(searchTerm) || (i.moldType || '').toLowerCase().includes(searchTerm));
-            }
-            
-            data.sort((a, b) => {
-                let va = a[invSort.field], vb = b[invSort.field];
-                if (typeof va === 'string') return invSort.asc ? (va || '').localeCompare(vb || '') : (vb || '').localeCompare(va || '');
-                return invSort.asc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
-            });
-            
-            document.getElementById('invTableCount').textContent = `${data.length} items`;
-            const tbody = document.getElementById('invTableBody');
-            tbody.innerHTML = data.map(i => {
-                const isLow = i.fusionQty < i.minimum && i.minimum > 0;
-                const needsMake = i.partsToBeMade > 0;
-                const rowClass = isLow ? 'inv-low' : (needsMake ? 'inv-warning' : '');
-                const statusBadge = isLow ? '<span class="badge" style="background:var(--danger);color:white;">LOW</span>' : (needsMake ? '<span class="badge" style="background:var(--warning);color:#1a202c;">MAKE</span>' : '<span class="badge" style="background:var(--success);color:white;">OK</span>');
-                return `<tr class="${rowClass}">
-                    <td>${i.product || '-'}</td>
-                    <td><strong>${i.partNumber}</strong></td>
-                    <td>${formatNumber(i.fusionQty)}</td>
-                    <td>${formatNumber(i.minimum)}</td>
-                    <td>${formatNumber(i.manualTarget)}</td>
-                    <td>${formatNumber(i.qtyNeeded)}</td>
-                    <td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>
-                    <td>${i.moldType || '-'}</td>
-                    <td>${statusBadge}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function filterInvTable() { renderInvTable(); }
-        function exportInvCSV() { downloadCSV('Product Type,Part Number,...', 'inventory.csv'); }
+        // Placeholder functions for pages (to be implemented)
+        function updateOrdersDataPage() { console.log('Orders Data page loaded - ' + allData.length + ' orders'); renderOrdersDataTable(); }
+        function updateOrdersQueuePage() { console.log('Orders Queue page loaded'); }
+        function updateOrdersStagedPage() { console.log('Orders Staged page loaded'); }
+        function updateOrdersShippedPage() { console.log('Orders Shipped page loaded'); }
+        function updateInventoryPage() { console.log('Inventory page loaded'); }
+        function updateSalesOverview() { console.log('Sales Overview page loaded'); renderSalesOverviewData(); }
+        function updateSalesPartsPage() { console.log('Sales Parts page loaded'); renderSalesPartsData(); }
+        function updateSalesCustomersPage() { console.log('Sales Customers page loaded'); renderSalesCustomersData(); }
+        function updateSalesDatesPage() { console.log('Sales Dates page loaded'); renderSalesDatesData(); }
+        function initBomExplorer() { console.log('BOM Explorer page loaded'); }
+
+        // Toggle functions
+        function toggleOrdersDataCategory(cat) { ordersDataFilters.categories[cat] = !ordersDataFilters.categories[cat]; updateOrdersDataPage(); }
+        function toggleOrdersDataStatus(status) { ordersDataFilters.statuses[status] = !ordersDataFilters.statuses[status]; updateOrdersDataPage(); }
+        function toggleOrdersQueueCategory(cat) { ordersQueueFilters.categories[cat] = !ordersQueueFilters.categories[cat]; updateOrdersQueuePage(); }
+        function toggleOrdersStagedCategory(cat) { ordersStagedFilters.categories[cat] = !ordersStagedFilters.categories[cat]; updateOrdersStagedPage(); }
+        function toggleOrdersShippedCategory(cat) { ordersShippedFilters.categories[cat] = !ordersShippedFilters.categories[cat]; updateOrdersShippedPage(); }
+        function toggleSalesCategory(cat) { salesFilters.categories[cat] = !salesFilters.categories[cat]; updateSalesOverview(); }
+        function togglePartsCategory(cat) { partsFilters.categories[cat] = !partsFilters.categories[cat]; updateSalesPartsPage(); }
+        function toggleCustomersCategory(cat) { customersFilters.categories[cat] = !customersFilters.categories[cat]; updateSalesCustomersPage(); }
+        function toggleDatesCategory(cat) { datesFilters.categories[cat] = !datesFilters.categories[cat]; updateSalesDatesPage(); }
+
+        // Date filter functions
+        function applyShippedDateFilter() { updateOrdersShippedPage(); }
+        function resetShippedDateFilter() { document.getElementById('ordersShippedFromDate').value = ''; document.getElementById('ordersShippedToDate').value = ''; updateOrdersShippedPage(); }
+        function applyPartsDateFilter() { partsFilters.fromDate = document.getElementById('partsFromDate').value ? new Date(document.getElementById('partsFromDate').value) : null; partsFilters.toDate = document.getElementById('partsToDate').value ? new Date(document.getElementById('partsToDate').value) : null; updateSalesPartsPage(); }
+        function resetPartsDateFilter() { document.getElementById('partsFromDate').value = ''; document.getElementById('partsToDate').value = ''; partsFilters.fromDate = null; partsFilters.toDate = null; updateSalesPartsPage(); }
+        function applyCustomersDateFilter() { customersFilters.fromDate = document.getElementById('customersFromDate').value ? new Date(document.getElementById('customersFromDate').value) : null; customersFilters.toDate = document.getElementById('customersToDate').value ? new Date(document.getElementById('customersToDate').value) : null; updateSalesCustomersPage(); }
+        function resetCustomersDateFilter() { document.getElementById('customersFromDate').value = ''; document.getElementById('customersToDate').value = ''; customersFilters.fromDate = null; customersFilters.toDate = null; updateSalesCustomersPage(); }
+        function applyDatesDateFilter() { datesFilters.fromDate = document.getElementById('datesFromDate').value ? new Date(document.getElementById('datesFromDate').value) : null; datesFilters.toDate = document.getElementById('datesToDate').value ? new Date(document.getElementById('datesToDate').value) : null; updateSalesDatesPage(); }
+        function resetDatesDateFilter() { document.getElementById('datesFromDate').value = ''; document.getElementById('datesToDate').value = ''; datesFilters.fromDate = null; datesFilters.toDate = null; updateSalesDatesPage(); }
+
+        // Watchlist filter toggles
+        function togglePartsWatchlistFilter() { partsFilters.watchlistOnly = !partsFilters.watchlistOnly; document.getElementById('partsWatchlistBtn').classList.toggle('active', partsFilters.watchlistOnly); updateSalesPartsPage(); }
+        function toggleCustomersWatchlistFilter() { customersFilters.watchlistOnly = !customersFilters.watchlistOnly; document.getElementById('customersWatchlistBtn').classList.toggle('active', customersFilters.watchlistOnly); updateSalesCustomersPage(); }
+
+        // Filter table functions
+        function filterOrdersDataTable() { updateOrdersDataPage(); }
+        function filterOrdersQueueTable() { updateOrdersQueuePage(); }
+        function filterOrdersStagedTable() { updateOrdersStagedPage(); }
+        function filterOrdersShippedTable() { updateOrdersShippedPage(); }
+        function filterPartsTable() { updateSalesPartsPage(); }
+        function filterCustomersTable() { updateSalesCustomersPage(); }
+        function filterInvTable() { updateInventoryPage(); }
+
+        // Export functions
+        function exportOrdersDataToCSV() { downloadCSV('Orders Data Export', 'orders_data.csv'); }
+        function exportOrdersQueueToCSV() { downloadCSV('Orders Queue Export', 'orders_queue.csv'); }
+        function exportOrdersStagedToCSV() { downloadCSV('Orders Staged Export', 'orders_staged.csv'); }
+        function exportOrdersShippedToCSV() { downloadCSV('Orders Shipped Export', 'orders_shipped.csv'); }
+        function exportSalesCSV() { downloadCSV('Sales Export', 'sales.csv'); }
+        function exportPartsCSV() { downloadCSV('Parts Export', 'parts.csv'); }
+        function exportCustomersCSV() { downloadCSV('Customers Export', 'customers.csv'); }
+        function exportDatesCSV() { downloadCSV('Dates Export', 'dates.csv'); }
+        function exportInvCSV() { downloadCSV('Inventory Export', 'inventory.csv'); }
+
+        // Sort functions
+        function sortPartsTable(field) { if (partsSort.field === field) partsSort.asc = !partsSort.asc; else { partsSort.field = field; partsSort.asc = field === 'part'; } updateSalesPartsPage(); }
+        function sortCustomersTable(field) { if (customersSort.field === field) customersSort.asc = !customersSort.asc; else { customersSort.field = field; customersSort.asc = field === 'customer'; } updateSalesCustomersPage(); }
+        function sortInvTable(field) { if (invSort.field === field) invSort.asc = !invSort.asc; else { invSort.field = field; invSort.asc = true; } updateInventoryPage(); }
+        function setInvFilter(f) { invFilter = f; updateInventoryPage(); }
+
+        // Drilldown functions
+        function showPartsCustomerDrilldown(part) { currentDrilldownPart = part; document.getElementById('partsCustomerDrilldown').classList.add('active'); document.getElementById('partsCustomerDrilldownPart').textContent = part; }
+        function closePartsCustomerDrilldown() { document.getElementById('partsCustomerDrilldown').classList.remove('active'); document.getElementById('partsOrdersDrilldown').classList.remove('active'); currentDrilldownPart = null; }
+        function showPartsOrdersDrilldown(part, customer) { currentDrilldownCustomer = customer; document.getElementById('partsOrdersDrilldown').classList.add('active'); }
+        function closePartsOrdersDrilldown() { document.getElementById('partsOrdersDrilldown').classList.remove('active'); }
+        function backToPartsCustomers() { document.getElementById('partsOrdersDrilldown').classList.remove('active'); }
+        function closeAllPartsDrilldowns() { closePartsCustomerDrilldown(); }
+
+        function showCustomersProductDrilldown(customer) { currentDrilldownCustomer = customer; document.getElementById('customersProductDrilldown').classList.add('active'); document.getElementById('customersProductDrilldownCustomer').textContent = customer; }
+        function closeCustomersProductDrilldown() { document.getElementById('customersProductDrilldown').classList.remove('active'); document.getElementById('customersOrdersDrilldown').classList.remove('active'); currentDrilldownCustomer = null; }
+        function showCustomersOrdersDrilldown(customer, part) { currentDrilldownPart = part; document.getElementById('customersOrdersDrilldown').classList.add('active'); }
+        function closeCustomersOrdersDrilldown() { document.getElementById('customersOrdersDrilldown').classList.remove('active'); }
+        function backToCustomersProducts() { document.getElementById('customersOrdersDrilldown').classList.remove('active'); }
+        function closeAllCustomersDrilldowns() { closeCustomersProductDrilldown(); }
+
+        function showDatesCustomerDrilldown(month) { currentDrilldownMonth = month; document.getElementById('datesCustomerDrilldown').classList.add('active'); document.getElementById('datesCustomerDrilldownMonth').textContent = formatMonthLabel(month); }
+        function closeDatesCustomerDrilldown() { document.getElementById('datesCustomerDrilldown').classList.remove('active'); document.getElementById('datesOrdersDrilldown').classList.remove('active'); currentDrilldownMonth = null; }
+        function showDatesOrdersDrilldown(month, customer) { currentDrilldownCustomer = customer; document.getElementById('datesOrdersDrilldown').classList.add('active'); }
+        function closeDatesOrdersDrilldown() { document.getElementById('datesOrdersDrilldown').classList.remove('active'); }
+        function backToDatesCustomers() { document.getElementById('datesOrdersDrilldown').classList.remove('active'); }
+        function closeAllDatesDrilldowns() { closeDatesCustomerDrilldown(); }
+
+        // BOM functions
+        function switchBomTab(tab) { currentBomTab = tab; document.querySelectorAll('.tab[data-bomtab]').forEach(t => t.classList.toggle('active', t.dataset.bomtab === tab)); }
+        function filterBomSelector() { }
+        function showBomDetails(index) { }
 
         // ============================================================
-        // SALES OVERVIEW PAGE (Enhanced)
+        // RENDER FUNCTIONS (Basic implementations)
         // ============================================================
-        function toggleSalesCategory(cat) {
-            salesFilters.categories[cat] = !salesFilters.categories[cat];
-            if (!salesFilters.categories.rolltech && !salesFilters.categories.molding) { salesFilters.categories[cat] = true; return; }
-            document.getElementById('salesBtnRollTech').classList.toggle('active', salesFilters.categories.rolltech);
-            document.getElementById('salesBtnMolding').classList.toggle('active', salesFilters.categories.molding);
-            updateSalesOverview();
-        }
-        
-        function applySalesDateFilter() {
-            const fromInput = document.getElementById('salesFromDate').value;
-            const toInput = document.getElementById('salesToDate').value;
-            salesFilters.fromDate = fromInput ? new Date(fromInput) : null;
-            salesFilters.toDate = toInput ? new Date(toInput) : null;
-            updateSalesOverview();
-        }
-        
-        function resetSalesDateFilter() {
-            document.getElementById('salesFromDate').value = '';
-            document.getElementById('salesToDate').value = '';
-            salesFilters.fromDate = null;
-            salesFilters.toDate = null;
-            updateSalesOverview();
-        }
-        
-        function toggleSalesHeatMap() {
-            salesHeatMapEnabled = !salesHeatMapEnabled;
-            document.getElementById('salesHeatMapBtn').classList.toggle('active', salesHeatMapEnabled);
-            updateSalesOverview();
-        }
-        
-        function toggleSalesAutoRefresh() {
-            if (salesAutoRefreshInterval) {
-                clearInterval(salesAutoRefreshInterval);
-                salesAutoRefreshInterval = null;
-                document.getElementById('salesAutoRefreshBtn').classList.remove('active');
-                document.getElementById('salesAutoRefreshIndicator').classList.remove('active');
-                document.getElementById('salesAutoRefreshIndicator').innerHTML = '<span>Auto-refresh: Off</span>';
-            } else {
-                salesAutoRefreshInterval = setInterval(() => { loadDashboard(); }, 300000); // 5 minutes
-                document.getElementById('salesAutoRefreshBtn').classList.add('active');
-                document.getElementById('salesAutoRefreshIndicator').classList.add('active');
-                document.getElementById('salesAutoRefreshIndicator').innerHTML = '<span class="pulse"></span><span>Auto-refresh: On (5 min)</span>';
-            }
-        }
-        
-        function getFilteredSalesData() {
-            return allData.filter(r => {
-                if (!salesFilters.categories[getCategory(r)]) return false;
-                if (salesFilters.fromDate || salesFilters.toDate) {
-                    const dateStr = getAttributionDate(r);
-                    if (!dateStr) return false;
-                    const rowDate = parseDate(dateStr);
-                    if (!rowDate) return false;
-                    if (salesFilters.fromDate && rowDate < salesFilters.fromDate) return false;
-                    if (salesFilters.toDate && rowDate > salesFilters.toDate) return false;
-                }
+        function renderOrdersDataTable() {
+            const data = allData.filter(r => {
+                const cat = getCategory(r);
+                const status = getStatus(r);
+                if (!ordersDataFilters.categories[cat]) return false;
+                if (!ordersDataFilters.statuses[status]) return false;
                 return true;
             });
+            
+            document.getElementById('ordersDataTotalOrders').textContent = formatNumber(data.length);
+            document.getElementById('ordersDataTotalUnits').textContent = `${formatNumber(data.reduce((s,r) => s + parseNumber(getVal(r,'QTY')), 0))} units`;
+            document.getElementById('ordersDataNeedToMake').textContent = formatNumber(data.filter(r => getStatus(r) === 'pending').length);
+            document.getElementById('ordersDataMaking').textContent = formatNumber(data.filter(r => getStatus(r) === 'wip').length);
+            document.getElementById('ordersDataReadyToShip').textContent = formatNumber(data.filter(r => getStatus(r) === 'staged').length);
+            document.getElementById('ordersDataLastUpdated').textContent = new Date().toLocaleTimeString();
+            document.getElementById('ordersDataTableCount').textContent = `${data.length} orders`;
+            
+            document.getElementById('ordersDataTableHeader').innerHTML = '<th>Line</th><th>Priority</th><th>Days Until</th><th>Customer</th><th>Part #</th><th>Qty</th><th>Tire</th><th>Hub</th><th>Bearings</th><th>Status</th>';
+            document.getElementById('ordersDataTableBody').innerHTML = data.slice(0, 100).map(r => `<tr>
+                <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
+                <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
+                <td>${getVal(r, 'DAYS_UNTIL') || '-'}</td>
+                <td>${getVal(r, 'CUSTOMER') || '-'}</td>
+                <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
+                <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
+                <td>${formatComponent(getVal(r, 'TIRE'))}</td>
+                <td>${formatComponent(getVal(r, 'HUB'))}</td>
+                <td>${formatComponent(getVal(r, 'BEARINGS'))}</td>
+                <td>${getStatusBadge(getStatus(r))}</td>
+            </tr>`).join('');
         }
-        
-        function updateSalesOverview() {
-            const data = getFilteredSalesData();
-            let totalRevenue = 0, totalPL = 0, shippedPL = 0, forecastPL = 0, shippedCount = 0, forecastCount = 0;
-            
-            data.forEach(r => {
-                totalRevenue += parseNumber(r[COL.REVENUE]);
-                if (!hasMissingCostData(r)) {
-                    const pl = getPLValue(r);
-                    totalPL += pl;
-                    if (getStatus(r) === 'shipped') { shippedPL += pl; shippedCount++; }
-                    else { forecastPL += pl; forecastCount++; }
-                } else {
-                    if (getStatus(r) === 'shipped') shippedCount++; else forecastCount++;
-                }
-            });
-            
-            const margin = totalRevenue ? ((totalPL / totalRevenue) * 100).toFixed(2) : 0;
+
+        function renderSalesOverviewData() {
+            const data = allData.filter(r => salesFilters.categories[getCategory(r)]);
+            const totalRevenue = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
+            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
+            const shippedData = data.filter(r => getStatus(r) === 'shipped');
+            const shippedPL = shippedData.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
+            const forecastData = data.filter(r => getStatus(r) !== 'shipped');
+            const forecastPL = forecastData.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
             
             document.getElementById('salesStatRevenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('salesStatOrderCount').textContent = `${data.length} orders`;
             document.getElementById('salesStatPL').textContent = formatCurrency(totalPL);
             document.getElementById('salesStatPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('salesStatMargin').textContent = `Margin: ${margin}%`;
+            document.getElementById('salesStatMargin').textContent = `Margin: ${totalRevenue > 0 ? ((totalPL/totalRevenue)*100).toFixed(1) : 0}%`;
             document.getElementById('salesStatShippedPL').textContent = formatCurrency(shippedPL);
             document.getElementById('salesStatShippedPL').className = `value ${shippedPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('salesStatShippedCount').textContent = `${shippedCount} shipped`;
+            document.getElementById('salesStatShippedCount').textContent = `${shippedData.length} shipped`;
             document.getElementById('salesStatForecastPL').textContent = formatCurrency(forecastPL);
             document.getElementById('salesStatForecastPL').className = `value ${forecastPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('salesStatForecastCount').textContent = `${forecastCount} pending`;
+            document.getElementById('salesStatForecastCount').textContent = `${forecastData.length} pending`;
             
-            // Critical Alerts - Top 2 biggest loss parts
+            // Critical alerts
             const partStats = {};
-            data.forEach(r => {
-                const p = getVal(r, 'PART');
-                if (!partStats[p]) partStats[p] = { pl: 0 };
-                if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r);
-            });
-            const sortedByLoss = Object.entries(partStats).filter(([_,v]) => v.pl < 0).sort((a,b) => a[1].pl - b[1].pl).slice(0,2);
-            if (sortedByLoss.length > 0) {
-                const alertText = sortedByLoss.map(([part, stats]) => `${part}: ${formatCurrency(stats.pl)}`).join(' | ');
-                document.getElementById('salesCriticalText').textContent = alertText;
+            data.forEach(r => { const p = getVal(r, 'PART'); if (!partStats[p]) partStats[p] = { pl: 0 }; if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r); });
+            const lossParts = Object.entries(partStats).filter(([_,v]) => v.pl < 0).sort((a,b) => a[1].pl - b[1].pl).slice(0,2);
+            if (lossParts.length > 0) {
+                document.getElementById('salesCriticalText').textContent = lossParts.map(([part, stats]) => `${part}: ${formatCurrency(stats.pl)}`).join(' | ');
                 document.getElementById('salesCriticalBanner').classList.add('active');
             } else {
                 document.getElementById('salesCriticalBanner').classList.remove('active');
             }
-            
-            renderSalesLossesChart(data);
-            renderSalesCustomerPieChart(data);
-            renderSalesTrendChart(data);
-        }
-        
-        function renderSalesLossesChart(data) {
-            const partStats = {};
-            data.forEach(r => {
-                const p = getVal(r, 'PART');
-                if (!partStats[p]) partStats[p] = { pl: 0 };
-                if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r);
-            });
-            
-            // Get top 5 losses and top 5 gains
-            const sorted = Object.entries(partStats).sort((a,b) => a[1].pl - b[1].pl);
-            const topLosses = sorted.slice(0, 5).filter(([_,v]) => v.pl < 0);
-            const topGains = sorted.slice(-5).reverse().filter(([_,v]) => v.pl > 0);
-            const combined = [...topLosses, ...topGains.reverse()];
-            
-            if (charts.salesLosses) charts.salesLosses.destroy();
-            charts.salesLosses = new Chart(document.getElementById('salesLossesChart'), {
-                type: 'bar',
-                data: {
-                    labels: combined.map(s => s[0]),
-                    datasets: [{
-                        data: combined.map(s => s[1].pl),
-                        backgroundColor: combined.map(s => s[1].pl >= 0 ? 'rgba(56,161,105,0.8)' : 'rgba(229,62,62,0.8)')
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#a0aec0', font: { size: 10 } }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-        
-        function renderSalesCustomerPieChart(data) {
-            const custStats = {};
-            data.forEach(r => {
-                const c = getVal(r, 'CUSTOMER') || 'Unknown';
-                if (!custStats[c]) custStats[c] = { pl: 0 };
-                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
-            });
-            
-            const sorted = Object.entries(custStats).filter(([_,v]) => v.pl > 0).sort((a,b) => b[1].pl - a[1].pl).slice(0, 8);
-            const colors = ['#38a169', '#319795', '#3182ce', '#805ad5', '#d53f8c', '#dd6b20', '#d69e2e', '#718096'];
-            
-            if (charts.salesCustomerPie) charts.salesCustomerPie.destroy();
-            charts.salesCustomerPie = new Chart(document.getElementById('salesCustomerPieChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: sorted.map(s => s[0].substring(0, 20)),
-                    datasets: [{ data: sorted.map(s => s[1].pl), backgroundColor: colors }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#a0aec0', font: { size: 10 } } } } }
-            });
-        }
-        
-        function renderSalesTrendChart(data) {
-            const monthStats = {};
-            data.forEach(r => {
-                const d = getAttributionDate(r);
-                if (!d) return;
-                const month = getMonthKey(d);
-                if (!monthStats[month]) monthStats[month] = { shipped: 0, forecast: 0, revenue: 0 };
-                monthStats[month].revenue += parseNumber(r[COL.REVENUE]);
-                if (!hasMissingCostData(r)) {
-                    const pl = getPLValue(r);
-                    if (getStatus(r) === 'shipped') monthStats[month].shipped += pl;
-                    else monthStats[month].forecast += pl;
-                }
-            });
-            
-            const sorted = Object.entries(monthStats).sort((a,b) => a[0].localeCompare(b[0])).slice(-24);
-            
-            if (charts.salesTrend) charts.salesTrend.destroy();
-            charts.salesTrend = new Chart(document.getElementById('salesTrendChart'), {
-                type: 'line',
-                data: {
-                    labels: sorted.map(s => formatMonthLabel(s[0])),
-                    datasets: [
-                        { label: 'Shipped P/L', data: sorted.map(s => s[1].shipped), borderColor: '#38a169', backgroundColor: 'rgba(56,161,105,0.1)', fill: true, tension: 0.3, yAxisID: 'y' },
-                        { label: 'Forecast P/L', data: sorted.map(s => s[1].forecast), borderColor: '#d69e2e', backgroundColor: 'rgba(214,158,46,0.1)', fill: true, tension: 0.3, borderDash: [5,5], yAxisID: 'y' },
-                        { label: 'Revenue', data: sorted.map(s => s[1].revenue), borderColor: '#3182ce', backgroundColor: 'transparent', tension: 0.3, yAxisID: 'y1' }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#a0aec0' } } },
-                    scales: {
-                        y: { type: 'linear', position: 'left', ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y1: { type: 'linear', position: 'right', ticks: { callback: v => formatCurrency(v), color: '#3182ce' }, grid: { drawOnChartArea: false } },
-                        x: { ticks: { color: '#a0aec0', font: { size: 9 } }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-        
-        function exportSalesCSV() {
-            const data = getFilteredSalesData();
-            const csv = data.map(r => [getVal(r,'PART'),getVal(r,'CUSTOMER'),getVal(r,'QTY'),r[COL.REVENUE],getPLValue(r)].join(',')).join('\n');
-            downloadCSV('Part,Customer,Qty,Revenue,P/L\n' + csv, `sales_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
-        // ============================================================
-        // SALES BY PARTS PAGE (Enhanced with Drilldowns)
-        // ============================================================
-        function togglePartsCategory(cat) {
-            partsFilters.categories[cat] = !partsFilters.categories[cat];
-            if (!partsFilters.categories.rolltech && !partsFilters.categories.molding) { partsFilters.categories[cat] = true; return; }
-            document.getElementById('partsBtnRollTech').classList.toggle('active', partsFilters.categories.rolltech);
-            document.getElementById('partsBtnMolding').classList.toggle('active', partsFilters.categories.molding);
-            updateSalesPartsPage();
-        }
-        
-        function applyPartsDateFilter() {
-            partsFilters.fromDate = document.getElementById('partsFromDate').value ? new Date(document.getElementById('partsFromDate').value) : null;
-            partsFilters.toDate = document.getElementById('partsToDate').value ? new Date(document.getElementById('partsToDate').value) : null;
-            updateSalesPartsPage();
-        }
-        
-        function resetPartsDateFilter() {
-            document.getElementById('partsFromDate').value = '';
-            document.getElementById('partsToDate').value = '';
-            partsFilters.fromDate = null;
-            partsFilters.toDate = null;
-            updateSalesPartsPage();
-        }
-        
-        function togglePartsWatchlistFilter() {
-            partsFilters.watchlistOnly = !partsFilters.watchlistOnly;
-            document.getElementById('partsWatchlistBtn').classList.toggle('active', partsFilters.watchlistOnly);
-            updateSalesPartsPage();
-        }
-        
-        function getFilteredPartsData() {
-            return allData.filter(r => {
-                if (!partsFilters.categories[getCategory(r)]) return false;
-                if (partsFilters.fromDate || partsFilters.toDate) {
-                    const dateStr = getAttributionDate(r);
-                    if (!dateStr) return false;
-                    const rowDate = parseDate(dateStr);
-                    if (!rowDate) return false;
-                    if (partsFilters.fromDate && rowDate < partsFilters.fromDate) return false;
-                    if (partsFilters.toDate && rowDate > partsFilters.toDate) return false;
-                }
-                return true;
-            });
-        }
-        
-        function updateSalesPartsPage() {
-            const data = getFilteredPartsData();
+        function renderSalesPartsData() {
+            const data = allData.filter(r => partsFilters.categories[getCategory(r)]);
             const partStats = {};
-            
             data.forEach(r => {
                 const p = getVal(r, 'PART');
                 if (!partStats[p]) partStats[p] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
@@ -2183,33 +1664,12 @@
             });
             
             let partsArray = Object.entries(partStats).map(([part, stats]) => ({ part, ...stats, margin: stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0 }));
-            
-            // Filter by watchlist if enabled
             if (partsFilters.watchlistOnly) partsArray = partsArray.filter(p => isInWatchlist('part', p.part));
-            
-            // Search filter
-            const search = (document.getElementById('partsSearch')?.value || '').toLowerCase();
-            if (search) partsArray = partsArray.filter(p => p.part.toLowerCase().includes(search));
-            
-            // Sort
             partsArray.sort((a, b) => partsSort.asc ? a[partsSort.field] - b[partsSort.field] : b[partsSort.field] - a[partsSort.field]);
             
-            // Render chart
-            renderPartsBarChart(partsArray);
-            
-            // Render table
             document.getElementById('partsTableCount').textContent = `${partsArray.length} parts`;
-            document.getElementById('partsTableHeader').innerHTML = `
-                <th>★</th>
-                <th onclick="sortPartsTable('part')">Part # <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('orders')">Orders <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('qty')">Qty <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('revenue')">Revenue <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('pl')">P/L <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('margin')">Margin <span class="sort-indicator">↕</span></th>
-            `;
-            
-            document.getElementById('partsTableBody').innerHTML = partsArray.map(p => `
+            document.getElementById('partsTableHeader').innerHTML = '<th>★</th><th>Part #</th><th>Orders</th><th>Qty</th><th>Revenue</th><th>P/L</th><th>Margin</th>';
+            document.getElementById('partsTableBody').innerHTML = partsArray.slice(0, 100).map(p => `
                 <tr class="clickable" onclick="showPartsCustomerDrilldown('${p.part.replace(/'/g, "\\'")}')">
                     <td><span class="watchlist-star ${isInWatchlist('part', p.part) ? 'active' : ''}" onclick="event.stopPropagation(); toggleWatchlistPart('${p.part.replace(/'/g, "\\'")}')">★</span></td>
                     <td><strong>${p.part}</strong></td>
@@ -2221,202 +1681,10 @@
                 </tr>
             `).join('');
         }
-        
-        function renderPartsBarChart(partsArray) {
-            const top30 = [...partsArray].sort((a,b) => b.pl - a.pl).slice(0, 30);
-            if (charts.partsBar) charts.partsBar.destroy();
-            charts.partsBar = new Chart(document.getElementById('partsBarChart'), {
-                type: 'bar',
-                data: {
-                    labels: top30.map(p => p.part),
-                    datasets: [{ data: top30.map(p => p.pl), backgroundColor: top30.map(p => p.pl >= 0 ? 'rgba(56,161,105,0.8)' : 'rgba(229,62,62,0.8)') }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#a0aec0', font: { size: 9 }, maxRotation: 90 }, grid: { display: false } } } }
-            });
-        }
-        
-        function sortPartsTable(field) {
-            if (partsSort.field === field) partsSort.asc = !partsSort.asc;
-            else { partsSort.field = field; partsSort.asc = field === 'part'; }
-            updateSalesPartsPage();
-        }
-        
-        function filterPartsTable() { updateSalesPartsPage(); }
-        function exportPartsCSV() { downloadCSV('Part,Orders,Qty,Revenue,P/L,Margin', 'parts_pl.csv'); }
-        
-        // Parts Drilldown Functions
-        function showPartsCustomerDrilldown(part) {
-            currentDrilldownPart = part;
-            const data = getFilteredPartsData().filter(r => getVal(r, 'PART') === part);
-            
-            const customerStats = {};
-            data.forEach(r => {
-                const c = getVal(r, 'CUSTOMER') || 'Unknown';
-                if (!customerStats[c]) customerStats[c] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
-                customerStats[c].orders++;
-                customerStats[c].qty += parseNumber(getVal(r, 'QTY'));
-                customerStats[c].revenue += parseNumber(r[COL.REVENUE]);
-                if (!hasMissingCostData(r)) customerStats[c].pl += getPLValue(r);
-            });
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            
-            document.getElementById('partsCustomerDrilldownPart').textContent = part;
-            document.getElementById('partsCustomerSummary').innerHTML = `
-                <div class="summary-item"><div class="label">Customers</div><div class="value">${Object.keys(customerStats).length}</div></div>
-                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
-                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
-                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
-            `;
-            
-            const sorted = Object.entries(customerStats).sort((a,b) => b[1].pl - a[1].pl);
-            document.getElementById('partsCustomerDrilldownBody').innerHTML = sorted.map(([customer, stats]) => {
-                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
-                const avgPrice = stats.qty > 0 ? stats.revenue / stats.qty : 0;
-                return `<tr class="clickable" onclick="showPartsOrdersDrilldown('${currentDrilldownPart.replace(/'/g, "\\'")}', '${customer.replace(/'/g, "\\'")}')">
-                    <td><strong>${customer}</strong></td>
-                    <td>${formatNumber(stats.qty)}</td>
-                    <td>${formatCurrency(avgPrice)}</td>
-                    <td>${getContributionBadge(margin)}</td>
-                    <td class="${margin >= 0 ? 'positive' : 'negative'}">${margin.toFixed(1)}%</td>
-                    <td class="${stats.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(stats.pl)}</td>
-                    <td>${formatCurrency(stats.revenue)}</td>
-                </tr>`;
-            }).join('');
-            
-            document.getElementById('partsCustomerDrilldown').classList.add('active');
-            document.getElementById('partsOrdersDrilldown').classList.remove('active');
-            document.getElementById('partsCustomerDrilldown').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function showPartsOrdersDrilldown(part, customer) {
-            currentDrilldownCustomer = customer;
-            const data = getFilteredPartsData().filter(r => getVal(r, 'PART') === part && getVal(r, 'CUSTOMER') === customer);
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            
-            document.getElementById('partsOrdersBreadcrumbPart').textContent = part;
-            document.getElementById('partsOrdersBreadcrumbCustomer').textContent = customer;
-            document.getElementById('partsOrdersSummary').innerHTML = `
-                <div class="summary-item"><div class="label">Orders</div><div class="value">${data.length}</div></div>
-                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
-                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
-                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
-            `;
-            
-            // Price history chart
-            const priceData = data.map(r => ({ date: parseDate(getAttributionDate(r)), price: getUnitPrice(r) })).filter(d => d.date).sort((a,b) => a.date - b.date);
-            if (charts.partsOrdersPrice) charts.partsOrdersPrice.destroy();
-            if (priceData.length > 1) {
-                charts.partsOrdersPrice = new Chart(document.getElementById('partsOrdersPriceChart'), {
-                    type: 'line',
-                    data: {
-                        labels: priceData.map(d => d.date.toLocaleDateString()),
-                        datasets: [{ label: 'Unit Price', data: priceData.map(d => d.price), borderColor: '#3182ce', backgroundColor: 'rgba(49,130,206,0.1)', fill: true, tension: 0.3 }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#a0aec0', font: { size: 9 } }, grid: { display: false } } } }
-                });
-            }
-            
-            // Orders table
-            const sorted = [...data].sort((a,b) => {
-                const da = parseDate(getAttributionDate(a)) || new Date(0);
-                const db = parseDate(getAttributionDate(b)) || new Date(0);
-                return db - da;
-            });
-            
-            document.getElementById('partsOrdersDrilldownBody').innerHTML = sorted.map(r => {
-                const status = getStatus(r);
-                const pl = getPLValue(r);
-                const qty = parseNumber(getVal(r, 'QTY'));
-                const revenue = parseNumber(r[COL.REVENUE]);
-                const unitPrice = getUnitPrice(r);
-                const profitPart = getProfitPerPart(r);
-                const margin = revenue > 0 ? (pl / revenue * 100) : 0;
-                const dateStr = getAttributionDate(r) || '-';
-                const statusBadge = status === 'shipped' ? getStatusBadge(status) : `<span class="badge forecast">FORECAST</span>`;
-                
-                return `<tr>
-                    <td>${getVal(r, 'PO_NUM') || getVal(r, 'IF_NUM') || '-'}</td>
-                    <td>${statusBadge}</td>
-                    <td>${formatNumber(qty)}</td>
-                    <td>${formatCurrency(unitPrice)}</td>
-                    <td>${getContributionBadge(margin)}</td>
-                    <td class="${profitPart >= 0 ? 'positive' : 'negative'}">${formatCurrency(profitPart)}</td>
-                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>
-                    <td>${formatCurrency(revenue)}</td>
-                    <td>${dateStr}</td>
-                </tr>`;
-            }).join('');
-            
-            document.getElementById('partsOrdersDrilldown').classList.add('active');
-            document.getElementById('partsOrdersDrilldown').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function closePartsCustomerDrilldown() {
-            document.getElementById('partsCustomerDrilldown').classList.remove('active');
-            document.getElementById('partsOrdersDrilldown').classList.remove('active');
-            currentDrilldownPart = null;
-        }
-        
-        function closePartsOrdersDrilldown() { document.getElementById('partsOrdersDrilldown').classList.remove('active'); }
-        function backToPartsCustomers() { document.getElementById('partsOrdersDrilldown').classList.remove('active'); }
-        function closeAllPartsDrilldowns() { closePartsCustomerDrilldown(); }
 
-        // ============================================================
-        // SALES BY CUSTOMERS PAGE (Enhanced with Drilldowns)
-        // ============================================================
-        function toggleCustomersCategory(cat) {
-            customersFilters.categories[cat] = !customersFilters.categories[cat];
-            if (!customersFilters.categories.rolltech && !customersFilters.categories.molding) { customersFilters.categories[cat] = true; return; }
-            document.getElementById('customersBtnRollTech').classList.toggle('active', customersFilters.categories.rolltech);
-            document.getElementById('customersBtnMolding').classList.toggle('active', customersFilters.categories.molding);
-            updateSalesCustomersPage();
-        }
-        
-        function applyCustomersDateFilter() {
-            customersFilters.fromDate = document.getElementById('customersFromDate').value ? new Date(document.getElementById('customersFromDate').value) : null;
-            customersFilters.toDate = document.getElementById('customersToDate').value ? new Date(document.getElementById('customersToDate').value) : null;
-            updateSalesCustomersPage();
-        }
-        
-        function resetCustomersDateFilter() {
-            document.getElementById('customersFromDate').value = '';
-            document.getElementById('customersToDate').value = '';
-            customersFilters.fromDate = null;
-            customersFilters.toDate = null;
-            updateSalesCustomersPage();
-        }
-        
-        function toggleCustomersWatchlistFilter() {
-            customersFilters.watchlistOnly = !customersFilters.watchlistOnly;
-            document.getElementById('customersWatchlistBtn').classList.toggle('active', customersFilters.watchlistOnly);
-            updateSalesCustomersPage();
-        }
-        
-        function getFilteredCustomersData() {
-            return allData.filter(r => {
-                if (!customersFilters.categories[getCategory(r)]) return false;
-                if (customersFilters.fromDate || customersFilters.toDate) {
-                    const dateStr = getAttributionDate(r);
-                    if (!dateStr) return false;
-                    const rowDate = parseDate(dateStr);
-                    if (!rowDate) return false;
-                    if (customersFilters.fromDate && rowDate < customersFilters.fromDate) return false;
-                    if (customersFilters.toDate && rowDate > customersFilters.toDate) return false;
-                }
-                return true;
-            });
-        }
-        
-        function updateSalesCustomersPage() {
-            const data = getFilteredCustomersData();
+        function renderSalesCustomersData() {
+            const data = allData.filter(r => customersFilters.categories[getCategory(r)]);
             const custStats = {};
-            
             data.forEach(r => {
                 const c = getVal(r, 'CUSTOMER') || 'Unknown';
                 if (!custStats[c]) custStats[c] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
@@ -2427,37 +1695,12 @@
             });
             
             let custArray = Object.entries(custStats).map(([customer, stats]) => ({ customer, ...stats, margin: stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0 }));
-            
             if (customersFilters.watchlistOnly) custArray = custArray.filter(c => isInWatchlist('customer', c.customer));
-            
-            const search = (document.getElementById('customersSearch')?.value || '').toLowerCase();
-            if (search) custArray = custArray.filter(c => c.customer.toLowerCase().includes(search));
-            
             custArray.sort((a, b) => customersSort.asc ? a[customersSort.field] - b[customersSort.field] : b[customersSort.field] - a[customersSort.field]);
             
-            // Chart
-            const top10 = [...custArray].sort((a,b) => b.pl - a.pl).slice(0, 10);
-            const colors = ['#38a169', '#319795', '#3182ce', '#805ad5', '#d53f8c', '#dd6b20', '#d69e2e', '#e53e3e', '#718096', '#4a5568'];
-            if (charts.customers) charts.customers.destroy();
-            charts.customers = new Chart(document.getElementById('customersChart'), {
-                type: 'doughnut',
-                data: { labels: top10.map(c => c.customer.substring(0, 20)), datasets: [{ data: top10.map(c => Math.abs(c.pl)), backgroundColor: colors }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#a0aec0', font: { size: 10 } } } } }
-            });
-            
-            // Table
             document.getElementById('customersTableCount').textContent = `${custArray.length} customers`;
-            document.getElementById('customersTableHeader').innerHTML = `
-                <th>★</th>
-                <th onclick="sortCustomersTable('customer')">Customer <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('orders')">Orders <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('qty')">Qty <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('revenue')">Revenue <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('pl')">P/L <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('margin')">Margin <span class="sort-indicator">↕</span></th>
-            `;
-            
-            document.getElementById('customersTableBody').innerHTML = custArray.map(c => `
+            document.getElementById('customersTableHeader').innerHTML = '<th>★</th><th>Customer</th><th>Orders</th><th>Qty</th><th>Revenue</th><th>P/L</th><th>Margin</th>';
+            document.getElementById('customersTableBody').innerHTML = custArray.slice(0, 100).map(c => `
                 <tr class="clickable" onclick="showCustomersProductDrilldown('${c.customer.replace(/'/g, "\\'")}')">
                     <td><span class="watchlist-star ${isInWatchlist('customer', c.customer) ? 'active' : ''}" onclick="event.stopPropagation(); toggleWatchlistCustomer('${c.customer.replace(/'/g, "\\'")}')">★</span></td>
                     <td><strong>${c.customer}</strong></td>
@@ -2469,448 +1712,49 @@
                 </tr>
             `).join('');
         }
-        
-        function sortCustomersTable(field) {
-            if (customersSort.field === field) customersSort.asc = !customersSort.asc;
-            else { customersSort.field = field; customersSort.asc = field === 'customer'; }
-            updateSalesCustomersPage();
-        }
-        
-        function filterCustomersTable() { updateSalesCustomersPage(); }
-        function exportCustomersCSV() { downloadCSV('Customer,Orders,Qty,Revenue,P/L,Margin', 'customers_pl.csv'); }
-        
-        // Customers Drilldown Functions
-        function showCustomersProductDrilldown(customer) {
-            currentDrilldownCustomer = customer;
-            const data = getFilteredCustomersData().filter(r => getVal(r, 'CUSTOMER') === customer);
-            
-            const partStats = {};
-            data.forEach(r => {
-                const p = getVal(r, 'PART');
-                if (!partStats[p]) partStats[p] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
-                partStats[p].orders++;
-                partStats[p].qty += parseNumber(getVal(r, 'QTY'));
-                partStats[p].revenue += parseNumber(r[COL.REVENUE]);
-                if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r);
-            });
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            
-            document.getElementById('customersProductDrilldownCustomer').textContent = customer;
-            document.getElementById('customersProductSummary').innerHTML = `
-                <div class="summary-item"><div class="label">Products</div><div class="value">${Object.keys(partStats).length}</div></div>
-                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
-                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
-                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
-            `;
-            
-            const sorted = Object.entries(partStats).sort((a,b) => b[1].pl - a[1].pl);
-            document.getElementById('customersProductDrilldownBody').innerHTML = sorted.map(([part, stats]) => {
-                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
-                const avgPrice = stats.qty > 0 ? stats.revenue / stats.qty : 0;
-                return `<tr class="clickable" onclick="showCustomersOrdersDrilldown('${currentDrilldownCustomer.replace(/'/g, "\\'")}', '${part.replace(/'/g, "\\'")}')">
-                    <td><strong>${part}</strong></td>
-                    <td>${formatNumber(stats.qty)}</td>
-                    <td>${formatCurrency(avgPrice)}</td>
-                    <td>${getContributionBadge(margin)}</td>
-                    <td class="${margin >= 0 ? 'positive' : 'negative'}">${margin.toFixed(1)}%</td>
-                    <td class="${stats.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(stats.pl)}</td>
-                    <td>${formatCurrency(stats.revenue)}</td>
-                </tr>`;
-            }).join('');
-            
-            document.getElementById('customersProductDrilldown').classList.add('active');
-            document.getElementById('customersOrdersDrilldown').classList.remove('active');
-            document.getElementById('customersProductDrilldown').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function showCustomersOrdersDrilldown(customer, part) {
-            currentDrilldownPart = part;
-            const data = getFilteredCustomersData().filter(r => getVal(r, 'CUSTOMER') === customer && getVal(r, 'PART') === part);
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            
-            document.getElementById('customersOrdersBreadcrumbCustomer').textContent = customer;
-            document.getElementById('customersOrdersBreadcrumbPart').textContent = part;
-            document.getElementById('customersOrdersSummary').innerHTML = `
-                <div class="summary-item"><div class="label">Orders</div><div class="value">${data.length}</div></div>
-                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
-                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
-                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
-            `;
-            
-            const sorted = [...data].sort((a,b) => {
-                const da = parseDate(getAttributionDate(a)) || new Date(0);
-                const db = parseDate(getAttributionDate(b)) || new Date(0);
-                return db - da;
-            });
-            
-            document.getElementById('customersOrdersDrilldownBody').innerHTML = sorted.map(r => {
-                const status = getStatus(r);
-                const pl = getPLValue(r);
-                const qty = parseNumber(getVal(r, 'QTY'));
-                const revenue = parseNumber(r[COL.REVENUE]);
-                const unitPrice = getUnitPrice(r);
-                const profitPart = getProfitPerPart(r);
-                const margin = revenue > 0 ? (pl / revenue * 100) : 0;
-                const dateStr = getAttributionDate(r) || '-';
-                const statusBadge = status === 'shipped' ? getStatusBadge(status) : `<span class="badge forecast">FORECAST</span>`;
-                
-                return `<tr>
-                    <td>${getVal(r, 'PO_NUM') || getVal(r, 'IF_NUM') || '-'}</td>
-                    <td>${statusBadge}</td>
-                    <td>${formatNumber(qty)}</td>
-                    <td>${formatCurrency(unitPrice)}</td>
-                    <td>${getContributionBadge(margin)}</td>
-                    <td class="${profitPart >= 0 ? 'positive' : 'negative'}">${formatCurrency(profitPart)}</td>
-                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>
-                    <td>${formatCurrency(revenue)}</td>
-                    <td>${dateStr}</td>
-                </tr>`;
-            }).join('');
-            
-            document.getElementById('customersOrdersDrilldown').classList.add('active');
-            document.getElementById('customersOrdersDrilldown').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function closeCustomersProductDrilldown() {
-            document.getElementById('customersProductDrilldown').classList.remove('active');
-            document.getElementById('customersOrdersDrilldown').classList.remove('active');
-            currentDrilldownCustomer = null;
-        }
-        
-        function closeCustomersOrdersDrilldown() { document.getElementById('customersOrdersDrilldown').classList.remove('active'); }
-        function backToCustomersProducts() { document.getElementById('customersOrdersDrilldown').classList.remove('active'); }
-        function closeAllCustomersDrilldowns() { closeCustomersProductDrilldown(); }
 
-        // ============================================================
-        // SALES BY DATE PAGE (Enhanced with Drilldowns)
-        // ============================================================
-        function toggleDatesCategory(cat) {
-            datesFilters.categories[cat] = !datesFilters.categories[cat];
-            if (!datesFilters.categories.rolltech && !datesFilters.categories.molding) { datesFilters.categories[cat] = true; return; }
-            document.getElementById('datesBtnRollTech').classList.toggle('active', datesFilters.categories.rolltech);
-            document.getElementById('datesBtnMolding').classList.toggle('active', datesFilters.categories.molding);
-            updateSalesDatesPage();
-        }
-        
-        function applyDatesDateFilter() {
-            datesFilters.fromDate = document.getElementById('datesFromDate').value ? new Date(document.getElementById('datesFromDate').value) : null;
-            datesFilters.toDate = document.getElementById('datesToDate').value ? new Date(document.getElementById('datesToDate').value) : null;
-            updateSalesDatesPage();
-        }
-        
-        function resetDatesDateFilter() {
-            document.getElementById('datesFromDate').value = '';
-            document.getElementById('datesToDate').value = '';
-            datesFilters.fromDate = null;
-            datesFilters.toDate = null;
-            updateSalesDatesPage();
-        }
-        
-        function getFilteredDatesData() {
-            return allData.filter(r => {
-                if (!datesFilters.categories[getCategory(r)]) return false;
-                if (datesFilters.fromDate || datesFilters.toDate) {
-                    const dateStr = getAttributionDate(r);
-                    if (!dateStr) return false;
-                    const rowDate = parseDate(dateStr);
-                    if (!rowDate) return false;
-                    if (datesFilters.fromDate && rowDate < datesFilters.fromDate) return false;
-                    if (datesFilters.toDate && rowDate > datesFilters.toDate) return false;
-                }
-                return true;
-            });
-        }
-        
-        function updateSalesDatesPage() {
-            const data = getFilteredDatesData();
+        function renderSalesDatesData() {
+            const data = allData.filter(r => datesFilters.categories[getCategory(r)]);
             const monthStats = {};
-            let totalOrders = 0, totalUnits = 0, totalRevenue = 0, totalPL = 0;
-            
             data.forEach(r => {
                 const dateStr = getAttributionDate(r);
                 if (!dateStr) return;
                 const month = getMonthKey(dateStr);
-                const status = getStatus(r);
-                if (!monthStats[month]) monthStats[month] = { orders: 0, shipped: 0, qty: 0, revenue: 0, shippedPL: 0, forecastPL: 0 };
+                if (!monthStats[month]) monthStats[month] = { orders: 0, shipped: 0, qty: 0, revenue: 0, pl: 0 };
                 monthStats[month].orders++;
                 monthStats[month].qty += parseNumber(getVal(r, 'QTY'));
                 monthStats[month].revenue += parseNumber(r[COL.REVENUE]);
-                if (status === 'shipped') monthStats[month].shipped++;
-                if (!hasMissingCostData(r)) {
-                    const pl = getPLValue(r);
-                    if (status === 'shipped') monthStats[month].shippedPL += pl;
-                    else monthStats[month].forecastPL += pl;
-                }
-                totalOrders++;
-                totalUnits += parseNumber(getVal(r, 'QTY'));
-                totalRevenue += parseNumber(r[COL.REVENUE]);
-                if (!hasMissingCostData(r)) totalPL += getPLValue(r);
+                if (getStatus(r) === 'shipped') monthStats[month].shipped++;
+                if (!hasMissingCostData(r)) monthStats[month].pl += getPLValue(r);
             });
             
-            const margin = totalRevenue > 0 ? ((totalPL / totalRevenue) * 100) : 0;
-            const monthCount = Object.keys(monthStats).length;
+            const sortedMonths = Object.entries(monthStats).sort((a,b) => b[0].localeCompare(a[0]));
+            const totalOrders = sortedMonths.reduce((s, [_,v]) => s + v.orders, 0);
+            const totalUnits = sortedMonths.reduce((s, [_,v]) => s + v.qty, 0);
+            const totalRevenue = sortedMonths.reduce((s, [_,v]) => s + v.revenue, 0);
+            const totalPL = sortedMonths.reduce((s, [_,v]) => s + v.pl, 0);
             
             document.getElementById('datesStatOrders').textContent = formatNumber(totalOrders);
             document.getElementById('datesStatUnits').textContent = `${formatNumber(totalUnits)} units`;
             document.getElementById('datesStatRevenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('datesStatPL').textContent = formatCurrency(totalPL);
             document.getElementById('datesStatPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('datesStatMargin').textContent = `Margin: ${margin.toFixed(1)}%`;
-            document.getElementById('datesStatMarginPct').textContent = `${margin.toFixed(1)}%`;
-            document.getElementById('datesStatMarginPct').className = `value ${margin >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('datesStatMonths').textContent = `${monthCount} months`;
-            
-            const sortedMonths = Object.entries(monthStats).sort((a,b) => a[0].localeCompare(b[0]));
-            
-            // Stacked bar chart with shipped profit/loss and forecast profit/loss
-            if (charts.datesBar) charts.datesBar.destroy();
-            charts.datesBar = new Chart(document.getElementById('datesBarChart'), {
-                type: 'bar',
-                data: {
-                    labels: sortedMonths.map(s => formatMonthLabel(s[0])),
-                    datasets: [
-                        { label: 'Shipped Profit', data: sortedMonths.map(s => Math.max(0, s[1].shippedPL)), backgroundColor: 'rgba(56,161,105,0.8)', stack: 'shipped' },
-                        { label: 'Shipped Loss', data: sortedMonths.map(s => Math.min(0, s[1].shippedPL)), backgroundColor: 'rgba(229,62,62,0.8)', stack: 'shipped' },
-                        { label: 'Forecast Profit', data: sortedMonths.map(s => Math.max(0, s[1].forecastPL)), backgroundColor: 'rgba(56,161,105,0.4)', stack: 'forecast' },
-                        { label: 'Forecast Loss', data: sortedMonths.map(s => Math.min(0, s[1].forecastPL)), backgroundColor: 'rgba(229,62,62,0.4)', stack: 'forecast' }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#a0aec0' } } },
-                    scales: {
-                        y: { stacked: true, ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        x: { stacked: true, ticks: { color: '#a0aec0', font: { size: 10 } }, grid: { display: false } }
-                    }
-                }
-            });
-            
-            // Table with X/Y Shipped format
+            document.getElementById('datesStatMarginPct').textContent = `${totalRevenue > 0 ? ((totalPL/totalRevenue)*100).toFixed(1) : 0}%`;
+            document.getElementById('datesStatMonths').textContent = `${sortedMonths.length} months`;
             document.getElementById('datesTableCount').textContent = `${sortedMonths.length} months`;
-            document.getElementById('datesTableBody').innerHTML = sortedMonths.reverse().map(([month, stats]) => {
-                const totalPL = stats.shippedPL + stats.forecastPL;
-                const rowMargin = stats.revenue > 0 ? ((totalPL / stats.revenue) * 100).toFixed(1) : 0;
-                const statusText = `${stats.shipped}/${stats.orders} Shipped`;
+            
+            document.getElementById('datesTableBody').innerHTML = sortedMonths.map(([month, stats]) => {
+                const margin = stats.revenue > 0 ? ((stats.pl / stats.revenue) * 100).toFixed(1) : 0;
                 return `<tr class="clickable" onclick="showDatesCustomerDrilldown('${month}')">
                     <td><strong>${formatMonthLabel(month)}</strong></td>
-                    <td>${statusText}</td>
-                    <td>${formatNumber(stats.orders)}</td>
-                    <td>${formatNumber(stats.qty)}</td>
-                    <td>${formatCurrency(stats.revenue)}</td>
-                    <td class="${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</td>
-                    <td class="${parseFloat(rowMargin) >= 0 ? 'positive' : 'negative'}">${rowMargin}%</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function exportDatesCSV() { downloadCSV('Month,Status,Orders,Quantity,Revenue,P/L,Margin', 'dates_pl.csv'); }
-        
-        // Dates Drilldown Functions
-        function showDatesCustomerDrilldown(month) {
-            currentDrilldownMonth = month;
-            const data = getFilteredDatesData().filter(r => getMonthKey(getAttributionDate(r)) === month);
-            
-            const custStats = {};
-            data.forEach(r => {
-                const c = getVal(r, 'CUSTOMER') || 'Unknown';
-                if (!custStats[c]) custStats[c] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
-                custStats[c].orders++;
-                custStats[c].qty += parseNumber(getVal(r, 'QTY'));
-                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
-                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
-            });
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            
-            document.getElementById('datesCustomerDrilldownMonth').textContent = formatMonthLabel(month);
-            document.getElementById('datesCustomerSummary').innerHTML = `
-                <div class="summary-item"><div class="label">Orders</div><div class="value">${data.length}</div></div>
-                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
-                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
-                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
-            `;
-            
-            const sorted = Object.entries(custStats).sort((a,b) => b[1].pl - a[1].pl);
-            document.getElementById('datesCustomerDrilldownBody').innerHTML = sorted.map(([customer, stats]) => {
-                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
-                return `<tr class="clickable" onclick="showDatesOrdersDrilldown('${currentDrilldownMonth}', '${customer.replace(/'/g, "\\'")}')">
-                    <td><strong>${customer}</strong></td>
+                    <td>${stats.shipped}/${stats.orders} Shipped</td>
                     <td>${formatNumber(stats.orders)}</td>
                     <td>${formatNumber(stats.qty)}</td>
                     <td>${formatCurrency(stats.revenue)}</td>
                     <td class="${stats.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(stats.pl)}</td>
-                    <td class="${margin >= 0 ? 'positive' : 'negative'}">${margin.toFixed(1)}%</td>
+                    <td class="${parseFloat(margin) >= 0 ? 'positive' : 'negative'}">${margin}%</td>
                 </tr>`;
             }).join('');
-            
-            document.getElementById('datesCustomerDrilldown').classList.add('active');
-            document.getElementById('datesOrdersDrilldown').classList.remove('active');
-            document.getElementById('datesCustomerDrilldown').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function showDatesOrdersDrilldown(month, customer) {
-            currentDrilldownCustomer = customer;
-            const data = getFilteredDatesData().filter(r => getMonthKey(getAttributionDate(r)) === month && getVal(r, 'CUSTOMER') === customer);
-            
-            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            
-            document.getElementById('datesOrdersBreadcrumbMonth').textContent = formatMonthLabel(month);
-            document.getElementById('datesOrdersBreadcrumbCustomer').textContent = customer;
-            document.getElementById('datesOrdersSummary').innerHTML = `
-                <div class="summary-item"><div class="label">Orders</div><div class="value">${data.length}</div></div>
-                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
-                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
-                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
-            `;
-            
-            const sorted = [...data].sort((a,b) => {
-                const da = parseDate(getAttributionDate(a)) || new Date(0);
-                const db = parseDate(getAttributionDate(b)) || new Date(0);
-                return db - da;
-            });
-            
-            document.getElementById('datesOrdersDrilldownBody').innerHTML = sorted.map(r => {
-                const status = getStatus(r);
-                const pl = getPLValue(r);
-                const qty = parseNumber(getVal(r, 'QTY'));
-                const revenue = parseNumber(r[COL.REVENUE]);
-                const unitPrice = getUnitPrice(r);
-                const profitPart = getProfitPerPart(r);
-                const dateStr = getAttributionDate(r) || '-';
-                const statusBadge = status === 'shipped' ? getStatusBadge(status) : `<span class="badge forecast">FORECAST</span>`;
-                
-                return `<tr>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${getVal(r, 'PO_NUM') || getVal(r, 'IF_NUM') || '-'}</td>
-                    <td>${statusBadge}</td>
-                    <td>${dateStr}</td>
-                    <td>${formatNumber(qty)}</td>
-                    <td>${formatCurrency(unitPrice)}</td>
-                    <td class="${profitPart >= 0 ? 'positive' : 'negative'}">${formatCurrency(profitPart)}</td>
-                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>
-                    <td>${formatCurrency(revenue)}</td>
-                </tr>`;
-            }).join('');
-            
-            document.getElementById('datesOrdersDrilldown').classList.add('active');
-            document.getElementById('datesOrdersDrilldown').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function closeDatesCustomerDrilldown() {
-            document.getElementById('datesCustomerDrilldown').classList.remove('active');
-            document.getElementById('datesOrdersDrilldown').classList.remove('active');
-            currentDrilldownMonth = null;
-        }
-        
-        function closeDatesOrdersDrilldown() { document.getElementById('datesOrdersDrilldown').classList.remove('active'); }
-        function backToDatesCustomers() { document.getElementById('datesOrdersDrilldown').classList.remove('active'); }
-        function closeAllDatesDrilldowns() { closeDatesCustomerDrilldown(); }
-
-        // ============================================================
-        // BOM EXPLORER
-        // ============================================================
-        function initBomExplorer() { renderBomSelector(); }
-        function filterBomSelector() { renderBomSelector((document.getElementById('bomSearch').value || '').toLowerCase()); }
-        
-        function switchBomTab(tab) {
-            currentBomTab = tab;
-            document.querySelectorAll('.tab[data-bomtab]').forEach(t => t.classList.toggle('active', t.dataset.bomtab === tab));
-            document.getElementById('bomSearch').value = '';
-            renderBomSelector();
-            document.getElementById('bomPartName').textContent = 'Select a part';
-            document.getElementById('bomCategory').textContent = '';
-            document.getElementById('bomContent').innerHTML = '<p style="color:var(--text-secondary);">Click on a part from the list to view details.</p>';
-        }
-        
-        function renderBomSelector(filter = '') {
-            const data = currentBomTab === 'final' ? bomFinalData : currentBomTab === 'sub' ? bomSubData : bomIndividualData;
-            const selector = document.getElementById('bomSelector');
-            if (!data || data.length === 0) { selector.innerHTML = '<p style="color:var(--text-secondary);">No BOM data available. Check that the source sheet contains data.</p>'; return; }
-            const nameKey = Object.keys(data[0]).find(k => k.trim().toLowerCase() === 'part name') || 'Part name';
-            const filtered = data.filter(d => (d[nameKey] || '').toLowerCase().includes(filter));
-            selector.innerHTML = filtered.length === 0 ? '<p style="color:var(--text-secondary);">No parts found.</p>' : filtered.map((d, i) => {
-                const originalIndex = data.indexOf(d);
-                return `<div class="bom-item" data-index="${originalIndex}" onclick="showBomDetails(${originalIndex})">${d[nameKey] || 'Unknown'}</div>`;
-            }).join('');
-        }
-        
-        function showBomDetails(index) {
-            const data = currentBomTab === 'final' ? bomFinalData : currentBomTab === 'sub' ? bomSubData : bomIndividualData;
-            const part = data[index];
-            if (!part) return;
-            
-            document.querySelectorAll('.bom-item').forEach((item, i) => item.classList.toggle('selected', parseInt(item.dataset.index) === index));
-            
-            const nameKey = Object.keys(part).find(k => k.trim().toLowerCase() === 'part name') || 'Part name';
-            const catKey = Object.keys(part).find(k => k.trim().toLowerCase() === 'category');
-            document.getElementById('bomPartName').textContent = part[nameKey] || 'Unknown';
-            document.getElementById('bomCategory').textContent = catKey ? (part[catKey] || '') : '';
-            
-            let content = '';
-            if (currentBomTab === 'individual') {
-                content = `<div class="bom-section"><h4>Item Details</h4><div class="cost-breakdown">`;
-                const descKey = Object.keys(part).find(k => k.trim().toLowerCase() === 'description');
-                const costKey = Object.keys(part).find(k => k.trim().toLowerCase().includes('cost'));
-                const suppKey = Object.keys(part).find(k => k.trim().toLowerCase() === 'supplier');
-                if (descKey && part[descKey]) content += `<div class="cost-item"><span class="label">Description</span><span class="value">${part[descKey]}</span></div>`;
-                if (costKey && part[costKey]) content += `<div class="cost-item"><span class="label">Cost/lb</span><span class="value">${formatCurrency(parseNumber(part[costKey]))}</span></div>`;
-                if (suppKey && part[suppKey]) content += `<div class="cost-item"><span class="label">Supplier</span><span class="value">${part[suppKey]}</span></div>`;
-                content += `</div></div>`;
-            } else if (currentBomTab === 'sub') {
-                content = `<div class="bom-section"><h4>Assembly Info</h4><div class="cost-breakdown">`;
-                for (const [label, search, exactMatch] of [['Mold','mold',false],['Weight','weight',false],['Labor/Part','labor cost/ part',false],['Overhead','overhead',false],['Total Cost','total cost',true]]) {
-                    let key = exactMatch ? Object.keys(part).find(k => k.trim().toLowerCase() === search) : Object.keys(part).find(k => k.trim().toLowerCase().includes(search));
-                    if (key && part[key]) content += `<div class="cost-item"><span class="label">${label}</span><span class="value">${['Labor/Part','Overhead','Total Cost'].includes(label) ? formatCurrency(parseNumber(part[key])) : part[key]}</span></div>`;
-                }
-                content += `</div></div><div class="bom-section"><h4>Components</h4><div class="component-list">`;
-                for (let i = 1; i <= 5; i++) {
-                    const comp = Object.keys(part).find(k => k.trim() === `Component ${i}`);
-                    const qty = Object.keys(part).find(k => k.trim() === `Component ${i} Qty.`);
-                    const cost = Object.keys(part).find(k => k.trim() === `Component ${i} cost`);
-                    if (comp && part[comp] && part[comp] !== 'nan') content += `<div class="component-item"><span class="name">${part[comp]}</span><span class="details"><span>Qty: ${qty ? part[qty] : '-'}</span><span>Cost: ${cost ? formatCurrency(parseNumber(part[cost])) : '-'}</span></span></div>`;
-                }
-                content += `</div></div>`;
-            } else {
-                content = `<div class="bom-section"><h4>Assembly Info</h4><div class="cost-breakdown">`;
-                const partsPkgKey = Object.keys(part).find(k => k.trim().toLowerCase().includes('parts per package'));
-                if (partsPkgKey && part[partsPkgKey]) content += `<div class="cost-item"><span class="label">Parts/Pkg</span><span class="value">${part[partsPkgKey]}</span></div>`;
-                const laborKey = Object.keys(part).find(k => k.trim().toLowerCase().includes('labor cost / finished') || k.trim().toLowerCase().includes('labor cost/ finished'));
-                if (laborKey && part[laborKey]) content += `<div class="cost-item"><span class="label">Labor</span><span class="value">${formatCurrency(parseNumber(part[laborKey]))}</span></div>`;
-                const varCostKey = Object.keys(part).find(k => k.trim().toLowerCase() === 'variable cost');
-                if (varCostKey && part[varCostKey]) content += `<div class="cost-item"><span class="label">Variable Cost</span><span class="value">${formatCurrency(parseNumber(part[varCostKey]))}</span></div>`;
-                const totalCostKey = Object.keys(part).find(k => k.trim().toLowerCase() === 'total cost');
-                if (totalCostKey && part[totalCostKey]) content += `<div class="cost-item"><span class="label">Total Cost</span><span class="value">${formatCurrency(parseNumber(part[totalCostKey]))}</span></div>`;
-                content += `</div></div>`;
-                const profitKey = Object.keys(part).find(k => k.trim().toLowerCase().includes('profit target'));
-                const salesKey = Object.keys(part).find(k => k.trim().toLowerCase().includes('sales target'));
-                if ((profitKey && part[profitKey]) || (salesKey && part[salesKey])) {
-                    content += `<div class="highlight-box">`;
-                    if (profitKey && part[profitKey]) { const profitVal = parseNumber(part[profitKey]); const displayVal = profitVal < 1 ? (profitVal * 100).toFixed(0) + '%' : profitVal.toFixed(0) + '%'; content += `<div class="item"><div class="value">${displayVal}</div><div class="label">Profit Target</div></div>`; }
-                    if (salesKey && part[salesKey]) content += `<div class="item"><div class="value">${formatCurrency(parseNumber(part[salesKey]))}</div><div class="label">Sales Target</div></div>`;
-                    content += `</div>`;
-                }
-                content += `<div class="bom-section"><h4>Components</h4><div class="component-list">`;
-                for (let i = 1; i <= 13; i++) {
-                    const comp = Object.keys(part).find(k => k.trim() === `Component ${i}`);
-                    const qty = Object.keys(part).find(k => k.trim() === `Component ${i} Qty.`);
-                    const cost = Object.keys(part).find(k => k.trim() === `Component ${i} Cost.`);
-                    if (comp && part[comp] && part[comp] !== 'nan' && !String(part[comp]).startsWith('nan')) {
-                        content += `<div class="component-item"><span class="name">${part[comp]}</span><span class="details"><span>Qty: ${qty && part[qty] && part[qty] !== 'nan' ? part[qty] : '-'}</span><span>Cost: ${cost && part[cost] && part[cost] !== 'nan' ? formatCurrency(parseNumber(part[cost])) : '-'}</span></span></div>`;
-                    }
-                }
-                content += `</div></div>`;
-            }
-            document.getElementById('bomContent').innerHTML = content;
         }
 
         // Initialize
