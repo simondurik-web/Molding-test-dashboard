@@ -1102,6 +1102,50 @@
         const hasMissingCostData = row => isEmpty(row[COL.VARIABLE_COST]) || isEmpty(row[COL.TOTAL_COST]) || (isEmpty(row[COL.PL]) && isEmpty(row[COL.PL_TOTAL]));
         const getPLValue = row => { if (!isEmpty(row[COL.PL])) return parseNumber(row[COL.PL]); if (!isEmpty(row[COL.PL_TOTAL])) return parseNumber(row[COL.PL_TOTAL]); return 0; };
         
+        // v5 Helper Functions
+        const getAttributionDate = row => {
+            const status = getStatus(row);
+            if (status === 'shipped') return row[COL.SHIPPED_DATE];
+            return row[COL.REQUESTED_DATE] || getVal(row, 'REQUEST_DATE');
+        };
+        
+        const getMonthKey = dateStr => {
+            if (!dateStr) return null;
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                return `${parts[2].length === 2 ? '20' + parts[2] : parts[2]}-${parts[0].padStart(2, '0')}`;
+            }
+            return dateStr.substring(0, 7);
+        };
+        
+        const formatMonthLabel = monthKey => {
+            if (!monthKey) return '-';
+            const [year, month] = monthKey.split('-');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${months[parseInt(month) - 1]} ${year}`;
+        };
+        
+        const getUnitPrice = row => {
+            const unitPrice = parseNumber(row[COL.UNIT_PRICE]);
+            if (unitPrice > 0) return unitPrice;
+            const revenue = parseNumber(row[COL.REVENUE]);
+            const qty = parseNumber(getVal(row, 'QTY'));
+            return qty > 0 ? revenue / qty : 0;
+        };
+        
+        const getProfitPerPart = row => {
+            const pl = getPLValue(row);
+            const qty = parseNumber(getVal(row, 'QTY'));
+            return qty > 0 ? pl / qty : 0;
+        };
+        
+        const getContributionBadge = margin => {
+            if (margin < -10) return '<span class="badge" style="background:var(--danger);">CRITICAL</span>';
+            if (margin < 0) return '<span class="badge" style="background:var(--warning);color:#1a202c;">LOW</span>';
+            if (margin < 15) return '<span class="badge" style="background:var(--accent);">TARGET</span>';
+            return '<span class="badge" style="background:var(--success);">PROFITABLE</span>';
+        };
+        
         const getCategory = row => {
             const cat = (getVal(row, 'CATEGORY') || '').toLowerCase();
             if (cat.includes('roll tech')) return 'rolltech';
