@@ -542,6 +542,7 @@
                     <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠  Low Stock</button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 Needs Production</button>
                 </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportInvCSV()">📥 Export</button>
             </div>
@@ -555,17 +556,7 @@
                 <div class="chart-header"><h3>Inventory Status</h3><span style="color:var(--text-secondary);font-size:12px;" id="invTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table" id="invTable">
-                        <thead><tr>
-                            <th onclick="sortInvTable('product')">Product Type</th>
-                            <th onclick="sortInvTable('partNumber')">Part Number</th>
-                            <th onclick="sortInvTable('fusionQty')">Fusion Qty</th>
-                            <th onclick="sortInvTable('minimum')">Minimum</th>
-                            <th onclick="sortInvTable('manualTarget')">Manual Target</th>
-                            <th onclick="sortInvTable('qtyNeeded')">Qty Needed</th>
-                            <th onclick="sortInvTable('partsToBeMade')">Parts to Make</th>
-                            <th onclick="sortInvTable('moldType')">Mold Type</th>
-                            <th>Status</th>
-                        </tr></thead>
+                        <thead><tr id="invTableHeader"></tr></thead>
                         <tbody id="invTableBody"></tbody>
                     </table>
                 </div>
@@ -770,6 +761,7 @@
                     <label>To:</label><input type="date" id="datesToDate" onchange="applyDatesDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 Clear Dates</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportDatesCSV()">📥 Export</button>
             </div>
@@ -786,7 +778,7 @@
             <div class="chart-container">
                 <div class="chart-header"><h3>Monthly Details</h3><span style="color:var(--text-secondary);font-size:12px;" id="datesTableCount">-</span></div>
                 <div class="scrollable-table">
-                    <table class="data-table"><thead><tr><th>Month</th><th>Status</th><th>Orders</th><th>Qty</th><th>Revenue</th><th>P/L</th><th>Margin</th></tr></thead><tbody id="datesTableBody"></tbody></table>
+                    <table class="data-table"><thead><tr id="datesTableHeader"></tr></thead><tbody id="datesTableBody"></tbody></table>
                 </div>
             </div>
             <!-- Dates Customer Drilldown (Level 1) -->
@@ -1148,6 +1140,7 @@
         let invSort = { field: 'partNumber', asc: true };
         let partsSort = { field: 'pl', asc: false };
         let customersSort = { field: 'pl', asc: false };
+        let datesSort = { field: 'month', asc: false };
         let partsCustomerDrilldownSort = { field: 'pl', asc: false };
         let customersProductDrilldownSort = { field: 'pl', asc: false };
         
@@ -1309,7 +1302,7 @@
                     <span>${label}${filterIndicator}</span>
                     <div class="filter-th-btns">
                         ${sortable ? `<button onclick="sortTableColumn('${tableId}', '${columnKey}')" title="Sort">↕</button>` : ''}
-                        <button onclick="openColumnFilter('${tableId}', '${columnKey}', this)" title="Filter">▼</button>
+                        <button onclick="openColumnFilter('${tableId}', '${columnKey}', this)" title="Filter">â–¼</button>
                     </div>
                 </div>
             </th>`;
@@ -1325,6 +1318,7 @@
                 case 'ordersStaged': sortOrdersStagedTable(columnKey); break;
                 case 'ordersShipped': sortOrdersShippedTable(columnKey); break;
                 case 'inventory': sortInvTable(columnKey); break;
+                case 'dates': sortDatesTable(columnKey); break;
             }
         }
         
@@ -1580,6 +1574,11 @@
                 switch(columnKey) {
                     case 'product': values.add(i.product || '-'); break;
                     case 'partNumber': values.add(i.partNumber); break;
+                    case 'fusionQty': values.add(String(i.fusionQty)); break;
+                    case 'minimum': values.add(String(i.minimum)); break;
+                    case 'manualTarget': values.add(String(i.manualTarget)); break;
+                    case 'qtyNeeded': values.add(String(i.qtyNeeded)); break;
+                    case 'partsToBeMade': values.add(String(i.partsToBeMade)); break;
                     case 'moldType': values.add(i.moldType || '-'); break;
                     case 'status':
                         const isLow = i.fusionQty < i.minimum && i.minimum > 0;
@@ -1598,14 +1597,29 @@
                 const dateStr = getAttributionDate(r);
                 if (!dateStr) return;
                 const month = getMonthKey(dateStr);
-                if (!monthStats[month]) monthStats[month] = { orders: 0, shipped: 0 };
+                if (!monthStats[month]) monthStats[month] = { orders: 0, shipped: 0, qty: 0, revenue: 0, pl: 0 };
                 monthStats[month].orders++;
+                monthStats[month].qty += parseNumber(getVal(r, 'QTY'));
+                monthStats[month].revenue += parseNumber(r[COL.REVENUE]);
                 if (getStatus(r) === 'shipped') monthStats[month].shipped++;
+                if (!hasMissingCostData(r)) monthStats[month].pl += getPLValue(r);
             });
             const values = new Set();
             Object.entries(monthStats).forEach(([month, stats]) => {
+                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
                 switch(columnKey) {
                     case 'month': values.add(formatMonthLabel(month)); break;
+                    case 'status': values.add(`${stats.shipped}/${stats.orders} Shipped`); break;
+                    case 'orders': values.add(String(stats.orders)); break;
+                    case 'qty': values.add(String(stats.qty)); break;
+                    case 'revenue': values.add(formatCurrency(stats.revenue)); break;
+                    case 'pl': values.add(stats.pl >= 0 ? 'Positive' : 'Negative'); break;
+                    case 'margin':
+                        if (margin < 0) values.add('Negative');
+                        else if (margin < 10) values.add('Low (0-10%)');
+                        else if (margin < 20) values.add('Medium (10-20%)');
+                        else values.add('High (>20%)');
+                        break;
                 }
             });
             return Array.from(values).sort();
@@ -2337,7 +2351,21 @@
             renderInvTable();
         }
         
+        function renderInvTableHeader() {
+            document.getElementById('invTableHeader').innerHTML = 
+                createFilterHeader('inventory', 'product', 'Product Type') +
+                createFilterHeader('inventory', 'partNumber', 'Part Number') +
+                createFilterHeader('inventory', 'fusionQty', 'Fusion Qty') +
+                createFilterHeader('inventory', 'minimum', 'Minimum') +
+                createFilterHeader('inventory', 'manualTarget', 'Manual Target') +
+                createFilterHeader('inventory', 'qtyNeeded', 'Qty Needed') +
+                createFilterHeader('inventory', 'partsToBeMade', 'Parts to Make') +
+                createFilterHeader('inventory', 'moldType', 'Mold Type') +
+                createFilterHeader('inventory', 'status', 'Status');
+        }
+        
         function renderInvTable() {
+            renderInvTableHeader();
             let data = [...inventoryData];
             const searchTerm = (document.getElementById('invSearch')?.value || '').toLowerCase();
             
@@ -2347,6 +2375,24 @@
             if (searchTerm) {
                 data = data.filter(i => (i.partNumber || '').toLowerCase().includes(searchTerm) || (i.product || '').toLowerCase().includes(searchTerm) || (i.moldType || '').toLowerCase().includes(searchTerm));
             }
+            
+            // Apply column filters
+            data = data.filter(i => {
+                const isLow = i.fusionQty < i.minimum && i.minimum > 0;
+                const needsMake = i.partsToBeMade > 0;
+                const status = isLow ? 'LOW' : (needsMake ? 'MAKE' : 'OK');
+                
+                if (!passesColumnFilter('inventory', 'product', i.product || '-')) return false;
+                if (!passesColumnFilter('inventory', 'partNumber', i.partNumber)) return false;
+                if (!passesColumnFilter('inventory', 'fusionQty', String(i.fusionQty))) return false;
+                if (!passesColumnFilter('inventory', 'minimum', String(i.minimum))) return false;
+                if (!passesColumnFilter('inventory', 'manualTarget', String(i.manualTarget))) return false;
+                if (!passesColumnFilter('inventory', 'qtyNeeded', String(i.qtyNeeded))) return false;
+                if (!passesColumnFilter('inventory', 'partsToBeMade', String(i.partsToBeMade))) return false;
+                if (!passesColumnFilter('inventory', 'moldType', i.moldType || '-')) return false;
+                if (!passesColumnFilter('inventory', 'status', status)) return false;
+                return true;
+            });
             
             data.sort((a, b) => {
                 let va = a[invSort.field], vb = b[invSort.field];
@@ -2373,6 +2419,8 @@
                     <td>${statusBadge}</td>
                 </tr>`;
             }).join('');
+            
+            updateClearAllButton('inventory');
         }
         
         function filterInvTable() { renderInvTable(); }
@@ -3211,19 +3259,66 @@
             document.getElementById('datesStatMarginPct').className = `value ${margin >= 0 ? 'positive' : 'negative'}`;
             document.getElementById('datesStatMonths').textContent = `${monthCount} months`;
             
-            const sortedMonths = Object.entries(monthStats).sort((a,b) => a[0].localeCompare(b[0]));
+            // Convert to array for filtering and sorting
+            let monthsArray = Object.entries(monthStats).map(([month, stats]) => {
+                const totalPL = stats.shippedPL + stats.forecastPL;
+                const rowMargin = stats.revenue > 0 ? (totalPL / stats.revenue * 100) : 0;
+                return {
+                    month,
+                    monthLabel: formatMonthLabel(month),
+                    statusText: `${stats.shipped}/${stats.orders} Shipped`,
+                    orders: stats.orders,
+                    shipped: stats.shipped,
+                    qty: stats.qty,
+                    revenue: stats.revenue,
+                    pl: totalPL,
+                    margin: rowMargin,
+                    shippedPL: stats.shippedPL,
+                    forecastPL: stats.forecastPL
+                };
+            });
+            
+            // Apply column filters
+            monthsArray = monthsArray.filter(m => {
+                if (!passesColumnFilter('dates', 'month', m.monthLabel)) return false;
+                if (!passesColumnFilter('dates', 'status', m.statusText)) return false;
+                if (!passesColumnFilter('dates', 'orders', String(m.orders))) return false;
+                if (!passesColumnFilter('dates', 'qty', String(m.qty))) return false;
+                if (!passesColumnFilter('dates', 'revenue', formatCurrency(m.revenue))) return false;
+                if (!passesColumnFilter('dates', 'pl', m.pl >= 0 ? 'Positive' : 'Negative')) return false;
+                // Margin category filter
+                let marginCat;
+                if (m.margin < 0) marginCat = 'Negative';
+                else if (m.margin < 10) marginCat = 'Low (0-10%)';
+                else if (m.margin < 20) marginCat = 'Medium (10-20%)';
+                else marginCat = 'High (>20%)';
+                if (!passesColumnFilter('dates', 'margin', marginCat)) return false;
+                return true;
+            });
+            
+            // Sort
+            monthsArray.sort((a, b) => {
+                const field = datesSort.field;
+                if (field === 'month') {
+                    return datesSort.asc ? a.month.localeCompare(b.month) : b.month.localeCompare(a.month);
+                }
+                return datesSort.asc ? a[field] - b[field] : b[field] - a[field];
+            });
+            
+            // Use full array for chart (before filtering affects it)
+            const chartMonths = Object.entries(monthStats).sort((a,b) => a[0].localeCompare(b[0]));
             
             // Stacked bar chart with shipped profit/loss and forecast profit/loss
             if (charts.datesBar) charts.datesBar.destroy();
             charts.datesBar = new Chart(document.getElementById('datesBarChart'), {
                 type: 'bar',
                 data: {
-                    labels: sortedMonths.map(s => formatMonthLabel(s[0])),
+                    labels: chartMonths.map(s => formatMonthLabel(s[0])),
                     datasets: [
-                        { label: 'Shipped Profit', data: sortedMonths.map(s => Math.max(0, s[1].shippedPL)), backgroundColor: 'rgba(56,161,105,0.8)', stack: 'shipped' },
-                        { label: 'Shipped Loss', data: sortedMonths.map(s => Math.min(0, s[1].shippedPL)), backgroundColor: 'rgba(229,62,62,0.8)', stack: 'shipped' },
-                        { label: 'Forecast Profit', data: sortedMonths.map(s => Math.max(0, s[1].forecastPL)), backgroundColor: 'rgba(56,161,105,0.4)', stack: 'forecast' },
-                        { label: 'Forecast Loss', data: sortedMonths.map(s => Math.min(0, s[1].forecastPL)), backgroundColor: 'rgba(229,62,62,0.4)', stack: 'forecast' }
+                        { label: 'Shipped Profit', data: chartMonths.map(s => Math.max(0, s[1].shippedPL)), backgroundColor: 'rgba(56,161,105,0.8)', stack: 'shipped' },
+                        { label: 'Shipped Loss', data: chartMonths.map(s => Math.min(0, s[1].shippedPL)), backgroundColor: 'rgba(229,62,62,0.8)', stack: 'shipped' },
+                        { label: 'Forecast Profit', data: chartMonths.map(s => Math.max(0, s[1].forecastPL)), backgroundColor: 'rgba(56,161,105,0.4)', stack: 'forecast' },
+                        { label: 'Forecast Loss', data: chartMonths.map(s => Math.min(0, s[1].forecastPL)), backgroundColor: 'rgba(229,62,62,0.4)', stack: 'forecast' }
                     ]
                 },
                 options: {
@@ -3236,22 +3331,37 @@
                 }
             });
             
+            // Render filterable table header
+            document.getElementById('datesTableHeader').innerHTML = 
+                createFilterHeader('dates', 'month', 'Month') +
+                createFilterHeader('dates', 'status', 'Status') +
+                createFilterHeader('dates', 'orders', 'Orders') +
+                createFilterHeader('dates', 'qty', 'Qty') +
+                createFilterHeader('dates', 'revenue', 'Revenue') +
+                createFilterHeader('dates', 'pl', 'P/L') +
+                createFilterHeader('dates', 'margin', 'Margin');
+            
             // Table with X/Y Shipped format
-            document.getElementById('datesTableCount').textContent = `${sortedMonths.length} months`;
-            document.getElementById('datesTableBody').innerHTML = sortedMonths.reverse().map(([month, stats]) => {
-                const totalPL = stats.shippedPL + stats.forecastPL;
-                const rowMargin = stats.revenue > 0 ? ((totalPL / stats.revenue) * 100).toFixed(1) : 0;
-                const statusText = `${stats.shipped}/${stats.orders} Shipped`;
-                return `<tr class="clickable" onclick="showDatesCustomerDrilldown('${month}')">
-                    <td><strong>${formatMonthLabel(month)}</strong></td>
-                    <td>${statusText}</td>
-                    <td>${formatNumber(stats.orders)}</td>
-                    <td>${formatNumber(stats.qty)}</td>
-                    <td>${formatCurrency(stats.revenue)}</td>
-                    <td class="${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</td>
-                    <td class="${parseFloat(rowMargin) >= 0 ? 'positive' : 'negative'}">${rowMargin}%</td>
+            document.getElementById('datesTableCount').textContent = `${monthsArray.length} months`;
+            document.getElementById('datesTableBody').innerHTML = monthsArray.map(m => {
+                return `<tr class="clickable" onclick="showDatesCustomerDrilldown('${m.month}')">
+                    <td><strong>${m.monthLabel}</strong></td>
+                    <td>${m.statusText}</td>
+                    <td>${formatNumber(m.orders)}</td>
+                    <td>${formatNumber(m.qty)}</td>
+                    <td>${formatCurrency(m.revenue)}</td>
+                    <td class="${m.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(m.pl)}</td>
+                    <td class="${m.margin >= 0 ? 'positive' : 'negative'}">${m.margin.toFixed(1)}%</td>
                 </tr>`;
             }).join('');
+            
+            updateClearAllButton('dates');
+        }
+        
+        function sortDatesTable(field) {
+            if (datesSort.field === field) datesSort.asc = !datesSort.asc;
+            else { datesSort.field = field; datesSort.asc = field === 'month'; }
+            updateSalesDatesPage();
         }
         
         function exportDatesCSV() { downloadCSV('Month,Status,Orders,Quantity,Revenue,P/L,Margin', 'dates_pl.csv'); }
