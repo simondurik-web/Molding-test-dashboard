@@ -1081,6 +1081,8 @@
         let ordersShippedFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null };
         let salesFilters = { categories: { rolltech: true, molding: false } };
         let datesFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null };
+        let partsFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null, watchlistOnly: false };
+        let customersFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null, watchlistOnly: false };
         
         // Sort states
         let ordersDataSort = { field: 'daysUntil', asc: true };
@@ -1089,6 +1091,21 @@
         let ordersShippedSort = { field: 'shippedDate', asc: false };
         let invFilter = 'all';
         let invSort = { field: 'partNumber', asc: true };
+        let partsSort = { field: 'pl', asc: false };
+        let customersSort = { field: 'pl', asc: false };
+        
+        // Drilldown state
+        let currentDrilldownPart = null;
+        let currentDrilldownCustomer = null;
+        let currentDrilldownMonth = null;
+        
+        // Watchlist (localStorage persistence)
+        let watchlistParts = [];
+        let watchlistCustomers = [];
+        try {
+            watchlistParts = JSON.parse(localStorage.getItem('rolltech_watchlist_parts') || '[]');
+            watchlistCustomers = JSON.parse(localStorage.getItem('rolltech_watchlist_customers') || '[]');
+        } catch(e) { console.warn('Could not load watchlist from localStorage'); }
 
         // ============================================================
         // UTILITIES
@@ -1138,6 +1155,29 @@
             const qty = parseNumber(getVal(row, 'QTY'));
             return qty > 0 ? pl / qty : 0;
         };
+        
+        // Watchlist functions
+        function isInWatchlist(type, value) {
+            if (type === 'part') return watchlistParts.includes(value);
+            if (type === 'customer') return watchlistCustomers.includes(value);
+            return false;
+        }
+        
+        function toggleWatchlistPart(part) {
+            const idx = watchlistParts.indexOf(part);
+            if (idx > -1) watchlistParts.splice(idx, 1);
+            else watchlistParts.push(part);
+            try { localStorage.setItem('rolltech_watchlist_parts', JSON.stringify(watchlistParts)); } catch(e) {}
+            updateSalesPartsPage();
+        }
+        
+        function toggleWatchlistCustomer(customer) {
+            const idx = watchlistCustomers.indexOf(customer);
+            if (idx > -1) watchlistCustomers.splice(idx, 1);
+            else watchlistCustomers.push(customer);
+            try { localStorage.setItem('rolltech_watchlist_customers', JSON.stringify(watchlistCustomers)); } catch(e) {}
+            updateSalesCustomersPage();
+        }
         
         const getContributionBadge = margin => {
             if (margin < -10) return '<span class="badge" style="background:var(--danger);">CRITICAL</span>';
