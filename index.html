@@ -592,7 +592,7 @@
                 <div class="summary-row" id="partsCustomerSummary"></div>
                 <div class="scrollable-table">
                     <table class="data-table">
-                        <thead><tr><th>Customer</th><th>Qty</th><th>Unit Price</th><th>Contribution</th><th>Margin</th><th>P/L</th><th>Revenue</th></tr></thead>
+                        <thead><tr id="partsCustomerDrilldownHeader"></tr></thead>
                         <tbody id="partsCustomerDrilldownBody"></tbody>
                     </table>
                 </div>
@@ -1093,6 +1093,8 @@
         let invSort = { field: 'partNumber', asc: true };
         let partsSort = { field: 'pl', asc: false };
         let customersSort = { field: 'pl', asc: false };
+        let partsCustomerDrilldownSort = { field: 'pl', asc: false };
+        let customersProductDrilldownSort = { field: 'pl', asc: false };
         
         // Drilldown state
         let currentDrilldownPart = null;
@@ -2258,8 +2260,13 @@
             const search = (document.getElementById('partsSearch')?.value || '').toLowerCase();
             if (search) partsArray = partsArray.filter(p => p.part.toLowerCase().includes(search));
             
-            // Sort
-            partsArray.sort((a, b) => partsSort.asc ? a[partsSort.field] - b[partsSort.field] : b[partsSort.field] - a[partsSort.field]);
+            // Sort - handle string vs numeric fields
+            partsArray.sort((a, b) => {
+                if (partsSort.field === 'part') {
+                    return partsSort.asc ? a.part.localeCompare(b.part) : b.part.localeCompare(a.part);
+                }
+                return partsSort.asc ? a[partsSort.field] - b[partsSort.field] : b[partsSort.field] - a[partsSort.field];
+            });
             
             // Render chart
             renderPartsBarChart(partsArray);
@@ -2312,8 +2319,11 @@
         function exportPartsCSV() { downloadCSV('Part,Orders,Qty,Revenue,P/L,Margin', 'parts_pl.csv'); }
         
         // Parts Drilldown Functions
+        let partsCustomerDrilldownData = []; // Store data for re-sorting
+        
         function showPartsCustomerDrilldown(part) {
             currentDrilldownPart = part;
+            partsCustomerDrilldownSort = { field: 'pl', asc: false }; // Reset sort
             const data = getFilteredPartsData().filter(r => getVal(r, 'PART') === part);
             
             const customerStats = {};
@@ -2326,36 +2336,77 @@
                 if (!hasMissingCostData(r)) customerStats[c].pl += getPLValue(r);
             });
             
+            // Convert to array with computed fields
+            partsCustomerDrilldownData = Object.entries(customerStats).map(([customer, stats]) => ({
+                customer,
+                qty: stats.qty,
+                unitPrice: stats.qty > 0 ? stats.revenue / stats.qty : 0,
+                margin: stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0,
+                pl: stats.pl,
+                revenue: stats.revenue
+            }));
+            
             const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
             const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
             const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
             
             document.getElementById('partsCustomerDrilldownPart').textContent = part;
             document.getElementById('partsCustomerSummary').innerHTML = `
-                <div class="summary-item"><div class="label">Customers</div><div class="value">${Object.keys(customerStats).length}</div></div>
+                <div class="summary-item"><div class="label">Customers</div><div class="value">${partsCustomerDrilldownData.length}</div></div>
                 <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
                 <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
                 <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
             `;
             
-            const sorted = Object.entries(customerStats).sort((a,b) => b[1].pl - a[1].pl);
-            document.getElementById('partsCustomerDrilldownBody').innerHTML = sorted.map(([customer, stats]) => {
-                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
-                const avgPrice = stats.qty > 0 ? stats.revenue / stats.qty : 0;
-                return `<tr class="clickable" onclick="showPartsOrdersDrilldown('${currentDrilldownPart.replace(/'/g, "\\'")}', '${customer.replace(/'/g, "\\'")}')">
-                    <td><strong>${customer}</strong></td>
-                    <td>${formatNumber(stats.qty)}</td>
-                    <td>${formatCurrency(avgPrice)}</td>
-                    <td>${getContributionBadge(margin)}</td>
-                    <td class="${margin >= 0 ? 'positive' : 'negative'}">${margin.toFixed(1)}%</td>
-                    <td class="${stats.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(stats.pl)}</td>
-                    <td>${formatCurrency(stats.revenue)}</td>
-                </tr>`;
-            }).join('');
+            renderPartsCustomerDrilldownTable();
             
             document.getElementById('partsCustomerDrilldown').classList.add('active');
             document.getElementById('partsOrdersDrilldown').classList.remove('active');
             document.getElementById('partsCustomerDrilldown').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function renderPartsCustomerDrilldownTable() {
+            // Render sortable header
+            document.getElementById('partsCustomerDrilldownHeader').innerHTML = `
+                <th onclick="sortPartsCustomerDrilldown('customer')">Customer <span class="sort-indicator">↕</span></th>
+                <th onclick="sortPartsCustomerDrilldown('qty')">Qty <span class="sort-indicator">↕</span></th>
+                <th onclick="sortPartsCustomerDrilldown('unitPrice')">Unit Price <span class="sort-indicator">↕</span></th>
+                <th onclick="sortPartsCustomerDrilldown('margin')">Contribution <span class="sort-indicator">↕</span></th>
+                <th onclick="sortPartsCustomerDrilldown('margin')">Margin <span class="sort-indicator">↕</span></th>
+                <th onclick="sortPartsCustomerDrilldown('pl')">P/L <span class="sort-indicator">↕</span></th>
+                <th onclick="sortPartsCustomerDrilldown('revenue')">Revenue <span class="sort-indicator">↕</span></th>
+            `;
+            
+            // Sort data
+            const sorted = [...partsCustomerDrilldownData].sort((a, b) => {
+                if (partsCustomerDrilldownSort.field === 'customer') {
+                    return partsCustomerDrilldownSort.asc ? a.customer.localeCompare(b.customer) : b.customer.localeCompare(a.customer);
+                }
+                return partsCustomerDrilldownSort.asc ? a[partsCustomerDrilldownSort.field] - b[partsCustomerDrilldownSort.field] : b[partsCustomerDrilldownSort.field] - a[partsCustomerDrilldownSort.field];
+            });
+            
+            document.getElementById('partsCustomerDrilldownBody').innerHTML = sorted.map(row => {
+                return `<tr class="clickable" onclick="showPartsOrdersDrilldown('${currentDrilldownPart.replace(/'/g, "\\'")}', '${row.customer.replace(/'/g, "\\'")}')">
+                    <td><strong>${row.customer}</strong></td>
+                    <td>${formatNumber(row.qty)}</td>
+                    <td>${formatCurrency(row.unitPrice)}</td>
+                    <td>${getContributionBadge(row.margin)}</td>
+                    <td class="${row.margin >= 0 ? 'positive' : 'negative'}">${row.margin.toFixed(1)}%</td>
+                    <td class="${row.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(row.pl)}</td>
+                    <td>${formatCurrency(row.revenue)}</td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function sortPartsCustomerDrilldown(field) {
+            if (partsCustomerDrilldownSort.field === field) {
+                partsCustomerDrilldownSort.asc = !partsCustomerDrilldownSort.asc;
+            } else {
+                partsCustomerDrilldownSort.field = field;
+                partsCustomerDrilldownSort.asc = field === 'customer'; // Strings default asc, numbers default desc
+            }
+            renderPartsCustomerDrilldownTable();
+        }
         }
         
         function showPartsOrdersDrilldown(part, customer) {
