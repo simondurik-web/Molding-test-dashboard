@@ -236,9 +236,62 @@
         .summary-item .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
         .summary-item .value { font-size: 18px; font-weight: 700; }
         @media (max-width: 768px) { .bom-grid { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } }
+        
+        /* Column Filter System Styles */
+        .filter-th { position: relative; }
+        .filter-th-content { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+        .filter-th-btns { display: flex; gap: 2px; margin-left: 4px; }
+        .filter-th-btns button { background: rgba(255,255,255,0.1); border: none; color: var(--text-secondary); width: 20px; height: 20px; border-radius: 4px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .filter-th-btns button:hover { background: rgba(255,255,255,0.2); color: white; }
+        .filter-th.filtered { background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%) !important; }
+        .filter-th.filtered .filter-th-btns button { background: rgba(0,0,0,0.2); }
+        .filter-dropdown { position: fixed; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 2000; min-width: 240px; max-width: 320px; max-height: 400px; display: none; flex-direction: column; }
+        .filter-dropdown.active { display: flex; }
+        .filter-dropdown-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .filter-dropdown-header h4 { font-size: 12px; font-weight: 600; margin: 0; }
+        .filter-dropdown-header button { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 14px; }
+        .filter-search { margin: 10px; padding: 8px 12px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 12px; }
+        .filter-search:focus { outline: none; border-color: var(--accent); }
+        .filter-actions { display: flex; gap: 8px; padding: 0 10px 8px 10px; }
+        .filter-actions button { flex: 1; padding: 6px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-size: 10px; cursor: pointer; }
+        .filter-actions button:hover { border-color: var(--accent); color: white; }
+        .filter-values-list { flex: 1; overflow-y: auto; padding: 0 10px; max-height: 220px; }
+        .filter-value-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .filter-value-item:hover { background: rgba(255,255,255,0.05); }
+        .filter-value-item input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
+        .filter-value-item label { cursor: pointer; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .filter-dropdown-footer { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+        .filter-dropdown-footer button { flex: 1; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .filter-dropdown-footer .clear-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .filter-dropdown-footer .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+        .filter-dropdown-footer .apply-btn { background: var(--accent); border: none; color: white; }
+        .filter-dropdown-footer .apply-btn:hover { background: var(--primary-light); }
+        .clear-all-filters-btn { background: var(--bg-dark) !important; }
+        .clear-all-filters-btn.has-filters { background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%) !important; color: #1a202c !important; border-color: var(--warning) !important; }
+        .watchlist-star { cursor: pointer; color: var(--text-secondary); transition: color 0.2s; }
+        .watchlist-star:hover { color: var(--warning); }
+        .watchlist-star.active { color: var(--warning); }
     </style>
 </head>
 <body>
+    <!-- Column Filter Dropdown Modal -->
+    <div class="filter-dropdown" id="columnFilterDropdown">
+        <div class="filter-dropdown-header">
+            <h4 id="filterDropdownTitle">Filter Column</h4>
+            <button onclick="closeFilterDropdown()">✕</button>
+        </div>
+        <input type="text" class="filter-search" id="filterDropdownSearch" placeholder="Search values..." oninput="filterDropdownSearch()">
+        <div class="filter-actions">
+            <button onclick="filterSelectAll()">Select All</button>
+            <button onclick="filterDeselectAll()">Deselect All</button>
+        </div>
+        <div class="filter-values-list" id="filterValuesList"></div>
+        <div class="filter-dropdown-footer">
+            <button class="clear-btn" onclick="clearColumnFilter()">Clear</button>
+            <button class="apply-btn" onclick="applyColumnFilter()">Apply</button>
+        </div>
+    </div>
+
     <div class="mobile-header">
         <div><h1>Roll Tech</h1><span style="font-size:10px;color:var(--text-secondary);">Operations</span></div>
         <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
@@ -566,6 +619,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 Clear Dates</button>
                 <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ Watchlist</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" placeholder="Search parts..." oninput="filterPartsTable()">
                 <button class="toolbar-btn" onclick="exportPartsCSV()">📥 Export</button>
@@ -643,6 +697,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 Clear Dates</button>
                 <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ Watchlist</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" placeholder="Search customers..." oninput="filterCustomersTable()">
                 <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 Export</button>
@@ -1096,6 +1151,10 @@
         let partsCustomerDrilldownSort = { field: 'pl', asc: false };
         let customersProductDrilldownSort = { field: 'pl', asc: false };
         
+        // Column Filter System State
+        let columnFilters = {}; // { tableId: { columnKey: Set(selectedValues) } }
+        let activeFilterDropdown = null; // { tableId, columnKey, allValues, selectedValues }
+        
         // Drilldown state
         let currentDrilldownPart = null;
         let currentDrilldownCustomer = null;
@@ -1232,6 +1291,335 @@
             if (value === 'NA' || value === 'N/A') return `<span style="color:var(--text-secondary);">NA</span>`;
             return `<span class="cell-available">${value}</span>`;
         };
+
+        // ============================================================
+        // COLUMN FILTER SYSTEM
+        // ============================================================
+        function initTableFilters(tableId) {
+            if (!columnFilters[tableId]) columnFilters[tableId] = {};
+        }
+        
+        function createFilterHeader(tableId, columnKey, label, sortable = true) {
+            initTableFilters(tableId);
+            const isFiltered = columnFilters[tableId][columnKey] && columnFilters[tableId][columnKey].size > 0;
+            const filteredClass = isFiltered ? 'filtered' : '';
+            const filterIndicator = isFiltered ? ' 📋' : '';
+            return `<th class="filter-th ${filteredClass}">
+                <div class="filter-th-content">
+                    <span>${label}${filterIndicator}</span>
+                    <div class="filter-th-btns">
+                        ${sortable ? `<button onclick="sortTableColumn('${tableId}', '${columnKey}')" title="Sort">↕</button>` : ''}
+                        <button onclick="openColumnFilter('${tableId}', '${columnKey}', this)" title="Filter">▼</button>
+                    </div>
+                </div>
+            </th>`;
+        }
+        
+        function sortTableColumn(tableId, columnKey) {
+            // Delegate to existing sort functions based on tableId
+            switch(tableId) {
+                case 'parts': sortPartsTable(columnKey); break;
+                case 'customers': sortCustomersTable(columnKey); break;
+                case 'ordersData': sortOrdersDataTable(columnKey); break;
+                case 'ordersQueue': sortOrdersQueueTable(columnKey); break;
+                case 'ordersStaged': sortOrdersStagedTable(columnKey); break;
+                case 'ordersShipped': sortOrdersShippedTable(columnKey); break;
+                case 'inventory': sortInvTable(columnKey); break;
+            }
+        }
+        
+        function openColumnFilter(tableId, columnKey, buttonEl) {
+            initTableFilters(tableId);
+            const allValues = getUniqueValuesForColumn(tableId, columnKey);
+            const currentFilter = columnFilters[tableId][columnKey];
+            const selectedValues = currentFilter ? new Set(currentFilter) : new Set(allValues);
+            
+            activeFilterDropdown = { tableId, columnKey, allValues: [...allValues], selectedValues };
+            
+            const dropdown = document.getElementById('columnFilterDropdown');
+            document.getElementById('filterDropdownTitle').textContent = `Filter: ${columnKey}`;
+            document.getElementById('filterDropdownSearch').value = '';
+            renderFilterValues(allValues, selectedValues);
+            
+            // Position dropdown near button
+            const rect = buttonEl.getBoundingClientRect();
+            dropdown.style.top = Math.min(rect.bottom + 5, window.innerHeight - 420) + 'px';
+            dropdown.style.left = Math.min(rect.left, window.innerWidth - 260) + 'px';
+            dropdown.classList.add('active');
+        }
+        
+        function closeFilterDropdown() {
+            document.getElementById('columnFilterDropdown').classList.remove('active');
+            activeFilterDropdown = null;
+        }
+        
+        function renderFilterValues(values, selectedSet, searchTerm = '') {
+            const list = document.getElementById('filterValuesList');
+            const filtered = searchTerm ? values.filter(v => String(v).toLowerCase().includes(searchTerm.toLowerCase())) : values;
+            list.innerHTML = filtered.map(v => {
+                const checked = selectedSet.has(v) ? 'checked' : '';
+                const displayVal = v === '' ? '(empty)' : v;
+                return `<div class="filter-value-item">
+                    <input type="checkbox" id="fv_${encodeURIComponent(v)}" ${checked} onchange="toggleFilterValue('${encodeURIComponent(v)}')">
+                    <label for="fv_${encodeURIComponent(v)}">${displayVal}</label>
+                </div>`;
+            }).join('');
+        }
+        
+        function filterDropdownSearch() {
+            if (!activeFilterDropdown) return;
+            const searchTerm = document.getElementById('filterDropdownSearch').value;
+            renderFilterValues(activeFilterDropdown.allValues, activeFilterDropdown.selectedValues, searchTerm);
+        }
+        
+        function toggleFilterValue(encodedValue) {
+            if (!activeFilterDropdown) return;
+            const value = decodeURIComponent(encodedValue);
+            if (activeFilterDropdown.selectedValues.has(value)) {
+                activeFilterDropdown.selectedValues.delete(value);
+            } else {
+                activeFilterDropdown.selectedValues.add(value);
+            }
+        }
+        
+        function filterSelectAll() {
+            if (!activeFilterDropdown) return;
+            const searchTerm = document.getElementById('filterDropdownSearch').value.toLowerCase();
+            activeFilterDropdown.allValues.forEach(v => {
+                if (!searchTerm || String(v).toLowerCase().includes(searchTerm)) {
+                    activeFilterDropdown.selectedValues.add(v);
+                }
+            });
+            renderFilterValues(activeFilterDropdown.allValues, activeFilterDropdown.selectedValues, searchTerm);
+        }
+        
+        function filterDeselectAll() {
+            if (!activeFilterDropdown) return;
+            const searchTerm = document.getElementById('filterDropdownSearch').value.toLowerCase();
+            activeFilterDropdown.allValues.forEach(v => {
+                if (!searchTerm || String(v).toLowerCase().includes(searchTerm)) {
+                    activeFilterDropdown.selectedValues.delete(v);
+                }
+            });
+            renderFilterValues(activeFilterDropdown.allValues, activeFilterDropdown.selectedValues, searchTerm);
+        }
+        
+        function clearColumnFilter() {
+            if (!activeFilterDropdown) return;
+            const { tableId, columnKey } = activeFilterDropdown;
+            delete columnFilters[tableId][columnKey];
+            closeFilterDropdown();
+            refreshTableAfterFilter(tableId);
+            updateClearAllButton(tableId);
+        }
+        
+        function applyColumnFilter() {
+            if (!activeFilterDropdown) return;
+            const { tableId, columnKey, allValues, selectedValues } = activeFilterDropdown;
+            
+            // If all selected, remove filter; otherwise save it
+            if (selectedValues.size === allValues.length) {
+                delete columnFilters[tableId][columnKey];
+            } else if (selectedValues.size === 0) {
+                // Don't allow empty filter - select all instead
+                delete columnFilters[tableId][columnKey];
+            } else {
+                columnFilters[tableId][columnKey] = new Set(selectedValues);
+            }
+            
+            closeFilterDropdown();
+            refreshTableAfterFilter(tableId);
+            updateClearAllButton(tableId);
+        }
+        
+        function clearAllTableFilters(tableId) {
+            columnFilters[tableId] = {};
+            refreshTableAfterFilter(tableId);
+            updateClearAllButton(tableId);
+        }
+        
+        function updateClearAllButton(tableId) {
+            const btnId = tableId + 'ClearFiltersBtn';
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                const hasFilters = columnFilters[tableId] && Object.keys(columnFilters[tableId]).length > 0;
+                btn.classList.toggle('has-filters', hasFilters);
+            }
+        }
+        
+        function refreshTableAfterFilter(tableId) {
+            switch(tableId) {
+                case 'parts': updateSalesPartsPage(); break;
+                case 'customers': updateSalesCustomersPage(); break;
+                case 'ordersData': updateOrdersDataPage(); break;
+                case 'ordersQueue': updateOrdersQueuePage(); break;
+                case 'ordersStaged': updateOrdersStagedPage(); break;
+                case 'ordersShipped': updateOrdersShippedPage(); break;
+                case 'inventory': renderInvTable(); break;
+                case 'dates': updateSalesDatesPage(); break;
+            }
+        }
+        
+        function passesColumnFilter(tableId, columnKey, value) {
+            if (!columnFilters[tableId] || !columnFilters[tableId][columnKey]) return true;
+            return columnFilters[tableId][columnKey].has(value);
+        }
+        
+        function getUniqueValuesForColumn(tableId, columnKey) {
+            const values = new Set();
+            
+            switch(tableId) {
+                case 'parts':
+                    return getUniquePartsColumnValues(columnKey);
+                case 'customers':
+                    return getUniqueCustomersColumnValues(columnKey);
+                case 'ordersData':
+                case 'ordersQueue':
+                case 'ordersStaged':
+                case 'ordersShipped':
+                    return getUniqueOrdersColumnValues(tableId, columnKey);
+                case 'inventory':
+                    return getUniqueInventoryColumnValues(columnKey);
+                case 'dates':
+                    return getUniqueDatesColumnValues(columnKey);
+            }
+            return Array.from(values).sort();
+        }
+        
+        function getUniquePartsColumnValues(columnKey) {
+            const data = getFilteredPartsData();
+            const partStats = {};
+            data.forEach(r => {
+                const p = getVal(r, 'PART');
+                if (!partStats[p]) partStats[p] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
+                partStats[p].orders++;
+                partStats[p].qty += parseNumber(getVal(r, 'QTY'));
+                partStats[p].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r);
+            });
+            const values = new Set();
+            Object.entries(partStats).forEach(([part, stats]) => {
+                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
+                switch(columnKey) {
+                    case 'part': values.add(part); break;
+                    case 'orders': values.add(String(stats.orders)); break;
+                    case 'qty': values.add(String(stats.qty)); break;
+                    case 'revenue': values.add(formatCurrency(stats.revenue)); break;
+                    case 'pl': values.add(stats.pl >= 0 ? 'Positive' : 'Negative'); break;
+                    case 'margin':
+                        if (margin < 0) values.add('Negative');
+                        else if (margin < 10) values.add('Low (0-10%)');
+                        else if (margin < 20) values.add('Medium (10-20%)');
+                        else values.add('High (>20%)');
+                        break;
+                }
+            });
+            return Array.from(values).sort();
+        }
+        
+        function getUniqueCustomersColumnValues(columnKey) {
+            const data = getFilteredCustomersData();
+            const custStats = {};
+            data.forEach(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (!custStats[c]) custStats[c] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
+                custStats[c].orders++;
+                custStats[c].qty += parseNumber(getVal(r, 'QTY'));
+                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
+            });
+            const values = new Set();
+            Object.entries(custStats).forEach(([customer, stats]) => {
+                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
+                switch(columnKey) {
+                    case 'customer': values.add(customer); break;
+                    case 'orders': values.add(String(stats.orders)); break;
+                    case 'qty': values.add(String(stats.qty)); break;
+                    case 'revenue': values.add(formatCurrency(stats.revenue)); break;
+                    case 'pl': values.add(stats.pl >= 0 ? 'Positive' : 'Negative'); break;
+                    case 'margin':
+                        if (margin < 0) values.add('Negative');
+                        else if (margin < 10) values.add('Low (0-10%)');
+                        else if (margin < 20) values.add('Medium (10-20%)');
+                        else values.add('High (>20%)');
+                        break;
+                }
+            });
+            return Array.from(values).sort();
+        }
+        
+        function getUniqueOrdersColumnValues(tableId, columnKey) {
+            let data = allData;
+            // Filter based on table type
+            if (tableId === 'ordersQueue') data = data.filter(r => ordersQueueFilters.categories[getCategory(r)] && getStatus(r) === 'pending');
+            else if (tableId === 'ordersStaged') data = data.filter(r => ordersStagedFilters.categories[getCategory(r)] && getStatus(r) === 'staged');
+            else if (tableId === 'ordersShipped') data = data.filter(r => ordersShippedFilters.categories[getCategory(r)] && getStatus(r) === 'shipped');
+            else if (tableId === 'ordersData') data = data.filter(r => ordersDataFilters.categories[getCategory(r)] && ordersDataFilters.statuses[getStatus(r)]);
+            
+            const values = new Set();
+            data.forEach(r => {
+                switch(columnKey) {
+                    case 'line': values.add(getVal(r, 'LINE') || '-'); break;
+                    case 'priority': values.add(getVal(r, 'PRIORITY') || '-'); break;
+                    case 'customer': values.add(getVal(r, 'CUSTOMER') || '-'); break;
+                    case 'part': values.add(getVal(r, 'PART') || '-'); break;
+                    case 'status': values.add(getStatus(r)); break;
+                    case 'tire': values.add(isMissingComponent(getVal(r, 'TIRE')) ? 'Missing' : 'Available'); break;
+                    case 'hub': values.add(isMissingComponent(getVal(r, 'HUB')) ? 'Missing' : 'Available'); break;
+                    case 'bearings': values.add(isMissingComponent(getVal(r, 'BEARINGS')) ? 'Missing' : 'Available'); break;
+                    case 'assigned': values.add(getVal(r, 'ASSIGNED') || '-'); break;
+                    case 'packaging': values.add(getVal(r, 'PACKAGING') || '-'); break;
+                }
+            });
+            return Array.from(values).sort();
+        }
+        
+        function getUniqueInventoryColumnValues(columnKey) {
+            const values = new Set();
+            inventoryData.forEach(i => {
+                switch(columnKey) {
+                    case 'product': values.add(i.product || '-'); break;
+                    case 'partNumber': values.add(i.partNumber); break;
+                    case 'moldType': values.add(i.moldType || '-'); break;
+                    case 'status':
+                        const isLow = i.fusionQty < i.minimum && i.minimum > 0;
+                        const needsMake = i.partsToBeMade > 0;
+                        values.add(isLow ? 'LOW' : (needsMake ? 'MAKE' : 'OK'));
+                        break;
+                }
+            });
+            return Array.from(values).sort();
+        }
+        
+        function getUniqueDatesColumnValues(columnKey) {
+            const data = getFilteredDatesData();
+            const monthStats = {};
+            data.forEach(r => {
+                const dateStr = getAttributionDate(r);
+                if (!dateStr) return;
+                const month = getMonthKey(dateStr);
+                if (!monthStats[month]) monthStats[month] = { orders: 0, shipped: 0 };
+                monthStats[month].orders++;
+                if (getStatus(r) === 'shipped') monthStats[month].shipped++;
+            });
+            const values = new Set();
+            Object.entries(monthStats).forEach(([month, stats]) => {
+                switch(columnKey) {
+                    case 'month': values.add(formatMonthLabel(month)); break;
+                }
+            });
+            return Array.from(values).sort();
+        }
+        
+        // Close filter dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('columnFilterDropdown');
+            if (dropdown && dropdown.classList.contains('active')) {
+                if (!dropdown.contains(e.target) && !e.target.closest('.filter-th-btns')) {
+                    closeFilterDropdown();
+                }
+            }
+        });
 
         // ============================================================
         // DATA LOADING
@@ -2260,6 +2648,23 @@
             const search = (document.getElementById('partsSearch')?.value || '').toLowerCase();
             if (search) partsArray = partsArray.filter(p => p.part.toLowerCase().includes(search));
             
+            // Column filters
+            partsArray = partsArray.filter(p => {
+                if (!passesColumnFilter('parts', 'part', p.part)) return false;
+                if (!passesColumnFilter('parts', 'orders', String(p.orders))) return false;
+                if (!passesColumnFilter('parts', 'qty', String(p.qty))) return false;
+                if (!passesColumnFilter('parts', 'revenue', formatCurrency(p.revenue))) return false;
+                if (!passesColumnFilter('parts', 'pl', p.pl >= 0 ? 'Positive' : 'Negative')) return false;
+                // Margin category filter
+                let marginCat;
+                if (p.margin < 0) marginCat = 'Negative';
+                else if (p.margin < 10) marginCat = 'Low (0-10%)';
+                else if (p.margin < 20) marginCat = 'Medium (10-20%)';
+                else marginCat = 'High (>20%)';
+                if (!passesColumnFilter('parts', 'margin', marginCat)) return false;
+                return true;
+            });
+            
             // Sort - handle string vs numeric fields
             partsArray.sort((a, b) => {
                 if (partsSort.field === 'part') {
@@ -2275,12 +2680,12 @@
             document.getElementById('partsTableCount').textContent = `${partsArray.length} parts`;
             document.getElementById('partsTableHeader').innerHTML = `
                 <th>★</th>
-                <th onclick="sortPartsTable('part')">Part # <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('orders')">Orders <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('qty')">Qty <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('revenue')">Revenue <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('pl')">P/L <span class="sort-indicator">↕</span></th>
-                <th onclick="sortPartsTable('margin')">Margin <span class="sort-indicator">↕</span></th>
+                ${createFilterHeader('parts', 'part', 'Part #')}
+                ${createFilterHeader('parts', 'orders', 'Orders')}
+                ${createFilterHeader('parts', 'qty', 'Qty')}
+                ${createFilterHeader('parts', 'revenue', 'Revenue')}
+                ${createFilterHeader('parts', 'pl', 'P/L')}
+                ${createFilterHeader('parts', 'margin', 'Margin')}
             `;
             
             document.getElementById('partsTableBody').innerHTML = partsArray.map(p => `
@@ -2550,7 +2955,28 @@
             const search = (document.getElementById('customersSearch')?.value || '').toLowerCase();
             if (search) custArray = custArray.filter(c => c.customer.toLowerCase().includes(search));
             
-            custArray.sort((a, b) => customersSort.asc ? a[customersSort.field] - b[customersSort.field] : b[customersSort.field] - a[customersSort.field]);
+            // Column filters
+            custArray = custArray.filter(c => {
+                if (!passesColumnFilter('customers', 'customer', c.customer)) return false;
+                if (!passesColumnFilter('customers', 'orders', String(c.orders))) return false;
+                if (!passesColumnFilter('customers', 'qty', String(c.qty))) return false;
+                if (!passesColumnFilter('customers', 'revenue', formatCurrency(c.revenue))) return false;
+                if (!passesColumnFilter('customers', 'pl', c.pl >= 0 ? 'Positive' : 'Negative')) return false;
+                let marginCat;
+                if (c.margin < 0) marginCat = 'Negative';
+                else if (c.margin < 10) marginCat = 'Low (0-10%)';
+                else if (c.margin < 20) marginCat = 'Medium (10-20%)';
+                else marginCat = 'High (>20%)';
+                if (!passesColumnFilter('customers', 'margin', marginCat)) return false;
+                return true;
+            });
+            
+            custArray.sort((a, b) => {
+                if (customersSort.field === 'customer') {
+                    return customersSort.asc ? a.customer.localeCompare(b.customer) : b.customer.localeCompare(a.customer);
+                }
+                return customersSort.asc ? a[customersSort.field] - b[customersSort.field] : b[customersSort.field] - a[customersSort.field];
+            });
             
             // Chart
             const top10 = [...custArray].sort((a,b) => b.pl - a.pl).slice(0, 10);
@@ -2566,12 +2992,12 @@
             document.getElementById('customersTableCount').textContent = `${custArray.length} customers`;
             document.getElementById('customersTableHeader').innerHTML = `
                 <th>★</th>
-                <th onclick="sortCustomersTable('customer')">Customer <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('orders')">Orders <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('qty')">Qty <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('revenue')">Revenue <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('pl')">P/L <span class="sort-indicator">↕</span></th>
-                <th onclick="sortCustomersTable('margin')">Margin <span class="sort-indicator">↕</span></th>
+                ${createFilterHeader('customers', 'customer', 'Customer')}
+                ${createFilterHeader('customers', 'orders', 'Orders')}
+                ${createFilterHeader('customers', 'qty', 'Qty')}
+                ${createFilterHeader('customers', 'revenue', 'Revenue')}
+                ${createFilterHeader('customers', 'pl', 'P/L')}
+                ${createFilterHeader('customers', 'margin', 'Margin')}
             `;
             
             document.getElementById('customersTableBody').innerHTML = custArray.map(c => `
@@ -2585,6 +3011,8 @@
                     <td class="${c.margin >= 0 ? 'positive' : 'negative'}">${c.margin.toFixed(1)}%</td>
                 </tr>
             `).join('');
+            
+            updateClearAllButton('customers');
         }
         
         function sortCustomersTable(field) {
