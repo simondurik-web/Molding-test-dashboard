@@ -568,7 +568,7 @@
                 <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ Watchlist</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" placeholder="Search parts..." oninput="filterPartsTable()">
-                <button class="toolbar-btn" onclick="exportPartsCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportPartsCSV()">📥 Export</button>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h3>Parts P/L Analysis (Top 30)</h3></div>
@@ -645,7 +645,7 @@
                 <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ Watchlist</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" placeholder="Search customers..." oninput="filterCustomersTable()">
-                <button class="toolbar-btn" onclick="exportCustomersCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 Export</button>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h3>Customer P/L Distribution (Top 10)</h3></div>
@@ -716,7 +716,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 Clear Dates</button>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportDatesCSV()">ðŸ“¥ Export</button>
+                <button class="toolbar-btn" onclick="exportDatesCSV()">📥 Export</button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Orders</div><div class="value" id="datesStatOrders">-</div><div class="sub" id="datesStatUnits">- units</div></div>
@@ -2041,24 +2041,7 @@
             document.getElementById('salesStatForecastPL').className = `value ${forecastPL >= 0 ? 'positive' : 'negative'}`;
             document.getElementById('salesStatForecastCount').textContent = `${forecastCount} pending`;
             
-            // Critical Alerts - Top 2 biggest loss parts
-            const partStats = {};
-            data.forEach(r => {
-                const p = getVal(r, 'PART');
-                if (!partStats[p]) partStats[p] = { pl: 0 };
-                if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r);
-            });
-            const sortedByLoss = Object.entries(partStats).filter(([_,v]) => v.pl < 0).sort((a,b) => a[1].pl - b[1].pl).slice(0,2);
-            if (sortedByLoss.length > 0) {
-                const alertText = sortedByLoss.map(([part, stats]) => `${part}: ${formatCurrency(stats.pl)}`).join(' | ');
-                document.getElementById('salesCriticalText').textContent = alertText;
-                document.getElementById('salesCriticalBanner').classList.add('active');
-            } else {
-                document.getElementById('salesCriticalBanner').classList.remove('active');
-            }
-            
-            renderSalesLossesChart(data);
-            renderSalesCustomerPieChart(data);
+            // Render the Monthly P/L Trend chart
             renderSalesTrendChart(data);
         }
         
