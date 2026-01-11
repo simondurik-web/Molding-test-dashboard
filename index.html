@@ -3614,6 +3614,15 @@
         function renderAllDataTable() {
             let data = [...allRawData];
             
+            // Filter out rows where column A is empty (array formula fills column A only for valid rows)
+            const firstColHeader = allRawHeaders[0];
+            if (firstColHeader) {
+                data = data.filter(row => {
+                    const val = row[firstColHeader];
+                    return val !== undefined && val !== null && val !== '';
+                });
+            }
+            
             // Global search filter
             const globalSearch = (document.getElementById('allDataGlobalSearch')?.value || '').toLowerCase();
             if (globalSearch) {
@@ -3690,8 +3699,12 @@
         function getUniqueAllDataColumnValues(columnKey) {
             const colIndex = parseInt(columnKey.replace('col_', ''));
             const header = allRawHeaders[colIndex];
+            const firstColHeader = allRawHeaders[0];
             const values = new Set();
+            // Only include values from rows where column A has data
             allRawData.forEach(row => {
+                const firstColVal = row[firstColHeader];
+                if (firstColVal === undefined || firstColVal === null || firstColVal === '') return;
                 const val = row[header];
                 if (val !== undefined && val !== null && val !== '') {
                     values.add(String(val));
