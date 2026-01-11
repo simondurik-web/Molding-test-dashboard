@@ -1158,7 +1158,7 @@
             BEARINGS: ['Bearings', 'Bearings (Balero)', 'Balero', 'Baleros'],
             ASSIGNED: ['Assigned to', 'Assigned to: (Asignado a:)', 'Asignado a'],
             STATUS: ['Work order Internal Status', 'Work order Status', 'Status', 'Estado'],
-            DAYS_UNTIL: ['Days until promise date', 'Dias faltantes', 'Days until', 'Days remaining'],
+            DAYS_UNTIL: ['Days until promise date', 'Days until promise date.', 'Dias faltantes', 'Days until', 'Days remaining'],
             IF_NUM: ['IF #', 'IF#', 'IF Number'],
             PL: ['P/L', 'P/L total', 'PL', 'Profit/Loss'],
             REVENUE: ['Revenue', 'Total Sell Price', 'Sales']
@@ -1904,7 +1904,7 @@
         // ============================================================
         function updateMainDashboard() {
             const rollTechData = allData.filter(r => getCategory(r) === 'rolltech');
-            const needToMakeOrders = rollTechData.filter(r => getStatus(r) === 'pending');
+            const needToMakeOrders = rollTechData.filter(r => getStatus(r) === 'pending' || getStatus(r) === 'wip');
             const urgentOrders = needToMakeOrders.filter(r => (getVal(r, 'URGENT') || '').toLowerCase() === 'urgent');
             const totalQty = needToMakeOrders.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
             
@@ -2101,11 +2101,11 @@
         }
         
         function updateOrdersQueuePage() {
-            // Queue = only "pending" status (which includes both Pending and Approved from spreadsheet)
+            // Queue = "pending" + "wip" statuses (orders still being worked on)
             const data = allData.filter(r => {
                 const cat = getCategory(r);
                 const status = getStatus(r);
-                return ordersQueueFilters.categories[cat] && status === 'pending';
+                return ordersQueueFilters.categories[cat] && (status === 'pending' || status === 'wip');
             });
             
             const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
