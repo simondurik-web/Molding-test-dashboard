@@ -271,6 +271,12 @@
         .watchlist-star { cursor: pointer; color: var(--text-secondary); transition: color 0.2s; }
         .watchlist-star:hover { color: var(--warning); }
         .watchlist-star.active { color: var(--warning); }
+        
+        /* All Data table styles - compact for many columns */
+        #all-data .data-table th { font-size: 9px; padding: 8px 6px; white-space: nowrap; min-width: 80px; }
+        #all-data .data-table td { font-size: 10px; padding: 6px; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+        #all-data .scrollable-table { overflow-x: auto; }
+        #all-data .filter-th-btns button { width: 18px; height: 18px; font-size: 9px; }
     </style>
 </head>
 <body>
@@ -326,6 +332,10 @@
         <div class="nav-section">
             <div class="nav-section-title" data-i18n="nav.billOfMaterials">Bill of Materials</div>
             <div class="nav-item" data-page="bom" onclick="navigateTo('bom')"><span class="icon">📋</span> <span data-i18n="nav.bomExplorer">BOM Explorer</span></div>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title" data-i18n="nav.rawData">Raw Data</div>
+            <div class="nav-item" data-page="all-data" onclick="navigateTo('all-data')"><span class="icon">📄</span> <span data-i18n="nav.allData">All Data</span></div>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
     </div>
@@ -851,6 +861,39 @@
                 </div>
             </div>
         </div>
+
+        <!-- ALL DATA PAGE -->
+        <div id="all-data" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="allData.title">All Data (Raw)</h2><p data-i18n="allData.subtitle">Complete spreadsheet data - Columns A through AX</p></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <div class="last-updated"><span class="dot"></span><span id="allDataLastUpdated">-</span></div>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <label>Rows:</label>
+                    <span id="allDataRowCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <div class="toolbar-group">
+                    <label>Columns:</label>
+                    <span id="allDataColCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑️ Clear Filters</button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="allDataGlobalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
+                <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 Export</button>
+            </div>
+            <div class="chart-container" style="padding:10px;">
+                <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
+                    <table class="data-table" id="allDataTable">
+                        <thead><tr id="allDataTableHeader"></tr></thead>
+                        <tbody id="allDataTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -874,6 +917,10 @@
                 'nav.byDate': 'By Date',
                 'nav.billOfMaterials': 'BILL OF MATERIALS',
                 'nav.bomExplorer': 'BOM Explorer',
+                'nav.rawData': 'RAW DATA',
+                'nav.allData': 'All Data',
+                'allData.title': 'All Data (Raw)',
+                'allData.subtitle': 'Complete spreadsheet data - Columns A through AX',
                 'loading': 'Loading data from Google Sheets...',
                 'main.title': 'Operations Dashboard',
                 'main.subtitle': 'Real-time overview of Roll Tech manufacturing operations',
@@ -950,6 +997,10 @@
                 'nav.byDate': 'Por Fecha',
                 'nav.billOfMaterials': 'LISTA DE MATERIALES',
                 'nav.bomExplorer': 'Explorador BOM',
+                'nav.rawData': 'DATOS CRUDOS',
+                'nav.allData': 'Todos los Datos',
+                'allData.title': 'Todos los Datos (Crudo)',
+                'allData.subtitle': 'Datos completos de la hoja - Columnas A hasta AX',
                 'loading': 'Cargando datos de Google Sheets...',
                 'main.title': 'Panel de Operaciones',
                 'main.subtitle': 'Vista en tiempo real de las operaciones de manufactura',
@@ -1114,6 +1165,8 @@
         
         // State
         let allData = [];
+        let allRawData = []; // Stores ALL columns A-AX for All Data page
+        let allRawHeaders = []; // Column headers from spreadsheet
         let inventoryData = [];
         let bomFinalData = [], bomSubData = [], bomIndividualData = [];
         let currentBomTab = 'final';
@@ -1143,6 +1196,7 @@
         let datesSort = { field: 'month', asc: false };
         let partsCustomerDrilldownSort = { field: 'pl', asc: false };
         let customersProductDrilldownSort = { field: 'pl', asc: false };
+        let allDataSort = { field: null, asc: true };
         
         // Column Filter System State
         let columnFilters = {}; // { tableId: { columnKey: Set(selectedValues) } }
@@ -1319,6 +1373,7 @@
                 case 'ordersShipped': sortOrdersShippedTable(columnKey); break;
                 case 'inventory': sortInvTable(columnKey); break;
                 case 'dates': sortDatesTable(columnKey); break;
+                case 'allData': sortAllDataTable(columnKey); break;
             }
         }
         
@@ -1451,6 +1506,7 @@
                 case 'ordersShipped': updateOrdersShippedPage(); break;
                 case 'inventory': renderInvTable(); break;
                 case 'dates': updateSalesDatesPage(); break;
+                case 'allData': renderAllDataTable(); break;
             }
         }
         
@@ -1476,6 +1532,8 @@
                     return getUniqueInventoryColumnValues(columnKey);
                 case 'dates':
                     return getUniqueDatesColumnValues(columnKey);
+                case 'allData':
+                    return getUniqueAllDataColumnValues(columnKey);
             }
             return Array.from(values).sort();
         }
@@ -1638,12 +1696,13 @@
         // ============================================================
         // DATA LOADING
         // ============================================================
-        async function fetchSheetData(gid) {
+        async function fetchSheetData(gid, captureHeaders = false) {
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`;
             const res = await fetch(url);
             const text = await res.text();
             const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
             const headers = json.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim());
+            if (captureHeaders) allRawHeaders = headers.filter(h => h); // Store non-empty headers
             return json.table.rows.map(r => {
                 const obj = {};
                 headers.forEach((h, i) => { if (h && r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
@@ -1653,7 +1712,8 @@
         
         async function loadDashboard() {
             try {
-                const raw = await fetchSheetData(MAIN_DATA_GID);
+                const raw = await fetchSheetData(MAIN_DATA_GID, true); // Pass true to capture headers
+                allRawData = raw; // Store ALL raw data for All Data page
                 allData = raw.filter(r => {
                     const cat = getCategory(r);
                     return (cat === 'rolltech' || cat === 'molding') && getVal(r, 'PART');
@@ -1770,6 +1830,7 @@
                 case 'sales-customers': updateSalesCustomersPage(); break;
                 case 'sales-dates': updateSalesDatesPage(); break;
                 case 'bom': initBomExplorer(); break;
+                case 'all-data': updateAllDataPage(); break;
             }
             document.querySelector('.sidebar').classList.remove('open');
             document.querySelector('.sidebar-overlay').classList.remove('active');
@@ -3472,6 +3533,134 @@
         function closeAllDatesDrilldowns() { closeDatesCustomerDrilldown(); }
 
         // ============================================================
+        // ============================================================
+        // ALL DATA PAGE (Raw spreadsheet data - Columns A-AX)
+        // ============================================================
+        function updateAllDataPage() {
+            document.getElementById('allDataLastUpdated').textContent = new Date().toLocaleTimeString();
+            document.getElementById('allDataRowCount').textContent = allRawData.length;
+            document.getElementById('allDataColCount').textContent = allRawHeaders.length;
+            
+            renderAllDataTableHeader();
+            renderAllDataTable();
+            updateClearAllButton('allData');
+        }
+        
+        function renderAllDataTableHeader() {
+            initTableFilters('allData');
+            document.getElementById('allDataTableHeader').innerHTML = allRawHeaders.map((h, i) => 
+                createFilterHeader('allData', `col_${i}`, h, true)
+            ).join('');
+        }
+        
+        function renderAllDataTable() {
+            let data = [...allRawData];
+            
+            // Global search filter
+            const globalSearch = (document.getElementById('allDataGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => {
+                    return allRawHeaders.some(h => {
+                        const val = row[h];
+                        return val && String(val).toLowerCase().includes(globalSearch);
+                    });
+                });
+            }
+            
+            // Apply column filters
+            data = data.filter(row => {
+                return allRawHeaders.every((h, i) => {
+                    const colKey = `col_${i}`;
+                    const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    return passesColumnFilter('allData', colKey, val);
+                });
+            });
+            
+            // Apply sort
+            if (allDataSort.field !== null) {
+                const colIndex = parseInt(allDataSort.field.replace('col_', ''));
+                const header = allRawHeaders[colIndex];
+                data.sort((a, b) => {
+                    let va = a[header], vb = b[header];
+                    // Try numeric comparison first
+                    const numA = parseNumber(va), numB = parseNumber(vb);
+                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
+                        return allDataSort.asc ? numA - numB : numB - numA;
+                    }
+                    // Fall back to string comparison
+                    va = va !== undefined && va !== null ? String(va) : '';
+                    vb = vb !== undefined && vb !== null ? String(vb) : '';
+                    return allDataSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                });
+            }
+            
+            // Render table body
+            const tbody = document.getElementById('allDataTableBody');
+            tbody.innerHTML = data.map(row => {
+                return `<tr>${allRawHeaders.map(h => {
+                    let val = row[h];
+                    if (val === undefined || val === null) val = '';
+                    // Format currency values
+                    if (typeof val === 'number' || (typeof val === 'string' && val.startsWith('$'))) {
+                        const num = parseNumber(val);
+                        if (!isNaN(num) && (h.toLowerCase().includes('revenue') || h.toLowerCase().includes('cost') || h.toLowerCase().includes('price') || h.toLowerCase().includes('p/l'))) {
+                            const cls = num >= 0 ? 'positive' : 'negative';
+                            return `<td class="${cls}">${formatCurrency(num)}</td>`;
+                        }
+                    }
+                    return `<td>${val}</td>`;
+                }).join('')}</tr>`;
+            }).join('');
+            
+            document.getElementById('allDataRowCount').textContent = data.length;
+        }
+        
+        function sortAllDataTable(field) {
+            if (allDataSort.field === field) {
+                allDataSort.asc = !allDataSort.asc;
+            } else {
+                allDataSort.field = field;
+                allDataSort.asc = true;
+            }
+            renderAllDataTable();
+        }
+        
+        function filterAllDataTable() {
+            renderAllDataTable();
+        }
+        
+        function getUniqueAllDataColumnValues(columnKey) {
+            const colIndex = parseInt(columnKey.replace('col_', ''));
+            const header = allRawHeaders[colIndex];
+            const values = new Set();
+            allRawData.forEach(row => {
+                const val = row[header];
+                if (val !== undefined && val !== null && val !== '') {
+                    values.add(String(val));
+                }
+            });
+            // Sort values - try numeric first
+            const arr = Array.from(values);
+            arr.sort((a, b) => {
+                const numA = parseFloat(a), numB = parseFloat(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.localeCompare(b);
+            });
+            return arr;
+        }
+        
+        function exportAllDataToCSV() {
+            const headers = allRawHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = allRawData.map(row => 
+                allRawHeaders.map(h => {
+                    const val = row[h];
+                    if (val === undefined || val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+            downloadCSV([headers, ...rows].join('\n'), `all_data_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
         // BOM EXPLORER
         // ============================================================
         function initBomExplorer() { renderBomSelector(); }
