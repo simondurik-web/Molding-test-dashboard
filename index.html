@@ -272,11 +272,21 @@
         .watchlist-star:hover { color: var(--warning); }
         .watchlist-star.active { color: var(--warning); }
         
-        /* All Data table styles - compact for many columns */
-        #all-data .data-table th { font-size: 9px; padding: 8px 6px; white-space: nowrap; min-width: 80px; }
-        #all-data .data-table td { font-size: 10px; padding: 6px; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+        /* All Data table styles - larger for better readability */
+        #all-data .data-table th { font-size: 11px; padding: 10px 8px; white-space: nowrap; min-width: 100px; }
+        #all-data .data-table td { font-size: 12px; padding: 8px; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
         #all-data .scrollable-table { overflow-x: auto; }
-        #all-data .filter-th-btns button { width: 18px; height: 18px; font-size: 9px; }
+        #all-data .filter-th-btns button { width: 20px; height: 20px; font-size: 10px; }
+        
+        /* Zoom controls */
+        .zoom-controls { padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 10px 8px; }
+        .zoom-btn { width: 28px; height: 28px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .zoom-btn:hover { background: var(--accent); border-color: var(--accent); }
+        .zoom-reset-btn { width: 100%; margin-top: 8px; padding: 6px; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-size: 10px; cursor: pointer; transition: all 0.2s; }
+        .zoom-reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+        
+        /* Zoomed main content */
+        .main-content.zoomed { transform-origin: top left; }
     </style>
 </head>
 <body>
@@ -335,7 +345,18 @@
         </div>
         <div class="nav-section">
             <div class="nav-section-title" data-i18n="nav.rawData">Raw Data</div>
-            <div class="nav-item" data-page="all-data" onclick="navigateTo('all-data')"><span class="icon">📄</span> <span data-i18n="nav.allData">All Data</span></div>
+            <div class="nav-item" data-page="all-data" onclick="navigateTo('all-data')"><span class="icon">🗃️</span> <span data-i18n="nav.allData">All Data</span></div>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="zoom-controls">
+            <label style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Zoom</label>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <button class="zoom-btn" onclick="adjustZoom(-10)">−</button>
+                <input type="number" id="zoomInput" value="100" min="50" max="200" step="10" onchange="setZoom(this.value)" style="width:50px;text-align:center;background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;color:white;padding:4px;font-size:11px;">
+                <span style="font-size:10px;color:var(--text-secondary);">%</span>
+                <button class="zoom-btn" onclick="adjustZoom(10)">+</button>
+            </div>
+            <button class="zoom-reset-btn" onclick="resetZoom()">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
     </div>
@@ -1839,6 +1860,43 @@
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('open');
             document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        // ============================================================
+        // ZOOM CONTROLS
+        // ============================================================
+        let currentZoom = 100;
+        
+        function setZoom(value) {
+            value = parseInt(value);
+            if (isNaN(value) || value < 50) value = 50;
+            if (value > 200) value = 200;
+            currentZoom = value;
+            document.getElementById('zoomInput').value = value;
+            const mainContent = document.querySelector('.main-content');
+            mainContent.style.transform = `scale(${value / 100})`;
+            mainContent.style.transformOrigin = 'top left';
+            mainContent.style.width = `${10000 / value}%`;
+            mainContent.classList.add('zoomed');
+            // Save to localStorage
+            try { localStorage.setItem('rolltech_zoom', value); } catch(e) {}
+        }
+        
+        function adjustZoom(delta) {
+            setZoom(currentZoom + delta);
+        }
+        
+        function resetZoom() {
+            setZoom(100);
+        }
+        
+        function loadSavedZoom() {
+            try {
+                const saved = localStorage.getItem('rolltech_zoom');
+                if (saved) {
+                    setZoom(parseInt(saved));
+                }
+            } catch(e) {}
         }
 
         // ============================================================
@@ -3758,7 +3816,10 @@
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', loadDashboard);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedZoom();
+            loadDashboard();
+        });
     </script>
 </body>
 </html>
