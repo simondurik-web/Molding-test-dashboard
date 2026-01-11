@@ -983,6 +983,7 @@
                 'col.priority': 'Priority',
                 'col.daysUntil': 'Days Until',
                 'col.requestDate': 'Request Date',
+                'col.dueDate': 'Due Date',
                 'col.customer': 'Customer',
                 'col.ifNum': 'IF #',
                 'col.part': 'Part #',
@@ -1063,6 +1064,7 @@
                 'col.priority': 'Prioridad',
                 'col.daysUntil': 'Días Restantes',
                 'col.requestDate': 'Fecha de Solicitud',
+                'col.dueDate': 'Fecha de Entrega',
                 'col.customer': 'Cliente',
                 'col.ifNum': 'IF #',
                 'col.part': 'Parte #',
@@ -2112,8 +2114,8 @@
             const urgentCount = data.filter(r => (getVal(r, 'URGENT') || '').toLowerCase() === 'urgent').length;
             const dueWeek = data.filter(r => { const d = parseNumber(getVal(r, 'DAYS_UNTIL')); return d >= 0 && d <= 7; });
             const dueWeekQty = dueWeek.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const componentsReady = data.filter(r => !isMissingComponent(getVal(r,'TIRE')) && !isMissingComponent(getVal(r,'HUB')) && !isMissingComponent(getVal(r,'BEARINGS'))).length;
-            const missingOrders = data.filter(r => isMissingComponent(getVal(r,'TIRE')) || isMissingComponent(getVal(r,'HUB')) || isMissingComponent(getVal(r,'BEARINGS')));
+            const componentsReady = data.filter(r => getCategory(r) !== 'rolltech' || (!isMissingComponent(getVal(r,'TIRE')) && !isMissingComponent(getVal(r,'HUB')) && !isMissingComponent(getVal(r,'BEARINGS')))).length;
+            const missingOrders = data.filter(r => getCategory(r) === 'rolltech' && (isMissingComponent(getVal(r,'TIRE')) || isMissingComponent(getVal(r,'HUB')) || isMissingComponent(getVal(r,'BEARINGS'))));
             
             document.getElementById('ordersQueueTotalOrders').textContent = formatNumber(data.length);
             document.getElementById('ordersQueueTotalUnits').textContent = `${formatNumber(totalQty)} units`;
@@ -2137,7 +2139,7 @@
         function renderOrdersQueueTableHeader() {
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
-                { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'requestDate', label: t('col.requestDate') },
+                { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'dueDate', label: t('col.dueDate') },
                 { key: 'customer', label: t('col.customer') }, { key: 'ifNum', label: t('col.ifNum') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
                 { key: 'packaging', label: t('col.packaging') }, { key: 'tire', label: t('col.tire') },
@@ -2154,7 +2156,7 @@
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
                     case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
                     case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
-                    case 'requestDate': va = parseDate(getVal(a, 'REQUEST_DATE')) || new Date(0); vb = parseDate(getVal(b, 'REQUEST_DATE')) || new Date(0); break;
+                    case 'dueDate': va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0); vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0); break;
                     case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
                     case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
                     case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
@@ -2174,21 +2176,27 @@
             tbody.innerHTML = sorted.map(r => {
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
-                const isMissing = isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS'));
+                const isRollTech = getCategory(r) === 'rolltech';
+                const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
+                // For Molding items, show "N/A" instead of checking for missing components
+                const formatComponentCell = (value, field) => {
+                    if (!isRollTech) return '<span style="color:var(--text-secondary);">N/A</span>';
+                    return formatComponent(value);
+                };
                 return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
                     <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
                     <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
                     <td class="${daysClass}">${daysUntil || '-'}</td>
-                    <td>${getVal(r, 'REQUEST_DATE') || '-'}</td>
+                    <td>${r[COL.REQUESTED_DATE] || '-'}</td>
                     <td>${getVal(r, 'CUSTOMER') || '-'}</td>
                     <td>${getVal(r, 'IF_NUM') || '-'}</td>
                     <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
                     <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
                     <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                    <td>${formatComponent(getVal(r, 'TIRE'))}</td>
-                    <td>${formatComponent(getVal(r, 'HUB'))}</td>
+                    <td>${formatComponentCell(getVal(r, 'TIRE'), 'TIRE')}</td>
+                    <td>${formatComponentCell(getVal(r, 'HUB'), 'HUB')}</td>
                     <td>${getVal(r, 'HUB_MOLD') || '-'}</td>
-                    <td>${formatComponent(getVal(r, 'BEARINGS'))}</td>
+                    <td>${formatComponentCell(getVal(r, 'BEARINGS'), 'BEARINGS')}</td>
                     <td>${getVal(r, 'ASSIGNED') || '-'}</td>
                 </tr>`;
             }).join('');
