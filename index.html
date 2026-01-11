@@ -1135,6 +1135,7 @@
             BEARINGS: 'Bearings',
             ASSIGNED: 'Assigned to',
             STATUS: 'Work order Internal Status',
+            FUSION_STATUS: 'IF Status in Fusion',
             DAYS_UNTIL: 'Days until promise date',
             SHIPPED_DATE: 'Shipped Date',
             REQUESTED_DATE: 'Requested Completion Date',
@@ -1160,6 +1161,7 @@
             BEARINGS: ['Bearings', 'Bearings (Balero)', 'Balero', 'Baleros'],
             ASSIGNED: ['Assigned to', 'Assigned to: (Asignado a:)', 'Asignado a'],
             STATUS: ['Work order Internal Status', 'Work order Status', 'Status', 'Estado'],
+            FUSION_STATUS: ['IF Status in Fusion', 'IF Status', 'Fusion Status'],
             DAYS_UNTIL: ['Days until promise date', 'Days until promise date.', 'Dias faltantes', 'Days until', 'Days remaining'],
             IF_NUM: ['IF #', 'IF#', 'IF Number'],
             PL: ['P/L', 'P/L total', 'PL', 'Profit/Loss'],
@@ -1324,13 +1326,20 @@
             return 'other';
         };
         
-        // UPDATED: Maps both "Pending" AND "Approved" to 'pending' (Need to Make)
+        // UPDATED: Uses FUSION_STATUS (Col G) as fallback when STATUS (Col H) is empty
         const getStatus = row => {
-            const status = (getVal(row, 'STATUS') || '').toLowerCase();
+            // Check Work order Internal Status first (Column H)
+            let status = (getVal(row, 'STATUS') || '').toLowerCase();
+            
+            // If STATUS is empty or unclear, use IF Status in Fusion (Column G) as fallback
+            if (!status || status === '') {
+                status = (getVal(row, 'FUSION_STATUS') || '').toLowerCase();
+            }
+            
             if (status.includes('pending') || status.includes('approved')) return 'pending';
             if (status.includes('staged')) return 'staged';
             if (status.includes('work in progress') || status.includes('wip')) return 'wip';
-            if (status.includes('shipped')) return 'shipped';
+            if (status.includes('shipped') || status.includes('invoiced') || status.includes('to bill')) return 'shipped';
             return status;
         };
         
