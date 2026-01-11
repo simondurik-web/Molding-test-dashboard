@@ -430,7 +430,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="ordersDataBtnRollTech" onclick="toggleOrdersDataCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="ordersDataBtnMolding" onclick="toggleOrdersDataCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="ordersDataBtnMolding" onclick="toggleOrdersDataCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-group status-filters">
                     <label>Status:</label>
@@ -470,7 +470,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersQueueSearch" placeholder="Search..." oninput="filterOrdersQueueTable()">
@@ -504,7 +504,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="ordersStagedBtnRollTech" onclick="toggleOrdersStagedCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="ordersStagedBtnMolding" onclick="toggleOrdersStagedCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="ordersStagedBtnMolding" onclick="toggleOrdersStagedCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersStagedSearch" placeholder="Search..." oninput="filterOrdersStagedTable()">
@@ -534,7 +534,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="ordersShippedBtnRollTech" onclick="toggleOrdersShippedCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="ordersShippedBtnMolding" onclick="toggleOrdersShippedCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="ordersShippedBtnMolding" onclick="toggleOrdersShippedCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-group">
                     <label>From:</label><input type="date" id="ordersShippedFromDate" onchange="applyShippedDateFilter()">
@@ -604,7 +604,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="salesBtnRollTech" onclick="toggleSalesCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="salesBtnMolding" onclick="toggleSalesCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="salesBtnMolding" onclick="toggleSalesCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportSalesCSV()">📥 Export</button>
@@ -631,7 +631,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="partsBtnRollTech" onclick="togglePartsCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="partsBtnMolding" onclick="togglePartsCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="partsBtnMolding" onclick="togglePartsCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-group">
                     <label>From:</label><input type="date" id="partsFromDate" onchange="applyPartsDateFilter()">
@@ -709,7 +709,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="customersBtnRollTech" onclick="toggleCustomersCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="customersBtnMolding" onclick="toggleCustomersCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="customersBtnMolding" onclick="toggleCustomersCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-group">
                     <label>From:</label><input type="date" id="customersFromDate" onchange="applyCustomersDateFilter()">
@@ -783,7 +783,7 @@
                 <div class="toolbar-group category-filters">
                     <label>Category:</label>
                     <button class="category-btn rolltech active" id="datesBtnRollTech" onclick="toggleDatesCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding" id="datesBtnMolding" onclick="toggleDatesCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <button class="category-btn molding active" id="datesBtnMolding" onclick="toggleDatesCategory('molding')"><span class="indicator"></span> Molding</button>
                 </div>
                 <div class="toolbar-group">
                     <label>From:</label><input type="date" id="datesFromDate" onchange="applyDatesDateFilter()">
@@ -1196,14 +1196,14 @@
         let currentPage = 'main';
         
         // Filter states for each page
-        let ordersDataFilters = { categories: { rolltech: true, molding: false }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
-        let ordersQueueFilters = { categories: { rolltech: true, molding: false } };
-        let ordersStagedFilters = { categories: { rolltech: true, molding: false } };
-        let ordersShippedFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null };
-        let salesFilters = { categories: { rolltech: true, molding: false } };
-        let datesFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null };
-        let partsFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null, watchlistOnly: false };
-        let customersFilters = { categories: { rolltech: true, molding: false }, fromDate: null, toDate: null, watchlistOnly: false };
+        let ordersDataFilters = { categories: { rolltech: true, molding: true }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
+        let ordersQueueFilters = { categories: { rolltech: true, molding: true } };
+        let ordersStagedFilters = { categories: { rolltech: true, molding: true } };
+        let ordersShippedFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null };
+        let salesFilters = { categories: { rolltech: true, molding: true } };
+        let datesFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null };
+        let partsFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null, watchlistOnly: false };
+        let customersFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null, watchlistOnly: false };
         
         // Sort states
         let ordersDataSort = { field: 'daysUntil', asc: true };
