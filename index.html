@@ -170,8 +170,8 @@
         .chart-header h3 { font-size: 16px; font-weight: 600; }
         .chart-wrapper { position: relative; height: 280px; }
         .chart-wrapper.large { height: 350px; }
-        .price-history-container { position: relative; height: 220px; margin-bottom: 16px; }
-        .price-history-container canvas { max-height: 220px; }
+        .price-history-container { position: relative; height: 250px; margin-bottom: 20px; padding-bottom: 30px; }
+        .price-history-container canvas { max-height: 250px; }
         .search-box { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: white; font-size: 13px; min-width: 180px; transition: all 0.2s; }
         .search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.2); }
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -398,7 +398,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.1</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.2</div>
     </div>
 
     <div class="main-content">
@@ -3299,7 +3299,7 @@
             const priceData = data.map(r => ({ date: parseDate(getAttributionDate(r)), price: getUnitPrice(r) })).filter(d => d.date).sort((a,b) => a.date - b.date);
             if (charts.partsOrdersPrice) charts.partsOrdersPrice.destroy();
             const priceChartEl = document.getElementById('partsOrdersPriceChart');
-            console.log('Price History Debug v7.1:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
+            console.log('Price History Debug v7.2:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
             if (priceData.length > 1 && priceChartEl) {
                 const prices = priceData.map(d => d.price);
                 const minPrice = Math.min(...prices);
@@ -3308,7 +3308,7 @@
                 const allSame = (maxPrice - minPrice) < 0.01;
                 const yAxisMin = allSame ? minPrice * 0.9 : minPrice - (maxPrice - minPrice) * 0.15;
                 const yAxisMax = allSame ? maxPrice * 1.1 : maxPrice + (maxPrice - minPrice) * 0.15;
-                console.log('Y-Axis Debug v7.1:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
+                console.log('Y-Axis Debug v7.2:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
                 
                 charts.partsOrdersPrice = new Chart(priceChartEl, {
                     type: 'line',
