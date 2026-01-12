@@ -287,9 +287,46 @@
         
         /* Zoomed main content */
         .main-content.zoomed { transform-origin: top left; }
+        
+        /* Pallet Pictures Gallery Styles */
+        .pallet-drilldown { display: none; margin-top: 20px; background: var(--bg-card); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
+        .pallet-drilldown.active { display: block; }
+        .pallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .pallet-header h3 { font-size: 18px; }
+        .pallet-summary { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
+        .pallet-summary-item { background: var(--bg-dark); padding: 12px 16px; border-radius: 8px; }
+        .pallet-summary-item .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+        .pallet-summary-item .value { font-size: 18px; font-weight: 700; }
+        .pallet-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+        .pallet-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.2s; }
+        .pallet-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        .pallet-card-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .pallet-card-header h4 { font-size: 14px; font-weight: 600; }
+        .pallet-card-header .pallet-meta { font-size: 11px; color: var(--text-secondary); }
+        .pallet-images { padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+        .pallet-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .pallet-thumb:hover { border-color: var(--accent); transform: scale(1.05); }
+        .pallet-card-details { padding: 12px; background: rgba(0,0,0,0.2); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .pallet-detail { font-size: 11px; }
+        .pallet-detail .label { color: var(--text-secondary); }
+        .pallet-detail .value { font-weight: 600; color: var(--text-primary); }
+        .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
+        .image-modal.active { display: flex; }
+        .image-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+        .image-modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 30px; cursor: pointer; background: rgba(0,0,0,0.5); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .image-modal-close:hover { background: var(--danger); }
+        .clickable-row { cursor: pointer; }
+        .clickable-row:hover td { background: rgba(49,130,206,0.15) !important; }
+        .pallet-indicator { margin-left: 6px; color: var(--accent); font-size: 12px; }
     </style>
 </head>
 <body>
+    <!-- Image Modal for Pallet Pictures -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <div class="image-modal-close" onclick="closeImageModal()">✕</div>
+        <img id="modalImage" src="" alt="Pallet Picture">
+    </div>
+
     <!-- Column Filter Dropdown Modal -->
     <div class="filter-dropdown" id="columnFilterDropdown">
         <div class="filter-dropdown-header">
@@ -521,6 +558,18 @@
                 <div class="scrollable-table">
                     <table class="data-table"><thead><tr id="ordersStagedTableHeader"></tr></thead><tbody id="ordersStagedTableBody"></tbody></table>
                 </div>
+            </div>
+            <!-- Pallet Pictures Drilldown -->
+            <div class="pallet-drilldown" id="palletDrilldown">
+                <div class="pallet-header">
+                    <div>
+                        <div class="breadcrumb">Staged Orders › <span id="palletDrilldownOrder">-</span></div>
+                        <h3 data-i18n="pallet.title">Pallet Pictures</h3>
+                    </div>
+                    <button class="close-btn" onclick="closePalletDrilldown()">✕ Close</button>
+                </div>
+                <div class="pallet-summary" id="palletSummary"></div>
+                <div class="pallet-gallery" id="palletGallery"></div>
             </div>
         </div>
 
@@ -1001,7 +1050,18 @@
                 'missing': 'Missing',
                 'sales.title': 'P/L Overview',
                 'inv.title': 'Inventory Management',
-                'bom.title': 'BOM Explorer'
+                'bom.title': 'BOM Explorer',
+                'col.weight': 'Weight',
+                'col.dimensions': 'Dimensions',
+                'col.palletNum': 'Pallet #',
+                'col.partsPerPallet': 'Parts/Pallet',
+                'pallet.title': 'Pallet Pictures',
+                'pallet.noPictures': 'No pallet pictures found for this order.',
+                'pallet.clickToView': 'Click to view full size',
+                'pallet.weight': 'Weight (lbs)',
+                'pallet.dimensions': 'Dimensions (in)',
+                'pallet.pallets': 'Pallets',
+                'pallet.totalWeight': 'Total Weight'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones',
@@ -1082,7 +1142,18 @@
                 'missing': 'Faltante',
                 'sales.title': 'Resumen P/L',
                 'inv.title': 'Gestión de Inventario',
-                'bom.title': 'Explorador BOM'
+                'bom.title': 'Explorador BOM',
+                'col.weight': 'Peso',
+                'col.dimensions': 'Dimensiones',
+                'col.palletNum': 'Paleta #',
+                'col.partsPerPallet': 'Partes/Paleta',
+                'pallet.title': 'Fotos de Paletas',
+                'pallet.noPictures': 'No hay fotos de paletas para esta orden.',
+                'pallet.clickToView': 'Clic para ver tamaño completo',
+                'pallet.weight': 'Peso (lbs)',
+                'pallet.dimensions': 'Dimensiones (pulg)',
+                'pallet.pallets': 'Paletas',
+                'pallet.totalWeight': 'Peso Total'
             }
         };
         
@@ -1117,6 +1188,7 @@
         const FUSION_EXPORT_GID = '1805754553';
         const PROD_DATA_TOTALS_GID = '148810546';
         const CONFIG_GID = '912029812';
+        const PALLET_PICTURES_GID = '1879462508';
         
         const COL = {
             CATEGORY: 'Category',
@@ -1193,11 +1265,13 @@
         let allRawData = []; // Stores ALL columns A-AX for All Data page
         let allRawHeaders = []; // Column headers from spreadsheet
         let inventoryData = [];
+        let palletData = []; // Stores pallet pictures data
         let bomFinalData = [], bomSubData = [], bomIndividualData = [];
         let currentBomTab = 'final';
         let config = {};
         let charts = {};
         let currentPage = 'main';
+        let currentPalletOrder = null; // Currently viewed pallet order
         
         // Filter states for each page
         let ordersDataFilters = { categories: { rolltech: true, molding: true }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
@@ -1754,6 +1828,7 @@
                 
                 loadInventoryData().catch(e => console.warn('Inventory load failed:', e));
                 loadBOMData().catch(e => console.warn('BOM load failed:', e));
+                fetchPalletData().catch(e => console.warn('Pallet data load failed:', e));
                 
                 const now = new Date();
                 document.getElementById('lastUpdated').textContent = `Updated: ${now.toLocaleTimeString()}`;
@@ -1839,6 +1914,21 @@
                 if (config['BOM Sub assembly Reference data']) bomSubData = await fetchSheetData(config['BOM Sub assembly Reference data'].gid);
                 if (config['BOM Final assembly Reference data']) bomFinalData = await fetchSheetData(config['BOM Final assembly Reference data'].gid);
             } catch (e) { console.warn('BOM load error:', e); }
+        }
+        
+        async function fetchPalletData() {
+            try {
+                const data = await fetchSheetData(PALLET_PICTURES_GID);
+                palletData = data.filter(row => {
+                    // Filter rows that have an order number
+                    const orderNum = row['Order Number/ Numero de orden'] || row['Order Number'] || '';
+                    return orderNum && orderNum !== '';
+                });
+                console.log('Pallet data loaded:', palletData.length, 'entries');
+            } catch (e) { 
+                console.warn('Pallet data load error:', e); 
+                palletData = []; 
+            }
         }
 
         // ============================================================
@@ -2264,7 +2354,9 @@
                 { key: 'line', label: t('col.line') }, { key: 'customer', label: t('col.customer') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
                 { key: 'packaging', label: t('col.packaging') }, { key: 'revenue', label: t('col.revenue') },
-                { key: 'requestDate', label: t('col.requestDate') }, { key: 'assigned', label: t('col.assigned') }
+                { key: 'dueDate', label: t('col.dueDate') }, { key: 'daysUntil', label: t('col.daysUntil') },
+                { key: 'weight', label: t('col.weight') }, { key: 'dimensions', label: t('col.dimensions') },
+                { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: '📦' }
             ];
             document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersStagedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
         }
@@ -2272,12 +2364,29 @@
         function renderOrdersStagedTable(data) {
             let sorted = [...data].sort((a, b) => {
                 let va, vb;
+                const lineA = getVal(a, 'LINE');
+                const lineB = getVal(b, 'LINE');
+                const palletA = getPalletDataForOrder(lineA);
+                const palletB = getPalletDataForOrder(lineB);
                 switch(ordersStagedSort.field) {
-                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                    case 'line': va = parseNumber(lineA); vb = parseNumber(lineB); break;
                     case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
                     case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
                     case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
                     case 'revenue': va = parseNumber(a[COL.REVENUE]); vb = parseNumber(b[COL.REVENUE]); break;
+                    case 'dueDate': 
+                        va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0); 
+                        vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0); 
+                        break;
+                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                    case 'weight': 
+                        va = palletA.length > 0 ? palletA.reduce((s, p) => s + parseNumber(p.weight), 0) : 0;
+                        vb = palletB.length > 0 ? palletB.reduce((s, p) => s + parseNumber(p.weight), 0) : 0;
+                        break;
+                    case 'pallets':
+                        va = palletA.length;
+                        vb = palletB.length;
+                        break;
                     default: va = getVal(a, ordersStagedSort.field) || ''; vb = getVal(b, ordersStagedSort.field) || '';
                 }
                 if (typeof va === 'string') return ordersStagedSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
@@ -2291,16 +2400,92 @@
             
             document.getElementById('ordersStagedTableCount').textContent = `${sorted.length} orders`;
             const tbody = document.getElementById('ordersStagedTableBody');
-            tbody.innerHTML = sorted.map(r => `<tr>
-                <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
+            tbody.innerHTML = sorted.map(r => {
+                const line = getVal(r, 'LINE');
+                const pallets = getPalletDataForOrder(line);
+                const hasPallets = pallets.length > 0;
+                const totalWeight = hasPallets ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : 0;
+                const firstDimensions = hasPallets && pallets[0].dimensions ? pallets[0].dimensions : '-';
+                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
+                const palletIndicator = hasPallets ? `<span class="pallet-indicator" title="${pallets.length} ${t('pallet.pallets').toLowerCase()}">📷 ${pallets.length}</span>` : '-';
+                const clickHandler = hasPallets ? `onclick="showPalletPictures('${line}')" style="cursor:pointer;"` : '';
+                return `<tr class="${hasPallets ? 'clickable-row' : ''}" ${clickHandler}>
+                <td><strong>${line || '-'}</strong></td>
                 <td>${getVal(r, 'CUSTOMER') || '-'}</td>
                 <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
                 <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
                 <td>${getVal(r, 'PACKAGING') || '-'}</td>
                 <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
-                <td>${getVal(r, 'REQUEST_DATE') || '-'}</td>
+                <td>${r[COL.REQUESTED_DATE] || '-'}</td>
+                <td class="${daysClass}">${daysUntil || '-'}</td>
+                <td>${hasPallets ? formatNumber(totalWeight) + ' lbs' : '-'}</td>
+                <td>${firstDimensions}</td>
                 <td>${getVal(r, 'ASSIGNED') || '-'}</td>
-            </tr>`).join('');
+                <td>${palletIndicator}</td>
+            </tr>`;
+            }).join('');
+        }
+        
+        // Get pallet data for a specific order line number
+        function getPalletDataForOrder(lineNum) {
+            if (!lineNum || !palletData || palletData.length === 0) return [];
+            const lineStr = String(lineNum).trim();
+            return palletData.filter(p => String(p.orderNumber).trim() === lineStr);
+        }
+        
+        // Show pallet pictures modal for an order
+        function showPalletPictures(lineNum) {
+            const pallets = getPalletDataForOrder(lineNum);
+            if (pallets.length === 0) return;
+            
+            currentPalletOrder = lineNum;
+            const orderData = allData.find(r => String(getVal(r, 'LINE')).trim() === String(lineNum).trim());
+            const customer = orderData ? getVal(orderData, 'CUSTOMER') : '';
+            const part = orderData ? getVal(orderData, 'PART') : '';
+            
+            document.getElementById('palletDrilldownOrder').textContent = `#${lineNum}`;
+            
+            const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
+            document.getElementById('palletSummary').innerHTML = `
+                <div class="summary-item"><div class="label">${t('col.customer')}</div><div class="value">${customer}</div></div>
+                <div class="summary-item"><div class="label">${t('col.part')}</div><div class="value">${part}</div></div>
+                <div class="summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
+                <div class="summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
+            `;
+            
+            const gallery = document.getElementById('palletGallery');
+            gallery.innerHTML = pallets.map((p, idx) => {
+                const images = [p.picture1, p.picture2, p.picture3, p.picture4, p.picture5].filter(img => img && img.trim());
+                const thumbs = images.map(img => `<img src="${img}" class="pallet-thumb" onclick="openImageModal('${img}')" title="${t('pallet.clickToView')}">`).join('');
+                return `<div class="pallet-card">
+                    <h4>${t('col.palletNum')} ${p.palletNumber || (idx + 1)}</h4>
+                    <div class="pallet-info">
+                        <span><strong>${t('pallet.weight')}:</strong> ${p.weight || '-'}</span>
+                        <span><strong>${t('pallet.dimensions')}:</strong> ${p.dimensions || '-'}</span>
+                        ${p.partsPerPallet ? `<span><strong>${t('col.partsPerPallet')}:</strong> ${p.partsPerPallet}</span>` : ''}
+                    </div>
+                    <div class="pallet-images">${thumbs.length > 0 ? thumbs : '<p style="color:var(--text-secondary);">No images</p>'}</div>
+                </div>`;
+            }).join('');
+            
+            document.getElementById('palletDrilldown').classList.add('active');
+            document.getElementById('palletDrilldown').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function closePalletDrilldown() {
+            document.getElementById('palletDrilldown').classList.remove('active');
+            currentPalletOrder = null;
+        }
+        
+        function openImageModal(imgUrl) {
+            const modal = document.getElementById('imageModal');
+            document.getElementById('modalImage').src = imgUrl;
+            modal.classList.add('active');
+        }
+        
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
         }
         
         function sortOrdersStagedTable(field) {
@@ -2313,8 +2498,14 @@
         
         function exportOrdersStagedToCSV() {
             const data = allData.filter(r => ordersStagedFilters.categories[getCategory(r)] && getStatus(r) === 'staged');
-            const headers = ['Line','Customer','Part','Qty','Packaging','Revenue','Request Date','Assigned'];
-            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),r[COL.REVENUE],getVal(r,'REQUEST_DATE'),getVal(r,'ASSIGNED')].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+            const headers = ['Line','Customer','Part','Qty','Packaging','Revenue','Due Date','Days Until','Weight (lbs)','Dimensions','Assigned','Pallets'];
+            const rows = data.map(r => {
+                const line = getVal(r,'LINE');
+                const pallets = getPalletDataForOrder(line);
+                const totalWeight = pallets.length > 0 ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : '';
+                const dimensions = pallets.length > 0 && pallets[0].dimensions ? pallets[0].dimensions : '';
+                return [line,getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),r[COL.REVENUE],r[COL.REQUESTED_DATE],getVal(r,'DAYS_UNTIL'),totalWeight,dimensions,getVal(r,'ASSIGNED'),pallets.length].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',');
+            });
             downloadCSV([headers.join(','),...rows].join('\n'), 'orders_staged.csv');
         }
 
