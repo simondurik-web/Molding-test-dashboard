@@ -170,6 +170,8 @@
         .chart-header h3 { font-size: 16px; font-weight: 600; }
         .chart-wrapper { position: relative; height: 280px; }
         .chart-wrapper.large { height: 350px; }
+        .price-history-container { position: relative; height: 150px; margin-bottom: 16px; }
+        .price-history-container canvas { max-height: 150px; }
         .search-box { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: white; font-size: 13px; min-width: 180px; transition: all 0.2s; }
         .search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.2); }
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -696,7 +698,7 @@
                 <button class="toolbar-btn" onclick="exportPartsCSV()">📥 Export</button>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Parts P/L Analysis (Top 30)</h3></div>
+                <div class="chart-header"><h3>All Parts P/L Analysis</h3></div>
                 <div class="chart-wrapper large"><canvas id="partsBarChart"></canvas></div>
             </div>
             <div class="chart-container">
@@ -3163,13 +3165,14 @@
         }
         
         function renderPartsBarChart(partsArray) {
-            const top30 = [...partsArray].sort((a,b) => b.pl - a.pl).slice(0, 30);
+            // Sort all parts from lowest (losses) to highest (gains) P/L
+            const sortedParts = [...partsArray].sort((a,b) => a.pl - b.pl);
             if (charts.partsBar) charts.partsBar.destroy();
             charts.partsBar = new Chart(document.getElementById('partsBarChart'), {
                 type: 'bar',
                 data: {
-                    labels: top30.map(p => p.part),
-                    datasets: [{ data: top30.map(p => p.pl), backgroundColor: top30.map(p => p.pl >= 0 ? 'rgba(56,161,105,0.8)' : 'rgba(229,62,62,0.8)') }]
+                    labels: sortedParts.map(p => p.part),
+                    datasets: [{ data: sortedParts.map(p => p.pl), backgroundColor: sortedParts.map(p => p.pl >= 0 ? 'rgba(56,161,105,0.8)' : 'rgba(229,62,62,0.8)') }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#a0aec0', font: { size: 9 }, maxRotation: 90 }, grid: { display: false } } } }
             });
