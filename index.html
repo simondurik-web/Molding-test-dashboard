@@ -398,7 +398,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.2</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.3</div>
     </div>
 
     <div class="main-content">
@@ -816,6 +816,10 @@
                     </div>
                 </div>
                 <div class="summary-row" id="customersOrdersSummary"></div>
+                <div class="price-history-container">
+                    <h4 style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">PRICE HISTORY</h4>
+                    <canvas id="customersOrdersPriceChart"></canvas>
+                </div>
                 <div class="scrollable-table">
                     <table class="data-table">
                         <thead><tr><th>PO #</th><th>Status</th><th>Qty</th><th>Unit Price</th><th>Contribution</th><th>Profit/Part</th><th>P/L</th><th>Revenue</th><th>Date</th></tr></thead>
@@ -3299,7 +3303,7 @@
             const priceData = data.map(r => ({ date: parseDate(getAttributionDate(r)), price: getUnitPrice(r) })).filter(d => d.date).sort((a,b) => a.date - b.date);
             if (charts.partsOrdersPrice) charts.partsOrdersPrice.destroy();
             const priceChartEl = document.getElementById('partsOrdersPriceChart');
-            console.log('Price History Debug v7.2:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
+            console.log('Price History Debug v7.3:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
             if (priceData.length > 1 && priceChartEl) {
                 const prices = priceData.map(d => d.price);
                 const minPrice = Math.min(...prices);
@@ -3308,7 +3312,7 @@
                 const allSame = (maxPrice - minPrice) < 0.01;
                 const yAxisMin = allSame ? minPrice * 0.9 : minPrice - (maxPrice - minPrice) * 0.15;
                 const yAxisMax = allSame ? maxPrice * 1.1 : maxPrice + (maxPrice - minPrice) * 0.15;
-                console.log('Y-Axis Debug v7.2:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
+                console.log('Y-Axis Debug v7.3:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
                 
                 charts.partsOrdersPrice = new Chart(priceChartEl, {
                     type: 'line',
@@ -3588,6 +3592,53 @@
                 <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
                 <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
             `;
+            
+            // Price history chart for customer orders
+            const priceData = data.map(r => ({ date: parseDate(getAttributionDate(r)), price: getUnitPrice(r) })).filter(d => d.date).sort((a,b) => a.date - b.date);
+            if (charts.customersOrdersPrice) charts.customersOrdersPrice.destroy();
+            const custPriceChartEl = document.getElementById('customersOrdersPriceChart');
+            if (priceData.length > 1 && custPriceChartEl) {
+                const prices = priceData.map(d => d.price);
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                const allSame = (maxPrice - minPrice) < 0.01;
+                const yAxisMin = allSame ? minPrice * 0.9 : minPrice - (maxPrice - minPrice) * 0.15;
+                const yAxisMax = allSame ? maxPrice * 1.1 : maxPrice + (maxPrice - minPrice) * 0.15;
+                
+                charts.customersOrdersPrice = new Chart(custPriceChartEl, {
+                    type: 'line',
+                    data: {
+                        labels: priceData.map(d => d.date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'})),
+                        datasets: [{
+                            label: 'Unit Price',
+                            data: prices,
+                            borderColor: '#3182ce',
+                            backgroundColor: 'rgba(49,130,206,0.1)',
+                            fill: true,
+                            tension: 0,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#3182ce'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                min: yAxisMin,
+                                max: yAxisMax,
+                                ticks: { callback: v => formatCurrency(v), color: '#a0aec0', maxTicksLimit: 5 },
+                                grid: { color: 'rgba(255,255,255,0.05)' }
+                            },
+                            x: {
+                                ticks: { color: '#a0aec0', font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
             
             const sorted = [...data].sort((a,b) => {
                 const da = parseDate(getAttributionDate(a)) || new Date(0);
