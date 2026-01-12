@@ -170,8 +170,8 @@
         .chart-header h3 { font-size: 16px; font-weight: 600; }
         .chart-wrapper { position: relative; height: 280px; }
         .chart-wrapper.large { height: 350px; }
-        .price-history-container { position: relative; height: 150px; margin-bottom: 16px; }
-        .price-history-container canvas { max-height: 150px; }
+        .price-history-container { position: relative; height: 180px; margin-bottom: 16px; }
+        .price-history-container canvas { max-height: 180px; }
         .search-box { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: white; font-size: 13px; min-width: 180px; transition: all 0.2s; }
         .search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.2); }
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -3298,13 +3298,22 @@
             const priceData = data.map(r => ({ date: parseDate(getAttributionDate(r)), price: getUnitPrice(r) })).filter(d => d.date).sort((a,b) => a.date - b.date);
             if (charts.partsOrdersPrice) charts.partsOrdersPrice.destroy();
             if (priceData.length > 1) {
+                const prices = priceData.map(d => d.price);
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                // Add 10% padding to Y-axis, or $0.50 minimum range if all prices are same
+                const priceRange = maxPrice - minPrice;
+                const padding = priceRange > 0 ? priceRange * 0.1 : Math.max(minPrice * 0.1, 0.50);
+                const yMin = Math.max(0, minPrice - padding);
+                const yMax = maxPrice + padding;
+                
                 charts.partsOrdersPrice = new Chart(document.getElementById('partsOrdersPriceChart'), {
                     type: 'line',
                     data: {
                         labels: priceData.map(d => d.date.toLocaleDateString()),
-                        datasets: [{ label: 'Unit Price', data: priceData.map(d => d.price), borderColor: '#3182ce', backgroundColor: 'rgba(49,130,206,0.1)', fill: true, tension: 0.3 }]
+                        datasets: [{ label: 'Unit Price', data: prices, borderColor: '#3182ce', backgroundColor: 'rgba(49,130,206,0.1)', fill: true, tension: 0 }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#a0aec0', font: { size: 9 } }, grid: { display: false } } } }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: yMin, max: yMax, ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#a0aec0', font: { size: 9 }, maxRotation: 45 }, grid: { display: false } } } }
                 });
             }
             
