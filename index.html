@@ -1919,14 +1919,81 @@
         async function fetchPalletData() {
             try {
                 const data = await fetchSheetData(PALLET_PICTURES_GID);
-                palletData = data.filter(row => {
-                    // Filter rows that have an order number
-                    const orderNum = row['Order Number/ Numero de orden'] || row['Order Number'] || '';
-                    return orderNum && orderNum !== '';
-                });
+                console.log('Raw pallet data first row keys:', data.length > 0 ? Object.keys(data[0]) : 'no data');
+                console.log('Raw pallet data sample row:', data[0]);
+                
+                palletData = data.map(row => {
+                    // Get all keys to find the right columns
+                    const keys = Object.keys(row);
+                    
+                    // Find order number - try various patterns
+                    let orderNum = '';
+                    for (const k of keys) {
+                        if (k.toLowerCase().includes('order') && k.toLowerCase().includes('number')) {
+                            orderNum = row[k];
+                            break;
+                        }
+                    }
+                    if (!orderNum) orderNum = row[keys[1]] || ''; // Fallback to column B
+                    
+                    // Find pallet number
+                    let palletNum = '';
+                    for (const k of keys) {
+                        if (k.toLowerCase().includes('pallet') && k.toLowerCase().includes('number')) {
+                            palletNum = row[k];
+                            break;
+                        }
+                    }
+                    if (!palletNum) palletNum = row[keys[2]] || ''; // Fallback to column C
+                    
+                    // Find picture URL
+                    let pictureUrl = '';
+                    for (const k of keys) {
+                        if (k.toLowerCase().includes('picture') && !k.includes('2') && !k.includes('3') && !k.includes('4') && !k.includes('5')) {
+                            pictureUrl = row[k];
+                            break;
+                        }
+                    }
+                    if (!pictureUrl) pictureUrl = row[keys[3]] || ''; // Fallback to column D
+                    
+                    // Find weight
+                    let weight = '';
+                    for (const k of keys) {
+                        if (k.toLowerCase().includes('weight')) {
+                            weight = row[k];
+                            break;
+                        }
+                    }
+                    if (!weight) weight = row[keys[4]] || ''; // Fallback to column E
+                    
+                    // Find dimensions
+                    let dims = '';
+                    for (const k of keys) {
+                        if (k.toLowerCase().includes('dimension')) {
+                            dims = row[k];
+                            break;
+                        }
+                    }
+                    if (!dims) dims = row[keys[5]] || ''; // Fallback to column F
+                    
+                    return {
+                        orderNumber: String(orderNum).trim(),
+                        palletNumber: palletNum,
+                        pictureUrl: pictureUrl,
+                        weight: weight,
+                        dimensions: dims
+                    };
+                }).filter(p => p.orderNumber && p.orderNumber !== '');
+                
                 console.log('Pallet data loaded:', palletData.length, 'entries');
+                if (palletData.length > 0) {
+                    console.log('Sample parsed pallet:', palletData[0]);
+                    // Log unique order numbers for debugging
+                    const uniqueOrders = [...new Set(palletData.map(p => p.orderNumber))];
+                    console.log('Unique order numbers in pallet data:', uniqueOrders.slice(0, 20));
+                }
             } catch (e) { 
-                console.warn('Pallet data load error:', e); 
+                console.error('Pallet data load error:', e); 
                 palletData = []; 
             }
         }
@@ -2400,6 +2467,11 @@
             
             document.getElementById('ordersStagedTableCount').textContent = `${sorted.length} orders`;
             const tbody = document.getElementById('ordersStagedTableBody');
+            
+            // Debug: log line numbers being rendered
+            const lineNums = sorted.map(r => getVal(r, 'LINE')).filter(Boolean);
+            console.log('Staged orders Line numbers:', lineNums.slice(0, 20));
+            
             tbody.innerHTML = sorted.map(r => {
                 const line = getVal(r, 'LINE');
                 const pallets = getPalletDataForOrder(line);
@@ -2427,14 +2499,18 @@
             }).join('');
         }
         
-        // Get pallet data for a specific order line number
+        // Get pallet data for a specific order (by Line number)
         function getPalletDataForOrder(lineNum) {
             if (!lineNum || !palletData || palletData.length === 0) return [];
             const lineStr = String(lineNum).trim();
-            return palletData.filter(p => String(p.orderNumber).trim() === lineStr);
+            const matches = palletData.filter(p => String(p.orderNumber).trim() === lineStr);
+            if (matches.length > 0) {
+                console.log(`Found ${matches.length} pallets for line ${lineStr}`);
+            }
+            return matches;
         }
         
-        // Show pallet pictures modal for an order
+        // Show pallet pictures modal for an order (using Line number)
         function showPalletPictures(lineNum) {
             const pallets = getPalletDataForOrder(lineNum);
             if (pallets.length === 0) return;
@@ -2454,20 +2530,30 @@
                 <div class="summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
+            // Simple table with pallet # and clickable link
             const gallery = document.getElementById('palletGallery');
-            gallery.innerHTML = pallets.map((p, idx) => {
-                const images = [p.picture1, p.picture2, p.picture3, p.picture4, p.picture5].filter(img => img && img.trim());
-                const thumbs = images.map(img => `<img src="${img}" class="pallet-thumb" onclick="openImageModal('${img}')" title="${t('pallet.clickToView')}">`).join('');
-                return `<div class="pallet-card">
-                    <h4>${t('col.palletNum')} ${p.palletNumber || (idx + 1)}</h4>
-                    <div class="pallet-info">
-                        <span><strong>${t('pallet.weight')}:</strong> ${p.weight || '-'}</span>
-                        <span><strong>${t('pallet.dimensions')}:</strong> ${p.dimensions || '-'}</span>
-                        ${p.partsPerPallet ? `<span><strong>${t('col.partsPerPallet')}:</strong> ${p.partsPerPallet}</span>` : ''}
-                    </div>
-                    <div class="pallet-images">${thumbs.length > 0 ? thumbs : '<p style="color:var(--text-secondary);">No images</p>'}</div>
-                </div>`;
-            }).join('');
+            gallery.innerHTML = `
+                <table class="data-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>${t('col.palletNum')}</th>
+                            <th>${t('pallet.weight')}</th>
+                            <th>${t('pallet.dimensions')}</th>
+                            <th>Picture Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pallets.map((p, idx) => `
+                            <tr>
+                                <td><strong>${p.palletNumber || (idx + 1)}</strong></td>
+                                <td>${p.weight || '-'}</td>
+                                <td>${p.dimensions || '-'}</td>
+                                <td>${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷 View Photo</a>` : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
             
             document.getElementById('palletDrilldown').classList.add('active');
             document.getElementById('palletDrilldown').scrollIntoView({ behavior: 'smooth' });
