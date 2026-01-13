@@ -46,6 +46,11 @@
         .logo span { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 4px; }
         .nav-section { margin-bottom: 16px; }
         .nav-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); margin-bottom: 8px; padding-left: 14px; font-weight: 700; }
+        .nav-section-title.sales-locked { cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: linear-gradient(135deg, rgba(49,130,206,0.15) 0%, rgba(49,130,206,0.05) 100%); border-radius: 8px; margin: 4px 8px 8px; transition: all 0.2s; }
+        .nav-section-title.sales-locked:hover { background: linear-gradient(135deg, rgba(49,130,206,0.25) 0%, rgba(49,130,206,0.15) 100%); }
+        .nav-section-title.sales-locked .lock-icon { font-size: 12px; }
+        .nav-section-title.sales-unlocked { cursor: default; background: linear-gradient(135deg, rgba(56,161,105,0.15) 0%, rgba(56,161,105,0.05) 100%); margin: 4px 8px 8px; padding: 12px 14px; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
+        .nav-section-title.sales-unlocked .lock-icon { display: none; }
         .nav-item { display: flex; align-items: center; padding: 11px 14px; margin: 3px 0; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 500; }
         .nav-item:hover { background: rgba(255,255,255,0.1); transform: translateX(4px); }
         .nav-item.active { background: linear-gradient(135deg, var(--accent) 0%, #4299e1 100%); color: white; box-shadow: 0 4px 15px rgba(49,130,206,0.5); }
@@ -371,12 +376,16 @@
             <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">🚚</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
             <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
         </div>
-        <div class="nav-section">
-            <div class="nav-section-title" data-i18n="nav.salesFinance">Sales & Finance</div>
-            <div class="nav-item" data-page="sales-overview" onclick="navigateTo('sales-overview')"><span class="icon">📊</span> <span data-i18n="nav.plOverview">P/L Overview</span></div>
-            <div class="nav-item sub-item" data-page="sales-parts" onclick="navigateTo('sales-parts')"><span class="icon">🔧</span> <span data-i18n="nav.byPart">By Part Number</span></div>
-            <div class="nav-item sub-item" data-page="sales-customers" onclick="navigateTo('sales-customers')"><span class="icon">👥</span> <span data-i18n="nav.byCustomer">By Customer</span></div>
-            <div class="nav-item sub-item" data-page="sales-dates" onclick="navigateTo('sales-dates')"><span class="icon">📅</span> <span data-i18n="nav.byDate">By Date</span></div>
+        <div class="nav-section" id="salesNavSection">
+            <div class="nav-section-title sales-locked" id="salesNavTitle" onclick="promptSalesPassword()">
+                <span class="lock-icon">🔒</span> <span data-i18n="nav.salesFinance">Sales & Finance</span>
+            </div>
+            <div class="sales-nav-items" id="salesNavItems" style="display:none;">
+                <div class="nav-item" data-page="sales-overview" onclick="navigateTo('sales-overview')"><span class="icon">📊</span> <span data-i18n="nav.plOverview">P/L Overview</span></div>
+                <div class="nav-item sub-item" data-page="sales-parts" onclick="navigateTo('sales-parts')"><span class="icon">🔧</span> <span data-i18n="nav.byPart">By Part Number</span></div>
+                <div class="nav-item sub-item" data-page="sales-customers" onclick="navigateTo('sales-customers')"><span class="icon">👥</span> <span data-i18n="nav.byCustomer">By Customer</span></div>
+                <div class="nav-item sub-item" data-page="sales-dates" onclick="navigateTo('sales-dates')"><span class="icon">📅</span> <span data-i18n="nav.byDate">By Date</span></div>
+            </div>
         </div>
         <div class="nav-section">
             <div class="nav-section-title" data-i18n="nav.billOfMaterials">Bill of Materials</div>
@@ -398,7 +407,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.4</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.5</div>
     </div>
 
     <div class="main-content">
@@ -414,8 +423,6 @@
                 <div class="quick-stat"><div class="value warning" id="qsNeedToMake">-</div><div class="label" data-i18n="stats.needToMake">Need to Make</div></div>
                 <div class="quick-stat"><div class="value" id="qsUrgentOrders">-</div><div class="label" data-i18n="stats.urgent">Urgent</div></div>
                 <div class="quick-stat"><div class="value" id="qsTotalQty">-</div><div class="label" data-i18n="stats.totalUnits">Total Units</div></div>
-                <div class="quick-stat"><div class="value positive" id="qsMonthlyRevenue">-</div><div class="label" data-i18n="stats.monthRevenue">Month Revenue</div></div>
-                <div class="quick-stat"><div class="value" id="qsMonthlyPL">-</div><div class="label" data-i18n="stats.monthPL">Month P/L</div></div>
                 <div class="quick-stat"><div class="value warning" id="qsMissingComponents">-</div><div class="label" data-i18n="stats.missingParts">Missing Parts</div></div>
             </div>
             <div class="dept-grid">
@@ -427,16 +434,6 @@
                         <div class="metric"><div class="value" id="deptProdOrders">-</div><div class="label" data-i18n="dept.needToMake">Need to Make</div></div>
                         <div class="metric"><div class="value" id="deptProdUnits">-</div><div class="label" data-i18n="dept.units">Units</div></div>
                         <div class="metric"><div class="value warning" id="deptProdUrgent">-</div><div class="label" data-i18n="stats.urgent">Urgent</div></div>
-                    </div>
-                </div>
-                <div class="dept-card sales" onclick="navigateTo('sales-overview')">
-                    <div class="icon-large">💰</div>
-                    <h3 data-i18n="dept.sales">Sales & P/L Analytics</h3>
-                    <p data-i18n="dept.salesDesc">Revenue, profitability, and customer analysis</p>
-                    <div class="metrics">
-                        <div class="metric"><div class="value positive" id="deptSalesRev">-</div><div class="label" data-i18n="dept.revenue">Revenue</div></div>
-                        <div class="metric"><div class="value" id="deptSalesPL">-</div><div class="label" data-i18n="dept.profit">Profit</div></div>
-                        <div class="metric"><div class="value" id="deptSalesOrders">-</div><div class="label" data-i18n="dept.orders">Orders</div></div>
                     </div>
                 </div>
                 <div class="dept-card inventory" onclick="navigateTo('inventory')">
@@ -1854,15 +1851,15 @@
             try {
                 const fusionData = await fetchSheetData(FUSION_EXPORT_GID);
                 const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
-                console.log('Inventory Debug v7.4 - Prod Totals columns:', prodTotalsData.length > 0 ? Object.keys(prodTotalsData[0]) : 'No data');
-                console.log('Inventory Debug v7.4 - First Prod Totals row:', prodTotalsData[0]);
+                console.log('Inventory Debug v7.5 - Prod Totals columns:', prodTotalsData.length > 0 ? Object.keys(prodTotalsData[0]) : 'No data');
+                console.log('Inventory Debug v7.5 - First Prod Totals row:', prodTotalsData[0]);
                 const prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
                     let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
                     if (partNum) {
                         const fusionInv = parseNumber(row['Fusion inventory']) || parseNumber(row['Fusion Inventory']);
                         if (partNum === 'FS-TPO' || partNum === 'FS-URTH-BRN') {
-                            console.log('Inventory Debug v7.4 - ' + partNum + ':', { 
+                            console.log('Inventory Debug v7.5 - ' + partNum + ':', { 
                                 fusionInventory: fusionInv, 
                                 rawLower: row['Fusion inventory'], 
                                 rawUpper: row['Fusion Inventory'] 
@@ -2019,9 +2016,60 @@
         }
 
         // ============================================================
+        // SALES PASSWORD PROTECTION
+        // ============================================================
+        // Simple hash function to obscure password (not cryptographically secure, but deters casual inspection)
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString();
+        }
+        
+        const SALES_HASH = '2001594324'; // Hash of 'Sales@@@'
+        let salesUnlocked = sessionStorage.getItem('salesUnlocked') === 'true';
+        
+        function checkSalesUnlock() {
+            if (salesUnlocked) {
+                document.getElementById('salesNavItems').style.display = 'block';
+                document.getElementById('salesNavTitle').classList.remove('sales-locked');
+                document.getElementById('salesNavTitle').classList.add('sales-unlocked');
+                document.getElementById('salesNavTitle').onclick = null;
+                document.getElementById('salesNavTitle').innerHTML = '<span class="lock-icon">🔓</span> <span data-i18n="nav.salesFinance">Sales & Finance</span>';
+            }
+        }
+        
+        function promptSalesPassword() {
+            const password = prompt('Enter password to access Sales & Finance:');
+            if (password === null) return; // User cancelled
+            
+            if (simpleHash(password) === SALES_HASH) {
+                salesUnlocked = true;
+                sessionStorage.setItem('salesUnlocked', 'true');
+                checkSalesUnlock();
+                alert('Access granted! Sales & Finance section is now unlocked.');
+            } else {
+                alert('Incorrect password. Please try again.');
+            }
+        }
+        
+        // Check unlock state on page load
+        document.addEventListener('DOMContentLoaded', checkSalesUnlock);
+
+        // ============================================================
         // NAVIGATION
         // ============================================================
         function navigateTo(page) {
+            // Check if trying to access sales pages without unlock
+            const salesPages = ['sales-overview', 'sales-parts', 'sales-customers', 'sales-dates'];
+            if (salesPages.includes(page) && !salesUnlocked) {
+                promptSalesPassword();
+                if (!salesUnlocked) return; // Still not unlocked, don't navigate
+            }
+            
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(page).classList.add('active');
@@ -2117,21 +2165,11 @@
             document.getElementById('qsUrgentOrders').textContent = formatNumber(urgentOrders.length);
             document.getElementById('qsUrgentOrders').className = `value ${urgentOrders.length > 0 ? 'negative' : ''}`;
             document.getElementById('qsTotalQty').textContent = formatNumber(totalQty);
-            document.getElementById('qsMonthlyRevenue').textContent = formatCurrency(monthRevenue);
-            document.getElementById('qsMonthlyPL').textContent = formatCurrency(monthPL);
-            document.getElementById('qsMonthlyPL').className = `value ${monthPL >= 0 ? 'positive' : 'negative'}`;
             document.getElementById('qsMissingComponents').textContent = formatNumber(missingComponents);
             
             document.getElementById('deptProdOrders').textContent = formatNumber(needToMakeOrders.length);
             document.getElementById('deptProdUnits').textContent = formatNumber(totalQty);
             document.getElementById('deptProdUrgent').textContent = formatNumber(urgentOrders.length);
-            
-            const salesTotal = rollTechData.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
-            const salesPL = rollTechData.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
-            document.getElementById('deptSalesRev').textContent = formatCurrency(salesTotal);
-            document.getElementById('deptSalesPL').textContent = formatCurrency(salesPL);
-            document.getElementById('deptSalesPL').className = `value ${salesPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('deptSalesOrders').textContent = formatNumber(rollTechData.length);
             
             renderMainStatusChart(rollTechData.filter(r => getStatus(r) !== 'shipped'));
             renderMainDeadlineChart(needToMakeOrders);
@@ -3316,7 +3354,7 @@
             const priceData = data.map(r => ({ date: parseDate(getAttributionDate(r)), price: getUnitPrice(r) })).filter(d => d.date).sort((a,b) => a.date - b.date);
             if (charts.partsOrdersPrice) charts.partsOrdersPrice.destroy();
             const priceChartEl = document.getElementById('partsOrdersPriceChart');
-            console.log('Price History Debug v7.4:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
+            console.log('Price History Debug v7.5:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
             if (priceData.length > 1 && priceChartEl) {
                 const prices = priceData.map(d => d.price);
                 const minPrice = Math.min(...prices);
@@ -3325,7 +3363,7 @@
                 const allSame = (maxPrice - minPrice) < 0.01;
                 const yAxisMin = allSame ? minPrice * 0.9 : minPrice - (maxPrice - minPrice) * 0.15;
                 const yAxisMax = allSame ? maxPrice * 1.1 : maxPrice + (maxPrice - minPrice) * 0.15;
-                console.log('Y-Axis Debug v7.4:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
+                console.log('Y-Axis Debug v7.5:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
                 
                 charts.partsOrdersPrice = new Chart(priceChartEl, {
                     type: 'line',
