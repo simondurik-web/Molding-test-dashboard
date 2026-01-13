@@ -398,7 +398,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.3</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.4</div>
     </div>
 
     <div class="main-content">
@@ -1854,17 +1854,27 @@
             try {
                 const fusionData = await fetchSheetData(FUSION_EXPORT_GID);
                 const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                console.log('Inventory Debug v7.4 - Prod Totals columns:', prodTotalsData.length > 0 ? Object.keys(prodTotalsData[0]) : 'No data');
+                console.log('Inventory Debug v7.4 - First Prod Totals row:', prodTotalsData[0]);
                 const prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
                     let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
                     if (partNum) {
+                        const fusionInv = parseNumber(row['Fusion inventory']) || parseNumber(row['Fusion Inventory']);
+                        if (partNum === 'FS-TPO' || partNum === 'FS-URTH-BRN') {
+                            console.log('Inventory Debug v7.4 - ' + partNum + ':', { 
+                                fusionInventory: fusionInv, 
+                                rawLower: row['Fusion inventory'], 
+                                rawUpper: row['Fusion Inventory'] 
+                            });
+                        }
                         prodTotalsMap[partNum] = {
                             product: row['Product'] || '',
                             qtyNeeded: parseNumber(row['Quantity Needed']),
                             minimums: parseNumber(row['Minimums']),
                             manualTarget: parseNumber(row['Manual target']),
                             moldType: row['Mold type'] || '',
-                            fusionInventory: parseNumber(row['Fusion Inventory']),
+                            fusionInventory: fusionInv,
                             partsToBeMade: parseNumber(row['Parts to be made'])
                         };
                     }
@@ -1877,10 +1887,13 @@
                     seenParts.add(partNum);
                     const prodData = prodTotalsMap[partNum] || {};
                     const fusionTarget = parseNumber(row['Target']);
+                    const fusionExportQty = parseNumber(row['Real number value']);
+                    // Use Fusion Export qty if available, otherwise fall back to Production Data Totals
+                    const finalFusionQty = fusionExportQty > 0 ? fusionExportQty : (prodData.fusionInventory || 0);
                     mergedData.push({
                         partNumber: partNum,
                         product: prodData.product || '',
-                        fusionQty: parseNumber(row['Real number value']),
+                        fusionQty: finalFusionQty,
                         minimum: prodData.minimums || fusionTarget || 0,
                         manualTarget: prodData.manualTarget || 0,
                         qtyNeeded: prodData.qtyNeeded || 0,
@@ -3303,7 +3316,7 @@
             const priceData = data.map(r => ({ date: parseDate(getAttributionDate(r)), price: getUnitPrice(r) })).filter(d => d.date).sort((a,b) => a.date - b.date);
             if (charts.partsOrdersPrice) charts.partsOrdersPrice.destroy();
             const priceChartEl = document.getElementById('partsOrdersPriceChart');
-            console.log('Price History Debug v7.3:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
+            console.log('Price History Debug v7.4:', { dataPoints: priceData.length, prices: priceData.slice(0,5).map(d => d.price) });
             if (priceData.length > 1 && priceChartEl) {
                 const prices = priceData.map(d => d.price);
                 const minPrice = Math.min(...prices);
@@ -3312,7 +3325,7 @@
                 const allSame = (maxPrice - minPrice) < 0.01;
                 const yAxisMin = allSame ? minPrice * 0.9 : minPrice - (maxPrice - minPrice) * 0.15;
                 const yAxisMax = allSame ? maxPrice * 1.1 : maxPrice + (maxPrice - minPrice) * 0.15;
-                console.log('Y-Axis Debug v7.3:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
+                console.log('Y-Axis Debug v7.4:', { minPrice, maxPrice, allSame, yAxisMin, yAxisMax });
                 
                 charts.partsOrdersPrice = new Chart(priceChartEl, {
                     type: 'line',
