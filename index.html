@@ -616,24 +616,24 @@
                 <div><h2 data-i18n="inv.title">Inventory Management</h2></div>
             </div>
             <div class="toolbar">
-                <input type="text" class="search-box" id="invSearch" placeholder="Search items..." oninput="filterInvTable()">
+                <input type="text" class="search-box" id="invSearch" data-i18n-placeholder="ui.search" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
-                    <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')">All</button>
+                    <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
                     <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠  Low Stock</button>
-                    <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 Needs Production</button>
+                    <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
-                <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑️ Clear Filters</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑️ <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportInvCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Total Items</div><div class="value" id="invStatTotal">-</div><div class="sub" id="invStatTypes">- product types</div></div>
-                <div class="stat-card"><div class="label">Low Stock</div><div class="value" style="color:var(--danger);" id="invStatLow">-</div></div>
-                <div class="stat-card"><div class="label">Needs Production</div><div class="value" style="color:var(--warning);" id="invStatNeeded">-</div></div>
-                <div class="stat-card"><div class="label">Adequate Stock</div><div class="value" style="color:var(--success);" id="invStatOk">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalItems">Total Items</div><div class="value" id="invStatTotal">-</div><div class="sub" id="invStatTypes">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.lowStock">Low Stock</div><div class="value" style="color:var(--danger);" id="invStatLow">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.needsProduction">Needs Production</div><div class="value" style="color:var(--warning);" id="invStatNeeded">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.adequateStock">Adequate Stock</div><div class="value" style="color:var(--success);" id="invStatOk">-</div></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Inventory Status</h3><span style="color:var(--text-secondary);font-size:12px;" id="invTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.inventoryStatus">Inventory Status</h3><span style="color:var(--text-secondary);font-size:12px;" id="invTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table" id="invTable">
                         <thead><tr id="invTableHeader"></tr></thead>
@@ -910,8 +910,8 @@
                 <div><h2 data-i18n="bom.title">BOM Explorer</h2></div>
             </div>
             <div class="info-banner info active">
-                <span class="icon">ℹ️</span>
-                <p><strong>Note:</strong> BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</p>
+                <span class="icon">ℹ️</span>
+                <p><strong>Note:</strong> <span data-i18n="bom.note">BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</span></p>
             </div>
             <div class="tabs">
                 <div class="tab active" data-bomtab="final" onclick="switchBomTab('final')">Final Assembly</div>
@@ -920,8 +920,8 @@
             </div>
             <div class="chart-container">
                 <div class="chart-header">
-                    <h3>Select a Part</h3>
-                    <input type="text" class="search-box" id="bomSearch" placeholder="Search parts..." oninput="filterBomSelector()">
+                    <h3 data-i18n="bom.selectPart">Select a Part</h3>
+                    <input type="text" class="search-box" id="bomSearch" data-i18n-placeholder="bom.searchParts" placeholder="Search parts..." oninput="filterBomSelector()">
                 </div>
                 <div class="bom-grid">
                     <div class="bom-selector" id="bomSelector"><p style="color:var(--text-secondary);">Loading...</p></div>
@@ -947,16 +947,16 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group">
-                    <label>Rows:</label>
+                    <label data-i18n="ui.rows">Rows:</label>
                     <span id="allDataRowCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <div class="toolbar-group">
-                    <label>Columns:</label>
+                    <label data-i18n="ui.columns">Columns:</label>
                     <span id="allDataColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
-                <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑️ Clear Filters</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑️ <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="allDataGlobalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
+                <input type="text" class="search-box" id="allDataGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
                 <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="chart-container" style="padding:10px;">
@@ -1124,7 +1124,24 @@
                 'dates.title': 'P/L by Date',
                 'drilldown.customerBreakdown': 'Customer Breakdown',
                 'drilldown.productBreakdown': 'Product Breakdown',
-                'drilldown.ordersHistory': 'Orders & Price History'
+                'drilldown.ordersHistory': 'Orders & Price History',
+                // Batch 4: Inventory + BOM + All Data
+                'filter.all': 'All',
+                'filter.lowStock': 'Low Stock',
+                'filter.needsProduction': 'Needs Production',
+                'filter.clearFilters': 'Clear Filters',
+                'stats.totalItems': 'Total Items',
+                'stats.lowStock': 'Low Stock',
+                'stats.needsProduction': 'Needs Production',
+                'stats.adequateStock': 'Adequate Stock',
+                'table.inventoryStatus': 'Inventory Status',
+                'bom.note': 'Note: BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.',
+                'bom.selectPart': 'Select a part to view BOM',
+                'bom.searchParts': 'Search parts...',
+                'ui.globalSearch': 'Global search...',
+                'ui.rows': 'Rows:',
+                'ui.columns': 'Columns:',
+                'ui.items': 'items'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones',
@@ -1275,7 +1292,24 @@
                 'dates.title': 'P/L por Fecha',
                 'drilldown.customerBreakdown': 'Desglose por Cliente',
                 'drilldown.productBreakdown': 'Desglose por Producto',
-                'drilldown.ordersHistory': 'Historial de Órdenes y Precios'
+                'drilldown.ordersHistory': 'Historial de Órdenes y Precios',
+                // Batch 4: Inventory + BOM + All Data
+                'filter.all': 'Todos',
+                'filter.lowStock': 'Stock Bajo',
+                'filter.needsProduction': 'Requiere Producción',
+                'filter.clearFilters': 'Limpiar Filtros',
+                'stats.totalItems': 'Total de Artículos',
+                'stats.lowStock': 'Stock Bajo',
+                'stats.needsProduction': 'Requiere Producción',
+                'stats.adequateStock': 'Stock Adecuado',
+                'table.inventoryStatus': 'Estado del Inventario',
+                'bom.note': 'Nota: Los datos BOM reflejan el estado actual de filtros en Google Sheets. Si faltan artículos, verifique que no haya filtros activos en las hojas de origen.',
+                'bom.selectPart': 'Seleccione una parte para ver BOM',
+                'bom.searchParts': 'Buscar partes...',
+                'ui.globalSearch': 'Búsqueda global...',
+                'ui.rows': 'Filas:',
+                'ui.columns': 'Columnas:',
+                'ui.items': 'artículos'
             }
         };
         
@@ -2935,7 +2969,7 @@
             const productTypes = [...new Set(inventoryData.map(i => i.product).filter(p => p))];
             
             document.getElementById('invStatTotal').textContent = formatNumber(inventoryData.length);
-            document.getElementById('invStatTypes').textContent = `${productTypes.length} product types`;
+            document.getElementById('invStatTypes').textContent = `${productTypes.length} ${t('ui.productTypes')}`;
             document.getElementById('invStatLow').textContent = formatNumber(lowStock.length);
             document.getElementById('invStatNeeded').textContent = formatNumber(needsProduction.length);
             document.getElementById('invStatOk').textContent = formatNumber(okStock.length);
@@ -2998,7 +3032,7 @@
                 return invSort.asc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
             });
             
-            document.getElementById('invTableCount').textContent = `${data.length} items`;
+            document.getElementById('invTableCount').textContent = `${data.length} ${t('ui.items')}`;
             const tbody = document.getElementById('invTableBody');
             tbody.innerHTML = data.map(i => {
                 const isLow = i.fusionQty < i.minimum && i.minimum > 0;
