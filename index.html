@@ -337,18 +337,18 @@
     <!-- Column Filter Dropdown Modal -->
     <div class="filter-dropdown" id="columnFilterDropdown">
         <div class="filter-dropdown-header">
-            <h4 id="filterDropdownTitle">Filter Column</h4>
+            <h4 id="filterDropdownTitle" data-i18n="ui.filterColumn">Filter Column</h4>
             <button onclick="closeFilterDropdown()">✕</button>
         </div>
-        <input type="text" class="filter-search" id="filterDropdownSearch" placeholder="Search values..." oninput="filterDropdownSearch()">
+        <input type="text" class="filter-search" id="filterDropdownSearch" data-i18n-placeholder="ui.searchValues" placeholder="Search values..." oninput="filterDropdownSearch()">
         <div class="filter-actions">
-            <button onclick="filterSelectAll()">Select All</button>
-            <button onclick="filterDeselectAll()">Deselect All</button>
+            <button onclick="filterSelectAll()" data-i18n="ui.selectAll">Select All</button>
+            <button onclick="filterDeselectAll()" data-i18n="ui.deselectAll">Deselect All</button>
         </div>
         <div class="filter-values-list" id="filterValuesList"></div>
         <div class="filter-dropdown-footer">
-            <button class="clear-btn" onclick="clearColumnFilter()">Clear</button>
-            <button class="apply-btn" onclick="applyColumnFilter()">Apply</button>
+            <button class="clear-btn" onclick="clearColumnFilter()" data-i18n="ui.clear">Clear</button>
+            <button class="apply-btn" onclick="applyColumnFilter()" data-i18n="ui.apply">Apply</button>
         </div>
     </div>
 
@@ -397,17 +397,17 @@
         </div>
         <div class="nav-divider"></div>
         <div class="zoom-controls">
-            <label style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;">Zoom</label>
+            <label style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;" data-i18n="ui.zoom">Zoom</label>
             <div style="display:flex;align-items:center;gap:6px;">
                 <button class="zoom-btn" onclick="adjustZoom(-10)">−</button>
                 <input type="number" id="zoomInput" value="100" min="50" max="200" step="10" onchange="setZoom(this.value)" style="width:50px;text-align:center;background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;color:white;padding:4px;font-size:11px;">
                 <span style="font-size:10px;color:var(--text-secondary);">%</span>
                 <button class="zoom-btn" onclick="adjustZoom(10)">+</button>
             </div>
-            <button class="zoom-reset-btn" onclick="resetZoom()">Reset (100%)</button>
+            <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.5</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.6</div>
     </div>
 
     <div class="main-content">
@@ -465,20 +465,20 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="ordersDataBtnRollTech" onclick="toggleOrdersDataCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="ordersDataBtnMolding" onclick="toggleOrdersDataCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="ordersDataBtnRollTech" onclick="toggleOrdersDataCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="ordersDataBtnMolding" onclick="toggleOrdersDataCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-group status-filters">
-                    <label>Status:</label>
+                    <label data-i18n="ui.status">Status:</label>
                     <button class="status-btn pending active" id="ordersDataStatusPending" onclick="toggleOrdersDataStatus('pending')"><span data-i18n="status.needToMake">Need to Make</span></button>
                     <button class="status-btn wip active" id="ordersDataStatusWip" onclick="toggleOrdersDataStatus('wip')"><span data-i18n="status.making">Making</span></button>
                     <button class="status-btn staged active" id="ordersDataStatusStaged" onclick="toggleOrdersDataStatus('staged')"><span data-i18n="status.readyToShip">Ready to Ship</span></button>
                     <button class="status-btn shipped" id="ordersDataStatusShipped" onclick="toggleOrdersDataStatus('shipped')"><span data-i18n="status.shipped">Shipped</span></button>
                 </div>
                 <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="ordersDataSearch" placeholder="Search..." oninput="filterOrdersDataTable()">
-                <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 Export</button>
+                <input type="text" class="search-box" id="ordersDataSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersDataTable()">
+                <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="ordersDataTotalOrders">-</div><div class="sub" id="ordersDataTotalUnits">- units</div></div>
@@ -505,13 +505,13 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="ordersQueueSearch" placeholder="Search..." oninput="filterOrdersQueueTable()">
-                <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()">📥 Export</button>
+                <input type="text" class="search-box" id="ordersQueueSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersQueueTable()">
+                <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="info-banner warning" id="ordersQueueMissingBanner">
                 <span class="icon">⚠ </span>
@@ -539,13 +539,13 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="ordersStagedBtnRollTech" onclick="toggleOrdersStagedCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="ordersStagedBtnMolding" onclick="toggleOrdersStagedCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="ordersStagedBtnRollTech" onclick="toggleOrdersStagedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="ordersStagedBtnMolding" onclick="toggleOrdersStagedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="ordersStagedSearch" placeholder="Search..." oninput="filterOrdersStagedTable()">
-                <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 Export</button>
+                <input type="text" class="search-box" id="ordersStagedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersStagedTable()">
+                <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Staged Orders</div><div class="value" id="ordersStagedTotalOrders">-</div><div class="sub" id="ordersStagedTotalUnits">- units</div></div>
@@ -566,7 +566,7 @@
                         <div class="breadcrumb">Staged Orders › <span id="palletDrilldownOrder">-</span></div>
                         <h3 data-i18n="pallet.title">Pallet Pictures</h3>
                     </div>
-                    <button class="close-btn" onclick="closePalletDrilldown()">✕ Close</button>
+                    <button class="close-btn" onclick="closePalletDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                 </div>
                 <div class="pallet-summary" id="palletSummary"></div>
                 <div class="pallet-gallery" id="palletGallery"></div>
@@ -581,20 +581,20 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="ordersShippedBtnRollTech" onclick="toggleOrdersShippedCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="ordersShippedBtnMolding" onclick="toggleOrdersShippedCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="ordersShippedBtnRollTech" onclick="toggleOrdersShippedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="ordersShippedBtnMolding" onclick="toggleOrdersShippedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-group">
-                    <label>From:</label><input type="date" id="ordersShippedFromDate" onchange="applyShippedDateFilter()">
+                    <label data-i18n="ui.from">From:</label><input type="date" id="ordersShippedFromDate" onchange="applyShippedDateFilter()">
                 </div>
                 <div class="toolbar-group">
-                    <label>To:</label><input type="date" id="ordersShippedToDate" onchange="applyShippedDateFilter()">
+                    <label data-i18n="ui.to">To:</label><input type="date" id="ordersShippedToDate" onchange="applyShippedDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetShippedDateFilter()">🔄 Reset</button>
                 <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="ordersShippedSearch" placeholder="Search..." oninput="filterOrdersShippedTable()">
-                <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 Export</button>
+                <input type="text" class="search-box" id="ordersShippedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersShippedTable()">
+                <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Shipped Orders</div><div class="value" id="ordersShippedTotalOrders">-</div><div class="sub" id="ordersShippedTotalUnits">- units</div></div>
@@ -624,7 +624,7 @@
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportInvCSV()">📥 Export</button>
+                <button class="toolbar-btn" onclick="exportInvCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Total Items</div><div class="value" id="invStatTotal">-</div><div class="sub" id="invStatTypes">- product types</div></div>
@@ -651,12 +651,12 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="salesBtnRollTech" onclick="toggleSalesCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="salesBtnMolding" onclick="toggleSalesCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="salesBtnRollTech" onclick="toggleSalesCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="salesBtnMolding" onclick="toggleSalesCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportSalesCSV()">📥 Export</button>
+                <button class="toolbar-btn" onclick="exportSalesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Total Revenue</div><div class="value" id="salesStatRevenue">-</div><div class="sub" id="salesStatOrderCount">- orders</div></div>
@@ -678,22 +678,22 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="partsBtnRollTech" onclick="togglePartsCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="partsBtnMolding" onclick="togglePartsCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="partsBtnRollTech" onclick="togglePartsCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="partsBtnMolding" onclick="togglePartsCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-group">
-                    <label>From:</label><input type="date" id="partsFromDate" onchange="applyPartsDateFilter()">
+                    <label data-i18n="ui.from">From:</label><input type="date" id="partsFromDate" onchange="applyPartsDateFilter()">
                 </div>
                 <div class="toolbar-group">
-                    <label>To:</label><input type="date" id="partsToDate" onchange="applyPartsDateFilter()">
+                    <label data-i18n="ui.to">To:</label><input type="date" id="partsToDate" onchange="applyPartsDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 Clear Dates</button>
                 <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ Watchlist</button>
                 <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="partsSearch" placeholder="Search parts..." oninput="filterPartsTable()">
-                <button class="toolbar-btn" onclick="exportPartsCSV()">📥 Export</button>
+                <input type="text" class="search-box" id="partsSearch" data-i18n-placeholder="ui.search" placeholder="Search parts..." oninput="filterPartsTable()">
+                <button class="toolbar-btn" onclick="exportPartsCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h3>All Parts P/L Analysis</h3></div>
@@ -712,7 +712,7 @@
                         <div class="breadcrumb">Parts › <span id="partsCustomerDrilldownPart">-</span></div>
                         <h3>Customer Breakdown</h3>
                     </div>
-                    <button class="close-btn" onclick="closePartsCustomerDrilldown()">✕ Close</button>
+                    <button class="close-btn" onclick="closePartsCustomerDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                 </div>
                 <div class="summary-row" id="partsCustomerSummary"></div>
                 <div class="scrollable-table">
@@ -731,7 +731,7 @@
                     </div>
                     <div>
                         <button class="back-btn" onclick="backToPartsCustomers()">← Back</button>
-                        <button class="close-btn" onclick="closeAllPartsDrilldowns()">✕ Close All</button>
+                        <button class="close-btn" onclick="closeAllPartsDrilldowns()">✕ <span data-i18n="ui.closeAll">Close All</span></button>
                     </div>
                 </div>
                 <div class="summary-row" id="partsOrdersSummary"></div>
@@ -756,22 +756,22 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="customersBtnRollTech" onclick="toggleCustomersCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="customersBtnMolding" onclick="toggleCustomersCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="customersBtnRollTech" onclick="toggleCustomersCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="customersBtnMolding" onclick="toggleCustomersCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-group">
-                    <label>From:</label><input type="date" id="customersFromDate" onchange="applyCustomersDateFilter()">
+                    <label data-i18n="ui.from">From:</label><input type="date" id="customersFromDate" onchange="applyCustomersDateFilter()">
                 </div>
                 <div class="toolbar-group">
-                    <label>To:</label><input type="date" id="customersToDate" onchange="applyCustomersDateFilter()">
+                    <label data-i18n="ui.to">To:</label><input type="date" id="customersToDate" onchange="applyCustomersDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 Clear Dates</button>
                 <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ Watchlist</button>
                 <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="customersSearch" placeholder="Search customers..." oninput="filterCustomersTable()">
-                <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 Export</button>
+                <input type="text" class="search-box" id="customersSearch" data-i18n-placeholder="ui.search" placeholder="Search customers..." oninput="filterCustomersTable()">
+                <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h3>Customer P/L Distribution (Top 10)</h3></div>
@@ -790,7 +790,7 @@
                         <div class="breadcrumb">Customers › <span id="customersProductDrilldownCustomer">-</span></div>
                         <h3>Product Breakdown</h3>
                     </div>
-                    <button class="close-btn" onclick="closeCustomersProductDrilldown()">✕ Close</button>
+                    <button class="close-btn" onclick="closeCustomersProductDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                 </div>
                 <div class="summary-row" id="customersProductSummary"></div>
                 <div class="scrollable-table">
@@ -809,7 +809,7 @@
                     </div>
                     <div>
                         <button class="back-btn" onclick="backToCustomersProducts()">← Back</button>
-                        <button class="close-btn" onclick="closeAllCustomersDrilldowns()">✕ Close All</button>
+                        <button class="close-btn" onclick="closeAllCustomersDrilldowns()">✕ <span data-i18n="ui.closeAll">Close All</span></button>
                     </div>
                 </div>
                 <div class="summary-row" id="customersOrdersSummary"></div>
@@ -834,20 +834,20 @@
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
-                    <label>Category:</label>
-                    <button class="category-btn rolltech active" id="datesBtnRollTech" onclick="toggleDatesCategory('rolltech')"><span class="indicator"></span> Roll Tech</button>
-                    <button class="category-btn molding active" id="datesBtnMolding" onclick="toggleDatesCategory('molding')"><span class="indicator"></span> Molding</button>
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="datesBtnRollTech" onclick="toggleDatesCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="datesBtnMolding" onclick="toggleDatesCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
                 <div class="toolbar-group">
-                    <label>From:</label><input type="date" id="datesFromDate" onchange="applyDatesDateFilter()">
+                    <label data-i18n="ui.from">From:</label><input type="date" id="datesFromDate" onchange="applyDatesDateFilter()">
                 </div>
                 <div class="toolbar-group">
-                    <label>To:</label><input type="date" id="datesToDate" onchange="applyDatesDateFilter()">
+                    <label data-i18n="ui.to">To:</label><input type="date" id="datesToDate" onchange="applyDatesDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 Clear Dates</button>
                 <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportDatesCSV()">📥 Export</button>
+                <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label">Orders</div><div class="value" id="datesStatOrders">-</div><div class="sub" id="datesStatUnits">- units</div></div>
@@ -872,7 +872,7 @@
                         <div class="breadcrumb">Months › <span id="datesCustomerDrilldownMonth">-</span></div>
                         <h3>Customer Breakdown</h3>
                     </div>
-                    <button class="close-btn" onclick="closeDatesCustomerDrilldown()">✕ Close</button>
+                    <button class="close-btn" onclick="closeDatesCustomerDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                 </div>
                 <div class="summary-row" id="datesCustomerSummary"></div>
                 <div class="scrollable-table">
@@ -891,7 +891,7 @@
                     </div>
                     <div>
                         <button class="back-btn" onclick="backToDatesCustomers()">← Back</button>
-                        <button class="close-btn" onclick="closeAllDatesDrilldowns()">✕ Close All</button>
+                        <button class="close-btn" onclick="closeAllDatesDrilldowns()">✕ <span data-i18n="ui.closeAll">Close All</span></button>
                     </div>
                 </div>
                 <div class="summary-row" id="datesOrdersSummary"></div>
@@ -957,7 +957,7 @@
                 <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="allDataGlobalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
-                <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 Export</button>
+                <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="chart-container" style="padding:10px;">
                 <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
@@ -1065,7 +1065,30 @@
                 'pallet.weight': 'Weight (lbs)',
                 'pallet.dimensions': 'Dimensions (in)',
                 'pallet.pallets': 'Pallets',
-                'pallet.totalWeight': 'Total Weight'
+                'pallet.totalWeight': 'Total Weight',
+                // Batch 1: Global UI Elements
+                'ui.searchValues': 'Search values...',
+                'ui.selectAll': 'Select All',
+                'ui.deselectAll': 'Deselect All',
+                'ui.clear': 'Clear',
+                'ui.apply': 'Apply',
+                'ui.filterColumn': 'Filter Column',
+                'ui.search': 'Search...',
+                'ui.export': 'Export',
+                'ui.category': 'Category:',
+                'ui.status': 'Status:',
+                'ui.zoom': 'Zoom',
+                'ui.reset': 'Reset (100%)',
+                'ui.close': 'Close',
+                'ui.closeAll': 'Close All',
+                'ui.units': 'units',
+                'ui.orders': 'orders',
+                'ui.months': 'months',
+                'ui.productTypes': 'product types',
+                'category.rollTech': 'Roll Tech',
+                'category.molding': 'Molding',
+                'ui.from': 'From:',
+                'ui.to': 'To:'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones',
@@ -1157,7 +1180,30 @@
                 'pallet.weight': 'Peso (lbs)',
                 'pallet.dimensions': 'Dimensiones (pulg)',
                 'pallet.pallets': 'Paletas',
-                'pallet.totalWeight': 'Peso Total'
+                'pallet.totalWeight': 'Peso Total',
+                // Batch 1: Global UI Elements
+                'ui.searchValues': 'Buscar valores...',
+                'ui.selectAll': 'Seleccionar Todo',
+                'ui.deselectAll': 'Deseleccionar Todo',
+                'ui.clear': 'Limpiar',
+                'ui.apply': 'Aplicar',
+                'ui.filterColumn': 'Filtrar Columna',
+                'ui.search': 'Buscar...',
+                'ui.export': 'Exportar',
+                'ui.category': 'Categoría:',
+                'ui.status': 'Estado:',
+                'ui.zoom': 'Zoom',
+                'ui.reset': 'Restablecer (100%)',
+                'ui.close': 'Cerrar',
+                'ui.closeAll': 'Cerrar Todo',
+                'ui.units': 'unidades',
+                'ui.orders': 'órdenes',
+                'ui.months': 'meses',
+                'ui.productTypes': 'tipos de producto',
+                'category.rollTech': 'Roll Tech',
+                'category.molding': 'Moldeo',
+                'ui.from': 'Desde:',
+                'ui.to': 'Hasta:'
             }
         };
         
@@ -1170,6 +1216,11 @@
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (translations[lang][key]) el.textContent = translations[lang][key];
+            });
+            // Handle placeholder translations
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[lang][key]) el.placeholder = translations[lang][key];
             });
             document.getElementById('logoSubtitle').textContent = translations[lang]['logoSubtitle'];
             // Re-render current page
