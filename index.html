@@ -674,7 +674,7 @@
         <div id="sales-parts" class="page">
             <div class="page-header">
                 <div><h2 data-i18n="parts.title">P/L by Part Number</h2></div>
-                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← Back</button>
+                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← <span data-i18n="btn.back">Back</span></button>
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
@@ -688,8 +688,8 @@
                 <div class="toolbar-group">
                     <label data-i18n="ui.to">To:</label><input type="date" id="partsToDate" onchange="applyPartsDateFilter()">
                 </div>
-                <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 Clear Dates</button>
-                <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ Watchlist</button>
+                <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
+                <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" data-i18n-placeholder="ui.search" placeholder="Search parts..." oninput="filterPartsTable()">
@@ -730,7 +730,7 @@
                         <h3 data-i18n="drilldown.ordersHistory">Orders & Price History</h3>
                     </div>
                     <div>
-                        <button class="back-btn" onclick="backToPartsCustomers()">← Back</button>
+                        <button class="back-btn" onclick="backToPartsCustomers()">← <span data-i18n="btn.back">Back</span></button>
                         <button class="close-btn" onclick="closeAllPartsDrilldowns()">✕ <span data-i18n="ui.closeAll">Close All</span></button>
                     </div>
                 </div>
@@ -752,7 +752,7 @@
         <div id="sales-customers" class="page">
             <div class="page-header">
                 <div><h2 data-i18n="customers.title">P/L by Customer</h2></div>
-                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← Back</button>
+                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← <span data-i18n="btn.back">Back</span></button>
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
@@ -766,8 +766,8 @@
                 <div class="toolbar-group">
                     <label data-i18n="ui.to">To:</label><input type="date" id="customersToDate" onchange="applyCustomersDateFilter()">
                 </div>
-                <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 Clear Dates</button>
-                <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ Watchlist</button>
+                <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
+                <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" data-i18n-placeholder="ui.search" placeholder="Search customers..." oninput="filterCustomersTable()">
@@ -808,7 +808,7 @@
                         <h3 data-i18n="drilldown.ordersHistory">Orders & Price History</h3>
                     </div>
                     <div>
-                        <button class="back-btn" onclick="backToCustomersProducts()">← Back</button>
+                        <button class="back-btn" onclick="backToCustomersProducts()">← <span data-i18n="btn.back">Back</span></button>
                         <button class="close-btn" onclick="closeAllCustomersDrilldowns()">✕ <span data-i18n="ui.closeAll">Close All</span></button>
                     </div>
                 </div>
@@ -830,7 +830,7 @@
         <div id="sales-dates" class="page">
             <div class="page-header">
                 <div><h2 data-i18n="dates.title">P/L by Date</h2></div>
-                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← Back</button>
+                <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← <span data-i18n="btn.back">Back</span></button>
             </div>
             <div class="toolbar">
                 <div class="toolbar-group category-filters">
@@ -844,7 +844,7 @@
                 <div class="toolbar-group">
                     <label data-i18n="ui.to">To:</label><input type="date" id="datesToDate" onchange="applyDatesDateFilter()">
                 </div>
-                <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 Clear Dates</button>
+                <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑️ Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -890,7 +890,7 @@
                         <h3 data-i18n="drilldown.ordersHistory">Orders & Price History</h3>
                     </div>
                     <div>
-                        <button class="back-btn" onclick="backToDatesCustomers()">← Back</button>
+                        <button class="back-btn" onclick="backToDatesCustomers()">← <span data-i18n="btn.back">Back</span></button>
                         <button class="close-btn" onclick="closeAllDatesDrilldowns()">✕ <span data-i18n="ui.closeAll">Close All</span></button>
                     </div>
                 </div>
@@ -914,9 +914,9 @@
                 <p><strong>Note:</strong> <span data-i18n="bom.note">BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</span></p>
             </div>
             <div class="tabs">
-                <div class="tab active" data-bomtab="final" onclick="switchBomTab('final')">Final Assembly</div>
-                <div class="tab" data-bomtab="sub" onclick="switchBomTab('sub')">Sub Assembly</div>
-                <div class="tab" data-bomtab="individual" onclick="switchBomTab('individual')">Individual Items</div>
+                <div class="tab active" data-bomtab="final" onclick="switchBomTab('final')" data-i18n="bom.finalAssembly">Final Assembly</div>
+                <div class="tab" data-bomtab="sub" onclick="switchBomTab('sub')" data-i18n="bom.subAssembly">Sub Assembly</div>
+                <div class="tab" data-bomtab="individual" onclick="switchBomTab('individual')" data-i18n="bom.individualItems">Individual Items</div>
             </div>
             <div class="chart-container">
                 <div class="chart-header">
@@ -1141,7 +1141,23 @@
                 'ui.globalSearch': 'Global search...',
                 'ui.rows': 'Rows:',
                 'ui.columns': 'Columns:',
-                'ui.items': 'items'
+                'ui.items': 'items',
+                // Batch 5: Status badges, BOM tabs, misc
+                'bom.finalAssembly': 'Final Assembly',
+                'bom.subAssembly': 'Sub Assembly',
+                'bom.individualItems': 'Individual Items',
+                'status.low': 'LOW',
+                'status.make': 'MAKE',
+                'status.ok': 'OK',
+                'status.missing': 'Missing',
+                'status.available': 'Available',
+                'btn.clearDates': 'Clear Dates',
+                'btn.watchlist': 'Watchlist',
+                'btn.back': 'Back',
+                'btn.backToDashboard': 'Back',
+                'prod.missingBanner': 'orders have missing components.',
+                'ui.parts': 'parts',
+                'ui.customers': 'customers'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones',
@@ -1309,7 +1325,23 @@
                 'ui.globalSearch': 'Búsqueda global...',
                 'ui.rows': 'Filas:',
                 'ui.columns': 'Columnas:',
-                'ui.items': 'artículos'
+                'ui.items': 'artículos',
+                // Batch 5: Status badges, BOM tabs, misc
+                'bom.finalAssembly': 'Ensamble Final',
+                'bom.subAssembly': 'Sub Ensamble',
+                'bom.individualItems': 'Artículos Individuales',
+                'status.low': 'BAJO',
+                'status.make': 'HACER',
+                'status.ok': 'OK',
+                'status.missing': 'Faltante',
+                'status.available': 'Disponible',
+                'btn.clearDates': 'Limpiar Fechas',
+                'btn.watchlist': 'Lista de Seguimiento',
+                'btn.back': 'Volver',
+                'btn.backToDashboard': 'Volver',
+                'prod.missingBanner': 'órdenes tienen componentes faltantes.',
+                'ui.parts': 'partes',
+                'ui.customers': 'clientes'
             }
         };
         
@@ -3038,7 +3070,7 @@
                 const isLow = i.fusionQty < i.minimum && i.minimum > 0;
                 const needsMake = i.partsToBeMade > 0;
                 const rowClass = isLow ? 'inv-low' : (needsMake ? 'inv-warning' : '');
-                const statusBadge = isLow ? '<span class="badge" style="background:var(--danger);color:white;">LOW</span>' : (needsMake ? '<span class="badge" style="background:var(--warning);color:#1a202c;">MAKE</span>' : '<span class="badge" style="background:var(--success);color:white;">OK</span>');
+                const statusBadge = isLow ? `<span class="badge" style="background:var(--danger);color:white;">${t('status.low')}</span>` : (needsMake ? `<span class="badge" style="background:var(--warning);color:#1a202c;">${t('status.make')}</span>` : `<span class="badge" style="background:var(--success);color:white;">${t('status.ok')}</span>`);
                 return `<tr class="${rowClass}">
                     <td>${i.product || '-'}</td>
                     <td><strong>${i.partNumber}</strong></td>
@@ -3357,7 +3389,7 @@
             renderPartsBarChart(partsArray);
             
             // Render table
-            document.getElementById('partsTableCount').textContent = `${partsArray.length} parts`;
+            document.getElementById('partsTableCount').textContent = `${partsArray.length} ${t('ui.parts')}`;
             document.getElementById('partsTableHeader').innerHTML = `
                 <th>★</th>
                 ${createFilterHeader('parts', 'part', 'Part #')}
@@ -3706,7 +3738,7 @@
             });
             
             // Table
-            document.getElementById('customersTableCount').textContent = `${custArray.length} customers`;
+            document.getElementById('customersTableCount').textContent = `${custArray.length} ${t('ui.customers')}`;
             document.getElementById('customersTableHeader').innerHTML = `
                 <th>★</th>
                 ${createFilterHeader('customers', 'customer', 'Customer')}
@@ -4058,7 +4090,7 @@
                 createFilterHeader('dates', 'margin', 'Margin');
             
             // Table with X/Y Shipped format
-            document.getElementById('datesTableCount').textContent = `${monthsArray.length} months`;
+            document.getElementById('datesTableCount').textContent = `${monthsArray.length} ${t('ui.months')}`;
             document.getElementById('datesTableBody').innerHTML = monthsArray.map(m => {
                 return `<tr class="clickable" onclick="showDatesCustomerDrilldown('${m.month}')">
                     <td><strong>${m.monthLabel}</strong></td>
