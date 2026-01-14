@@ -51,6 +51,11 @@
         .nav-section-title.sales-locked .lock-icon { font-size: 12px; }
         .nav-section-title.sales-unlocked { cursor: default; background: linear-gradient(135deg, rgba(56,161,105,0.15) 0%, rgba(56,161,105,0.05) 100%); margin: 4px 8px 8px; padding: 12px 14px; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
         .nav-section-title.sales-unlocked .lock-icon { display: none; }
+        .financial-data { transition: opacity 0.3s; }
+        .financial-hidden .financial-data { display: none !important; }
+        .nav-item.locked-item { opacity: 0.5; cursor: pointer; }
+        .nav-item.locked-item:hover { opacity: 0.7; }
+        .nav-item.locked-item::after { content: '🔒'; margin-left: 8px; font-size: 10px; }
         .nav-item { display: flex; align-items: center; padding: 11px 14px; margin: 3px 0; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 500; }
         .nav-item:hover { background: rgba(255,255,255,0.1); transform: translateX(4px); }
         .nav-item.active { background: linear-gradient(135deg, var(--accent) 0%, #4299e1 100%); color: white; box-shadow: 0 4px 15px rgba(49,130,206,0.5); }
@@ -387,13 +392,13 @@
                 <div class="nav-item sub-item" data-page="sales-dates" onclick="navigateTo('sales-dates')"><span class="icon">📅</span> <span data-i18n="nav.byDate">By Date</span></div>
             </div>
         </div>
-        <div class="nav-section">
+        <div class="nav-section" id="bomNavSection" style="display:none;">
             <div class="nav-section-title" data-i18n="nav.billOfMaterials">Bill of Materials</div>
             <div class="nav-item" data-page="bom" onclick="navigateTo('bom')"><span class="icon">📋</span> <span data-i18n="nav.bomExplorer">BOM Explorer</span></div>
         </div>
-        <div class="nav-section">
+        <div class="nav-section" id="rawDataNavSection">
             <div class="nav-section-title" data-i18n="nav.rawData">Raw Data</div>
-            <div class="nav-item" data-page="all-data" onclick="navigateTo('all-data')"><span class="icon">🗃️</span> <span data-i18n="nav.allData">All Data</span></div>
+            <div class="nav-item locked-item" id="allDataNavItem" data-page="all-data" onclick="handleAllDataClick()"><span class="icon">🗃️</span> <span data-i18n="nav.allData">All Data</span></div>
         </div>
         <div class="nav-divider"></div>
         <div class="zoom-controls">
@@ -407,7 +412,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.6</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.7</div>
     </div>
 
     <div class="main-content">
@@ -549,8 +554,8 @@
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.stagedOrders">Staged Orders</div><div class="value" id="ordersStagedTotalOrders">-</div><div class="sub" id="ordersStagedTotalUnits">-</div></div>
-                <div class="stat-card"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value positive" id="ordersStagedRevenue">-</div></div>
-                <div class="stat-card"><div class="label" data-i18n="stats.avgOrderValue">Avg Order Value</div><div class="value" id="ordersStagedAvgValue">-</div></div>
+                <div class="stat-card financial-data"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value positive" id="ordersStagedRevenue">-</div></div>
+                <div class="stat-card financial-data"><div class="label" data-i18n="stats.avgOrderValue">Avg Order Value</div><div class="value" id="ordersStagedAvgValue">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.customers">Customers</div><div class="value" id="ordersStagedCustomers">-</div></div>
             </div>
             <div class="chart-container">
@@ -598,8 +603,8 @@
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.shippedOrders">Shipped Orders</div><div class="value" id="ordersShippedTotalOrders">-</div><div class="sub" id="ordersShippedTotalUnits">-</div></div>
-                <div class="stat-card"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value positive" id="ordersShippedRevenue">-</div></div>
-                <div class="stat-card"><div class="label" data-i18n="stats.totalPL">Total P/L</div><div class="value" id="ordersShippedPL">-</div><div class="sub" id="ordersShippedMargin">-</div></div>
+                <div class="stat-card financial-data"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value positive" id="ordersShippedRevenue">-</div></div>
+                <div class="stat-card financial-data"><div class="label" data-i18n="stats.totalPL">Total P/L</div><div class="value" id="ordersShippedPL">-</div><div class="sub" id="ordersShippedMargin">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.customers">Customers</div><div class="value" id="ordersShippedCustomers">-</div></div>
             </div>
             <div class="chart-container">
@@ -619,7 +624,7 @@
                 <input type="text" class="search-box" id="invSearch" data-i18n-placeholder="ui.search" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
-                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠  <span data-i18n="filter.lowStock">Low Stock</span></button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">âš   <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑️ <span data-i18n="filter.clearFilters">Clear Filters</span></button>
@@ -2227,11 +2232,38 @@
         
         function checkSalesUnlock() {
             if (salesUnlocked) {
+                // Show Sales & Finance items
                 document.getElementById('salesNavItems').style.display = 'block';
                 document.getElementById('salesNavTitle').classList.remove('sales-locked');
                 document.getElementById('salesNavTitle').classList.add('sales-unlocked');
                 document.getElementById('salesNavTitle').onclick = null;
                 document.getElementById('salesNavTitle').innerHTML = '<span class="lock-icon">🔓</span> <span data-i18n="nav.salesFinance">Sales & Finance</span>';
+                
+                // Show BOM Explorer section
+                document.getElementById('bomNavSection').style.display = 'block';
+                
+                // Unlock All Data nav item
+                const allDataNav = document.getElementById('allDataNavItem');
+                allDataNav.classList.remove('locked-item');
+                allDataNav.onclick = function() { navigateTo('all-data'); };
+                
+                // Remove financial-hidden class from body to show financial data
+                document.body.classList.remove('financial-hidden');
+            } else {
+                // Add financial-hidden class to body to hide financial data
+                document.body.classList.add('financial-hidden');
+            }
+        }
+        
+        // Handle All Data click - prompts for password if locked
+        function handleAllDataClick() {
+            if (salesUnlocked) {
+                navigateTo('all-data');
+            } else {
+                promptSalesPassword();
+                if (salesUnlocked) {
+                    navigateTo('all-data');
+                }
             }
         }
         
@@ -2671,11 +2703,17 @@
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'customer', label: t('col.customer') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
-                { key: 'packaging', label: t('col.packaging') }, { key: 'revenue', label: t('col.revenue') },
+                { key: 'packaging', label: t('col.packaging') }
+            ];
+            // Only add revenue column if sales is unlocked
+            if (salesUnlocked) {
+                headers.push({ key: 'revenue', label: t('col.revenue') });
+            }
+            headers.push(
                 { key: 'dueDate', label: t('col.dueDate') }, { key: 'daysUntil', label: t('col.daysUntil') },
                 { key: 'weight', label: t('col.weight') }, { key: 'dimensions', label: t('col.dimensions') },
-                { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: '📦' }
-            ];
+                { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: 'ðŸ"¦' }
+            );
             document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersStagedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
         }
         
@@ -2733,13 +2771,14 @@
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const palletIndicator = hasPallets ? `<span class="pallet-indicator" title="${pallets.length} ${t('pallet.pallets').toLowerCase()}">📷 ${pallets.length}</span>` : '-';
                 const clickHandler = hasPallets ? `onclick="showPalletPictures('${line}')" style="cursor:pointer;"` : '';
+                const revenueCell = salesUnlocked ? `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>` : '';
                 return `<tr class="${hasPallets ? 'clickable-row' : ''}" ${clickHandler}>
                 <td><strong>${line || '-'}</strong></td>
                 <td>${getVal(r, 'CUSTOMER') || '-'}</td>
                 <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
                 <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
                 <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
+                ${revenueCell}
                 <td>${r[COL.REQUESTED_DATE] || '-'}</td>
                 <td class="${daysClass}">${daysUntil || '-'}</td>
                 <td>${hasPallets ? formatNumber(totalWeight) + ' lbs' : '-'}</td>
@@ -2912,9 +2951,13 @@
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'shippedDate', label: t('col.shippedDate') },
                 { key: 'customer', label: t('col.customer') }, { key: 'part', label: t('col.part') },
-                { key: 'qty', label: t('col.qty') }, { key: 'revenue', label: t('col.revenue') },
-                { key: 'pl', label: t('col.pl') }
+                { key: 'qty', label: t('col.qty') }
             ];
+            // Only add revenue and P/L columns if sales is unlocked
+            if (salesUnlocked) {
+                headers.push({ key: 'revenue', label: t('col.revenue') });
+                headers.push({ key: 'pl', label: t('col.pl') });
+            }
             document.getElementById('ordersShippedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersShippedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
         }
         
@@ -2944,14 +2987,15 @@
             const tbody = document.getElementById('ordersShippedTableBody');
             tbody.innerHTML = sorted.map(r => {
                 const pl = getPLValue(r);
+                const financialCells = salesUnlocked ? `
+                    <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
+                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>` : '';
                 return `<tr>
                     <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
                     <td>${r[COL.SHIPPED_DATE] || '-'}</td>
                     <td>${getVal(r, 'CUSTOMER') || '-'}</td>
                     <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
-                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>
+                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>${financialCells}
                 </tr>`;
             }).join('');
         }
