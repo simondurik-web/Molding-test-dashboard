@@ -330,6 +330,40 @@
         .clickable-row { cursor: pointer; }
         .clickable-row:hover td { background: rgba(49,130,206,0.15) !important; }
         .pallet-indicator { margin-left: 6px; color: var(--accent); font-size: 12px; }
+        
+        /* Inventory History Modal */
+        .history-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2500; align-items: center; justify-content: center; }
+        .history-modal-overlay.active { display: flex; }
+        .history-modal { background: var(--bg-card); border-radius: 16px; width: 90%; max-width: 900px; max-height: 90vh; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid var(--border); }
+        .history-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); }
+        .history-modal-header h3 { font-size: 18px; font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; }
+        .history-modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .history-modal-close:hover { background: var(--danger); }
+        .history-modal-body { padding: 20px; overflow-y: auto; max-height: calc(90vh - 70px); }
+        .history-chart-container { height: 300px; margin-bottom: 20px; }
+        .history-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .history-date-inputs { display: flex; gap: 16px; flex-wrap: wrap; }
+        .history-date-group { display: flex; align-items: center; gap: 8px; }
+        .history-date-group label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+        .history-date-group input[type="date"] { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: white; font-size: 12px; }
+        .history-date-group input[type="date"]:focus { outline: none; border-color: var(--accent); }
+        .history-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+        .history-presets button { padding: 8px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .history-presets button:hover { background: var(--accent); border-color: var(--accent); color: white; }
+        .history-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .history-stat { background: var(--bg-dark); padding: 14px; border-radius: 10px; text-align: center; }
+        .history-stat-value { font-size: 20px; font-weight: 700; color: var(--accent); }
+        .history-stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px; }
+        .history-loading, .history-no-data { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .inv-history-btn { margin-left: 8px; background: var(--accent); color: white; border: none; padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; opacity: 0.8; transition: all 0.2s; }
+        .inv-history-btn:hover { opacity: 1; }
+        @media (max-width: 768px) {
+            .history-modal { width: 95%; max-height: 95vh; }
+            .history-controls { flex-direction: column; align-items: stretch; }
+            .history-date-inputs { justify-content: center; }
+            .history-presets { justify-content: center; }
+            .history-stats { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -354,6 +388,63 @@
         <div class="filter-dropdown-footer">
             <button class="clear-btn" onclick="clearColumnFilter()" data-i18n="ui.clear">Clear</button>
             <button class="apply-btn" onclick="applyColumnFilter()" data-i18n="ui.apply">Apply</button>
+        </div>
+    </div>
+
+    <!-- Inventory History Modal -->
+    <div class="history-modal-overlay" id="inventoryHistoryModal" onclick="closeInventoryHistoryModal(event)">
+        <div class="history-modal" onclick="event.stopPropagation()">
+            <div class="history-modal-header">
+                <h3>📈 <span data-i18n="inv.historyTitle">Inventory History</span>: <span id="historyPartName"></span></h3>
+                <button class="history-modal-close" onclick="closeInventoryHistoryModal()">✕</button>
+            </div>
+            <div class="history-modal-body">
+                <div class="history-chart-container">
+                    <canvas id="inventoryHistoryChart"></canvas>
+                </div>
+                <div class="history-controls">
+                    <div class="history-date-inputs">
+                        <div class="history-date-group">
+                            <label data-i18n="ui.from">From</label>
+                            <input type="date" id="historyStartDate" onchange="updateHistoryChart()">
+                        </div>
+                        <div class="history-date-group">
+                            <label data-i18n="ui.to">To</label>
+                            <input type="date" id="historyEndDate" onchange="updateHistoryChart()">
+                        </div>
+                    </div>
+                    <div class="history-presets">
+                        <button onclick="applyHistoryPreset('last7')" data-i18n="inv.last7">Last 7 Days</button>
+                        <button onclick="applyHistoryPreset('last30')" data-i18n="inv.last30">Last 30 Days</button>
+                        <button onclick="applyHistoryPreset('last90')" data-i18n="inv.last90">Last 90 Days</button>
+                        <button onclick="applyHistoryPreset('all')" data-i18n="inv.allData">All Data</button>
+                    </div>
+                </div>
+                <div class="history-stats" id="historyStatsPanel">
+                    <div class="history-stat">
+                        <div class="history-stat-value" id="historyStatCurrent">-</div>
+                        <div class="history-stat-label" data-i18n="inv.current">Current</div>
+                    </div>
+                    <div class="history-stat">
+                        <div class="history-stat-value" id="historyStatMin">-</div>
+                        <div class="history-stat-label" data-i18n="inv.minimum">Minimum</div>
+                    </div>
+                    <div class="history-stat">
+                        <div class="history-stat-value" id="historyStatMax">-</div>
+                        <div class="history-stat-label" data-i18n="inv.maximum">Maximum</div>
+                    </div>
+                    <div class="history-stat">
+                        <div class="history-stat-value" id="historyStatAvg">-</div>
+                        <div class="history-stat-label" data-i18n="inv.average">Average</div>
+                    </div>
+                </div>
+                <div class="history-loading" id="historyLoading" style="display:none;">
+                    <span data-i18n="ui.loading">Loading...</span>
+                </div>
+                <div class="history-no-data" id="historyNoData" style="display:none;">
+                    <span data-i18n="inv.noHistory">No history data available for this part</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -412,7 +503,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.7</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.8</div>
     </div>
 
     <div class="main-content">
@@ -914,6 +1005,10 @@
             <div class="page-header">
                 <div><h2 data-i18n="bom.title">BOM Explorer</h2></div>
             </div>
+            <div class="info-banner info active">
+                <span class="icon">ℹ</span>
+                <p><strong>Note:</strong> <span data-i18n="bom.note">BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</span></p>
+            </div>
             <div class="tabs">
                 <div class="tab active" data-bomtab="final" onclick="switchBomTab('final')" data-i18n="bom.finalAssembly">Final Assembly</div>
                 <div class="tab" data-bomtab="sub" onclick="switchBomTab('sub')" data-i18n="bom.subAssembly">Sub Assembly</div>
@@ -1055,6 +1150,17 @@
                 'missing': 'Missing',
                 'sales.title': 'P/L Overview',
                 'inv.title': 'Inventory Management',
+                'inv.historyTitle': 'Inventory History',
+                'inv.clickHistory': 'Click to view history',
+                'inv.last7': 'Last 7 Days',
+                'inv.last30': 'Last 30 Days',
+                'inv.last90': 'Last 90 Days',
+                'inv.allData': 'All Data',
+                'inv.current': 'Current',
+                'inv.minimum': 'Minimum',
+                'inv.maximum': 'Maximum',
+                'inv.average': 'Average',
+                'inv.noHistory': 'No history data available for this part',
                 'bom.title': 'BOM Explorer',
                 'col.weight': 'Weight',
                 'col.dimensions': 'Dimensions',
@@ -1086,6 +1192,8 @@
                 'ui.orders': 'orders',
                 'ui.months': 'months',
                 'ui.productTypes': 'product types',
+                'ui.qty': 'Qty',
+                'ui.loading': 'Loading...',
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Molding',
                 'ui.from': 'From:',
@@ -1239,6 +1347,17 @@
                 'missing': 'Faltante',
                 'sales.title': 'Resumen P/L',
                 'inv.title': 'Gestión de Inventario',
+                'inv.historyTitle': 'Historial de Inventario',
+                'inv.clickHistory': 'Clic para ver historial',
+                'inv.last7': 'Últimos 7 Días',
+                'inv.last30': 'Últimos 30 Días',
+                'inv.last90': 'Últimos 90 Días',
+                'inv.allData': 'Todos los Datos',
+                'inv.current': 'Actual',
+                'inv.minimum': 'Mínimo',
+                'inv.maximum': 'Máximo',
+                'inv.average': 'Promedio',
+                'inv.noHistory': 'No hay datos históricos disponibles para esta pieza',
                 'bom.title': 'Explorador BOM',
                 'col.weight': 'Peso',
                 'col.dimensions': 'Dimensiones',
@@ -1270,6 +1389,8 @@
                 'ui.orders': 'órdenes',
                 'ui.months': 'meses',
                 'ui.productTypes': 'tipos de producto',
+                'ui.qty': 'Cant',
+                'ui.loading': 'Cargando...',
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Moldeo',
                 'ui.from': 'Desde:',
@@ -1387,9 +1508,7 @@
         const PROD_DATA_TOTALS_GID = '148810546';
         const CONFIG_GID = '912029812';
         const PALLET_PICTURES_GID = '1879462508';
-        const BOM_FINAL_GID = '751106736';
-        const BOM_SUB_GID = '206288913';
-        const BOM_INDIVIDUAL_GID = '74377031';
+        const INVENTORY_HISTORY_GID = '171540940';  // Fusion records export (daily snapshots)
         
         const COL = {
             CATEGORY: 'Category',
@@ -1469,6 +1588,14 @@
         let palletData = []; // Stores pallet pictures data
         let bomFinalData = [], bomSubData = [], bomIndividualData = [];
         let currentBomTab = 'final';
+        
+        // Inventory History state (for historical tracking charts)
+        let inventoryHistoryData = [];      // Raw data: [{partNumber, dataByDate: {date: qty}}]
+        let inventoryHistoryDates = [];     // Array of available dates (sorted)
+        let inventoryHistoryLoaded = false; // Lazy loading flag
+        let currentHistoryPart = null;      // Currently viewed part in history modal
+        let historyDateRange = { start: null, end: null }; // Date range filter
+        
         let config = {};
         let charts = {};
         let currentPage = 'main';
@@ -2115,13 +2242,91 @@
             } catch (e) { console.error('Inventory load error:', e); inventoryData = []; }
         }
         
+        // Load historical inventory data (lazy loaded when needed)
+        async function loadInventoryHistoryData() {
+            if (inventoryHistoryLoaded) return; // Already loaded
+            try {
+                console.log('Loading inventory history data...');
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${INVENTORY_HISTORY_GID}`;
+                const response = await fetch(url);
+                const csvText = await response.text();
+                
+                // Parse CSV manually to preserve date headers
+                const lines = csvText.split('\n').filter(line => line.trim());
+                if (lines.length < 2) {
+                    console.warn('No inventory history data found');
+                    inventoryHistoryLoaded = true;
+                    return;
+                }
+                
+                // Parse header row to get dates (skip first column which is itemNumber)
+                const headerRow = parseCSVLine(lines[0]);
+                inventoryHistoryDates = [];
+                for (let i = 1; i < headerRow.length; i++) {
+                    const dateStr = headerRow[i].trim().replace(/^"|"$/g, '');
+                    if (dateStr && dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+                        inventoryHistoryDates.push(dateStr);
+                    }
+                }
+                console.log(`Found ${inventoryHistoryDates.length} date columns`);
+                
+                // Parse data rows
+                inventoryHistoryData = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const row = parseCSVLine(lines[i]);
+                    const partNumber = (row[0] || '').trim().replace(/^"|"$/g, '');
+                    if (!partNumber) continue;
+                    
+                    const dataByDate = {};
+                    for (let j = 1; j < row.length && j <= inventoryHistoryDates.length; j++) {
+                        const qty = parseNumber(row[j]);
+                        const date = inventoryHistoryDates[j - 1];
+                        if (date) dataByDate[date] = qty;
+                    }
+                    
+                    inventoryHistoryData.push({ partNumber, dataByDate });
+                }
+                console.log(`Loaded history for ${inventoryHistoryData.length} parts`);
+                inventoryHistoryLoaded = true;
+            } catch (e) {
+                console.error('Inventory history load error:', e);
+                inventoryHistoryData = [];
+                inventoryHistoryDates = [];
+            }
+        }
+        
+        // Helper to parse CSV line handling quoted values
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+        
         async function loadBOMData() {
             try {
-                // Load BOM data directly from dedicated tabs
-                bomFinalData = await fetchSheetData(BOM_FINAL_GID);
-                bomSubData = await fetchSheetData(BOM_SUB_GID);
-                bomIndividualData = await fetchSheetData(BOM_INDIVIDUAL_GID);
-                console.log('BOM data loaded:', { final: bomFinalData.length, sub: bomSubData.length, individual: bomIndividualData.length });
+                const configData = await fetchSheetData(CONFIG_GID);
+                config = {};
+                configData.forEach(row => {
+                    if (row['Dashboard Name'] === 'P&L Dashboard' && row['GID Number']) {
+                        config[row['Tab Name']] = { gid: row['GID Number'] };
+                    }
+                });
+                if (config['BOM individual items Reference data']) bomIndividualData = await fetchSheetData(config['BOM individual items Reference data'].gid);
+                if (config['BOM Sub assembly Reference data']) bomSubData = await fetchSheetData(config['BOM Sub assembly Reference data'].gid);
+                if (config['BOM Final assembly Reference data']) bomFinalData = await fetchSheetData(config['BOM Final assembly Reference data'].gid);
             } catch (e) { console.warn('BOM load error:', e); }
         }
         
@@ -3107,11 +3312,12 @@
             tbody.innerHTML = data.map(i => {
                 const isLow = i.fusionQty < i.minimum && i.minimum > 0;
                 const needsMake = i.partsToBeMade > 0;
-                const rowClass = isLow ? 'inv-low' : (needsMake ? 'inv-warning' : '');
+                const rowClass = isLow ? 'inv-low clickable-row' : (needsMake ? 'inv-warning clickable-row' : 'clickable-row');
                 const statusBadge = isLow ? `<span class="badge" style="background:var(--danger);color:white;">${t('status.low')}</span>` : (needsMake ? `<span class="badge" style="background:var(--warning);color:#1a202c;">${t('status.make')}</span>` : `<span class="badge" style="background:var(--success);color:white;">${t('status.ok')}</span>`);
-                return `<tr class="${rowClass}">
+                const escapedPart = (i.partNumber || '').replace(/'/g, "\\'");
+                return `<tr class="${rowClass}" onclick="openInventoryHistoryModal('${escapedPart}')" title="${t('inv.clickHistory')}">
                     <td>${i.product || '-'}</td>
-                    <td><strong>${i.partNumber}</strong></td>
+                    <td><strong>${i.partNumber}</strong><button class="inv-history-btn" onclick="event.stopPropagation(); openInventoryHistoryModal('${escapedPart}')">📈</button></td>
                     <td>${formatNumber(i.fusionQty)}</td>
                     <td>${formatNumber(i.minimum)}</td>
                     <td>${formatNumber(i.manualTarget)}</td>
@@ -3127,6 +3333,241 @@
         
         function filterInvTable() { renderInvTable(); }
         function exportInvCSV() { downloadCSV('Product Type,Part Number,...', 'inventory.csv'); }
+        
+        // ============================================================
+        // INVENTORY HISTORY MODAL
+        // ============================================================
+        async function openInventoryHistoryModal(partNumber) {
+            currentHistoryPart = partNumber;
+            const modal = document.getElementById('inventoryHistoryModal');
+            const loading = document.getElementById('historyLoading');
+            const noData = document.getElementById('historyNoData');
+            const chartContainer = document.querySelector('.history-chart-container');
+            const statsPanel = document.getElementById('historyStatsPanel');
+            const controls = document.querySelector('.history-controls');
+            
+            // Show modal with loading state
+            modal.classList.add('active');
+            document.getElementById('historyPartName').textContent = partNumber;
+            loading.style.display = 'block';
+            noData.style.display = 'none';
+            chartContainer.style.display = 'none';
+            statsPanel.style.display = 'none';
+            controls.style.display = 'none';
+            
+            // Ensure history data is loaded
+            await loadInventoryHistoryData();
+            
+            // Find data for this part
+            const partData = inventoryHistoryData.find(p => p.partNumber === partNumber);
+            
+            loading.style.display = 'none';
+            
+            if (!partData || Object.keys(partData.dataByDate).length === 0) {
+                noData.style.display = 'block';
+                return;
+            }
+            
+            // Show chart and controls
+            chartContainer.style.display = 'block';
+            statsPanel.style.display = 'grid';
+            controls.style.display = 'flex';
+            
+            // Reset date range to all data
+            historyDateRange = { start: null, end: null };
+            document.getElementById('historyStartDate').value = '';
+            document.getElementById('historyEndDate').value = '';
+            
+            // Render chart
+            renderInventoryHistoryChart();
+        }
+        
+        function closeInventoryHistoryModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('inventoryHistoryModal').classList.remove('active');
+            currentHistoryPart = null;
+            
+            // Destroy chart if exists
+            if (charts.inventoryHistory) {
+                charts.inventoryHistory.destroy();
+                charts.inventoryHistory = null;
+            }
+        }
+        
+        function renderInventoryHistoryChart() {
+            if (!currentHistoryPart) return;
+            
+            const partData = inventoryHistoryData.find(p => p.partNumber === currentHistoryPart);
+            if (!partData) return;
+            
+            // Get filtered dates based on range
+            let dates = [...inventoryHistoryDates];
+            if (historyDateRange.start || historyDateRange.end) {
+                dates = dates.filter(dateStr => {
+                    const dateParts = dateStr.split('/');
+                    const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
+                    if (historyDateRange.start && date < historyDateRange.start) return false;
+                    if (historyDateRange.end && date > historyDateRange.end) return false;
+                    return true;
+                });
+            }
+            
+            // Sort dates chronologically
+            dates.sort((a, b) => {
+                const aParts = a.split('/'), bParts = b.split('/');
+                const aDate = new Date(aParts[2], aParts[0] - 1, aParts[1]);
+                const bDate = new Date(bParts[2], bParts[0] - 1, bParts[1]);
+                return aDate - bDate;
+            });
+            
+            // Build data points
+            const dataPoints = [];
+            const labels = [];
+            dates.forEach(dateStr => {
+                const qty = partData.dataByDate[dateStr];
+                if (qty !== undefined) {
+                    dataPoints.push(qty);
+                    // Format label as "Jan 12"
+                    const parts = dateStr.split('/');
+                    const date = new Date(parts[2], parts[0] - 1, parts[1]);
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    labels.push(`${monthNames[date.getMonth()]} ${date.getDate()}`);
+                }
+            });
+            
+            if (dataPoints.length === 0) {
+                document.getElementById('historyNoData').style.display = 'block';
+                document.querySelector('.history-chart-container').style.display = 'none';
+                document.getElementById('historyStatsPanel').style.display = 'none';
+                return;
+            }
+            
+            // Calculate stats
+            const current = dataPoints[dataPoints.length - 1] || 0;
+            const min = Math.min(...dataPoints);
+            const max = Math.max(...dataPoints);
+            const avg = Math.round(dataPoints.reduce((a, b) => a + b, 0) / dataPoints.length);
+            
+            document.getElementById('historyStatCurrent').textContent = formatNumber(current);
+            document.getElementById('historyStatMin').textContent = formatNumber(min);
+            document.getElementById('historyStatMax').textContent = formatNumber(max);
+            document.getElementById('historyStatAvg').textContent = formatNumber(avg);
+            
+            // Destroy existing chart
+            if (charts.inventoryHistory) {
+                charts.inventoryHistory.destroy();
+            }
+            
+            // Create chart
+            const ctx = document.getElementById('inventoryHistoryChart').getContext('2d');
+            
+            // Handle flat line case
+            let suggestedMin = min * 0.9;
+            let suggestedMax = max * 1.1;
+            if (max - min < 1) {
+                suggestedMin = min - Math.max(1, min * 0.1);
+                suggestedMax = max + Math.max(1, max * 0.1);
+            }
+            
+            charts.inventoryHistory = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: currentHistoryPart,
+                        data: dataPoints,
+                        borderColor: '#3182ce',
+                        backgroundColor: 'rgba(49, 130, 206, 0.1)',
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: dataPoints.length < 30 ? 4 : 2,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${t('ui.qty')}: ${formatNumber(ctx.raw)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { 
+                                color: '#a0aec0',
+                                maxRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 12
+                            }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { 
+                                color: '#a0aec0',
+                                callback: val => formatNumber(val)
+                            },
+                            suggestedMin: suggestedMin,
+                            suggestedMax: suggestedMax
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateHistoryChart() {
+            const startVal = document.getElementById('historyStartDate').value;
+            const endVal = document.getElementById('historyEndDate').value;
+            
+            historyDateRange.start = startVal ? new Date(startVal) : null;
+            historyDateRange.end = endVal ? new Date(endVal) : null;
+            
+            renderInventoryHistoryChart();
+        }
+        
+        function applyHistoryPreset(preset) {
+            const now = new Date();
+            let start = null;
+            
+            switch (preset) {
+                case 'last7':
+                    start = new Date(now);
+                    start.setDate(start.getDate() - 7);
+                    break;
+                case 'last30':
+                    start = new Date(now);
+                    start.setDate(start.getDate() - 30);
+                    break;
+                case 'last90':
+                    start = new Date(now);
+                    start.setDate(start.getDate() - 90);
+                    break;
+                case 'all':
+                default:
+                    start = null;
+                    break;
+            }
+            
+            historyDateRange.start = start;
+            historyDateRange.end = null;
+            
+            // Update input fields
+            if (start) {
+                const y = start.getFullYear();
+                const m = String(start.getMonth() + 1).padStart(2, '0');
+                const d = String(start.getDate()).padStart(2, '0');
+                document.getElementById('historyStartDate').value = `${y}-${m}-${d}`;
+            } else {
+                document.getElementById('historyStartDate').value = '';
+            }
+            document.getElementById('historyEndDate').value = '';
+            
+            renderInventoryHistoryChart();
+        }
 
         // ============================================================
         // SALES OVERVIEW PAGE (Enhanced)
