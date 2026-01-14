@@ -481,13 +481,13 @@
                 <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="ordersDataTotalOrders">-</div><div class="sub" id="ordersDataTotalUnits">- units</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalOrders">Total Orders</div><div class="value" id="ordersDataTotalOrders">-</div><div class="sub" id="ordersDataTotalUnits">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.needToMake">Need to Make</div><div class="value warning" id="ordersDataNeedToMake">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.making">Making</div><div class="value" style="color:var(--teal);" id="ordersDataMaking">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.readyToShip">Ready to Ship</div><div class="value positive" id="ordersDataReadyToShip">-</div></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Orders</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersDataTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.orders">Orders</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersDataTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table" id="ordersDataTable"><thead><tr id="ordersDataTableHeader"></tr></thead><tbody id="ordersDataTableBody"></tbody></table>
                 </div>
@@ -518,13 +518,13 @@
                 <p><strong id="ordersQueueMissingCount">0</strong> <span data-i18n="prod.missingMsg">orders have missing components.</span></p>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="ordersQueueTotalOrders">-</div><div class="sub" id="ordersQueueTotalUnits">- units</div></div>
-                <div class="stat-card"><div class="label">Urgent</div><div class="value negative" id="ordersQueueUrgentCount">-</div></div>
-                <div class="stat-card"><div class="label">Due This Week</div><div class="value warning" id="ordersQueueDueWeek">-</div><div class="sub" id="ordersQueueDueWeekUnits">- units</div></div>
-                <div class="stat-card"><div class="label">Components Ready</div><div class="value positive" id="ordersQueueComponentsReady">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalOrders">Total Orders</div><div class="value" id="ordersQueueTotalOrders">-</div><div class="sub" id="ordersQueueTotalUnits">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.urgent">Urgent</div><div class="value negative" id="ordersQueueUrgentCount">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.dueThisWeek">Due This Week</div><div class="value warning" id="ordersQueueDueWeek">-</div><div class="sub" id="ordersQueueDueWeekUnits">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.componentsReady">Components Ready</div><div class="value positive" id="ordersQueueComponentsReady">-</div></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Orders to Make</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersQueueTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.ordersToMake">Orders to Make</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersQueueTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table"><thead><tr id="ordersQueueTableHeader"></tr></thead><tbody id="ordersQueueTableBody"></tbody></table>
                 </div>
@@ -548,13 +548,13 @@
                 <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Staged Orders</div><div class="value" id="ordersStagedTotalOrders">-</div><div class="sub" id="ordersStagedTotalUnits">- units</div></div>
-                <div class="stat-card"><div class="label">Total Revenue</div><div class="value positive" id="ordersStagedRevenue">-</div></div>
-                <div class="stat-card"><div class="label">Avg Order Value</div><div class="value" id="ordersStagedAvgValue">-</div></div>
-                <div class="stat-card"><div class="label">Customers</div><div class="value" id="ordersStagedCustomers">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.stagedOrders">Staged Orders</div><div class="value" id="ordersStagedTotalOrders">-</div><div class="sub" id="ordersStagedTotalUnits">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value positive" id="ordersStagedRevenue">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.avgOrderValue">Avg Order Value</div><div class="value" id="ordersStagedAvgValue">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.customers">Customers</div><div class="value" id="ordersStagedCustomers">-</div></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Ready to Ship</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersStagedTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.readyToShip">Ready to Ship</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersStagedTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table"><thead><tr id="ordersStagedTableHeader"></tr></thead><tbody id="ordersStagedTableBody"></tbody></table>
                 </div>
@@ -597,13 +597,13 @@
                 <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Shipped Orders</div><div class="value" id="ordersShippedTotalOrders">-</div><div class="sub" id="ordersShippedTotalUnits">- units</div></div>
-                <div class="stat-card"><div class="label">Total Revenue</div><div class="value positive" id="ordersShippedRevenue">-</div></div>
-                <div class="stat-card"><div class="label">Total P/L</div><div class="value" id="ordersShippedPL">-</div><div class="sub" id="ordersShippedMargin">Margin: -%</div></div>
-                <div class="stat-card"><div class="label">Customers</div><div class="value" id="ordersShippedCustomers">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.shippedOrders">Shipped Orders</div><div class="value" id="ordersShippedTotalOrders">-</div><div class="sub" id="ordersShippedTotalUnits">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value positive" id="ordersShippedRevenue">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalPL">Total P/L</div><div class="value" id="ordersShippedPL">-</div><div class="sub" id="ordersShippedMargin">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.customers">Customers</div><div class="value" id="ordersShippedCustomers">-</div></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Shipped Orders</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersShippedTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.shippedOrders">Shipped Orders</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersShippedTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table"><thead><tr id="ordersShippedTableHeader"></tr></thead><tbody id="ordersShippedTableBody"></tbody></table>
                 </div>
@@ -1088,7 +1088,22 @@
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Molding',
                 'ui.from': 'From:',
-                'ui.to': 'To:'
+                'ui.to': 'To:',
+                // Batch 2: Production Pages
+                'stats.totalOrders': 'Total Orders',
+                'stats.stagedOrders': 'Staged Orders',
+                'stats.shippedOrders': 'Shipped Orders',
+                'stats.totalRevenue': 'Total Revenue',
+                'stats.totalPL': 'Total P/L',
+                'stats.avgOrderValue': 'Avg Order Value',
+                'stats.customers': 'Customers',
+                'stats.dueThisWeek': 'Due This Week',
+                'stats.componentsReady': 'Components Ready',
+                'stats.margin': 'Margin',
+                'table.orders': 'Orders',
+                'table.ordersToMake': 'Orders to Make',
+                'table.readyToShip': 'Ready to Ship',
+                'table.shippedOrders': 'Shipped Orders'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones',
@@ -1203,7 +1218,22 @@
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Moldeo',
                 'ui.from': 'Desde:',
-                'ui.to': 'Hasta:'
+                'ui.to': 'Hasta:',
+                // Batch 2: Production Pages
+                'stats.totalOrders': 'Total de Órdenes',
+                'stats.stagedOrders': 'Órdenes en Staging',
+                'stats.shippedOrders': 'Órdenes Enviadas',
+                'stats.totalRevenue': 'Ingresos Totales',
+                'stats.totalPL': 'P/L Total',
+                'stats.avgOrderValue': 'Valor Promedio',
+                'stats.customers': 'Clientes',
+                'stats.dueThisWeek': 'Vence Esta Semana',
+                'stats.componentsReady': 'Componentes Listos',
+                'stats.margin': 'Margen',
+                'table.orders': 'Órdenes',
+                'table.ordersToMake': 'Órdenes a Fabricar',
+                'table.readyToShip': 'Listo para Enviar',
+                'table.shippedOrders': 'Órdenes Enviadas'
             }
         };
         
@@ -2287,7 +2317,7 @@
             const readyToShip = data.filter(r => getStatus(r) === 'staged').length;
             
             document.getElementById('ordersDataTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersDataTotalUnits').textContent = `${formatNumber(totalQty)} units`;
+            document.getElementById('ordersDataTotalUnits').textContent = `${formatNumber(totalQty)} ${t('ui.units')}`;
             document.getElementById('ordersDataNeedToMake').textContent = formatNumber(needToMake);
             document.getElementById('ordersDataMaking').textContent = formatNumber(making);
             document.getElementById('ordersDataReadyToShip').textContent = formatNumber(readyToShip);
@@ -2330,7 +2360,7 @@
                 sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
             }
             
-            document.getElementById('ordersDataTableCount').textContent = `${sorted.length} orders`;
+            document.getElementById('ordersDataTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
             const tbody = document.getElementById('ordersDataTableBody');
             tbody.innerHTML = sorted.map(r => {
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
@@ -2393,10 +2423,10 @@
             const missingOrders = data.filter(r => getCategory(r) === 'rolltech' && (isMissingComponent(getVal(r,'TIRE')) || isMissingComponent(getVal(r,'HUB')) || isMissingComponent(getVal(r,'BEARINGS'))));
             
             document.getElementById('ordersQueueTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersQueueTotalUnits').textContent = `${formatNumber(totalQty)} units`;
+            document.getElementById('ordersQueueTotalUnits').textContent = `${formatNumber(totalQty)} ${t('ui.units')}`;
             document.getElementById('ordersQueueUrgentCount').textContent = formatNumber(urgentCount);
             document.getElementById('ordersQueueDueWeek').textContent = formatNumber(dueWeek.length);
-            document.getElementById('ordersQueueDueWeekUnits').textContent = `${formatNumber(dueWeekQty)} units`;
+            document.getElementById('ordersQueueDueWeekUnits').textContent = `${formatNumber(dueWeekQty)} ${t('ui.units')}`;
             document.getElementById('ordersQueueComponentsReady').textContent = formatNumber(componentsReady);
             document.getElementById('ordersQueueLastUpdated').textContent = new Date().toLocaleTimeString();
             
@@ -2446,7 +2476,7 @@
                 sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'LINE') || '').toString().includes(search));
             }
             
-            document.getElementById('ordersQueueTableCount').textContent = `${sorted.length} orders`;
+            document.getElementById('ordersQueueTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
             const tbody = document.getElementById('ordersQueueTableBody');
             tbody.innerHTML = sorted.map(r => {
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
@@ -2516,7 +2546,7 @@
             const customers = new Set(data.map(r => getVal(r, 'CUSTOMER'))).size;
             
             document.getElementById('ordersStagedTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersStagedTotalUnits').textContent = `${formatNumber(totalQty)} units`;
+            document.getElementById('ordersStagedTotalUnits').textContent = `${formatNumber(totalQty)} ${t('ui.units')}`;
             document.getElementById('ordersStagedRevenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('ordersStagedAvgValue').textContent = formatCurrency(avgValue);
             document.getElementById('ordersStagedCustomers').textContent = formatNumber(customers);
@@ -2574,7 +2604,7 @@
                 sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
             }
             
-            document.getElementById('ordersStagedTableCount').textContent = `${sorted.length} orders`;
+            document.getElementById('ordersStagedTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
             const tbody = document.getElementById('ordersStagedTableBody');
             
             // Debug: log line numbers being rendered
@@ -2755,11 +2785,11 @@
             const customers = new Set(data.map(r => getVal(r, 'CUSTOMER'))).size;
             
             document.getElementById('ordersShippedTotalOrders').textContent = formatNumber(data.length);
-            document.getElementById('ordersShippedTotalUnits').textContent = `${formatNumber(totalQty)} units`;
+            document.getElementById('ordersShippedTotalUnits').textContent = `${formatNumber(totalQty)} ${t('ui.units')}`;
             document.getElementById('ordersShippedRevenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('ordersShippedPL').textContent = formatCurrency(totalPL);
             document.getElementById('ordersShippedPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('ordersShippedMargin').textContent = `Margin: ${margin}%`;
+            document.getElementById('ordersShippedMargin').textContent = `${t('stats.margin')}: ${margin}%`;
             document.getElementById('ordersShippedCustomers').textContent = formatNumber(customers);
             
             renderOrdersShippedTableHeader();
@@ -2798,7 +2828,7 @@
                 sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
             }
             
-            document.getElementById('ordersShippedTableCount').textContent = `${sorted.length} orders`;
+            document.getElementById('ordersShippedTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
             const tbody = document.getElementById('ordersShippedTableBody');
             tbody.innerHTML = sorted.map(r => {
                 const pl = getPLValue(r);
