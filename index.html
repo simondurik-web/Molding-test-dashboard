@@ -398,7 +398,7 @@
         </div>
         <div class="nav-section" id="rawDataNavSection">
             <div class="nav-section-title" data-i18n="nav.rawData">Raw Data</div>
-            <div class="nav-item locked-item" id="allDataNavItem" data-page="all-data" onclick="handleAllDataClick()"><span class="icon">🗃️</span> <span data-i18n="nav.allData">All Data</span></div>
+            <div class="nav-item locked-item" id="allDataNavItem" data-page="all-data" onclick="handleAllDataClick()"><span class="icon">🗃</span> <span data-i18n="nav.allData">All Data</span></div>
         </div>
         <div class="nav-divider"></div>
         <div class="zoom-controls">
@@ -627,7 +627,7 @@
                     <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">âš   <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
-                <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑️ <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportInvCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -695,7 +695,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
-                <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑️ Clear Filters</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑 Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" data-i18n-placeholder="ui.search" placeholder="Search parts..." oninput="filterPartsTable()">
                 <button class="toolbar-btn" onclick="exportPartsCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -773,7 +773,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
-                <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑️ Clear Filters</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑 Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" data-i18n-placeholder="ui.search" placeholder="Search customers..." oninput="filterCustomersTable()">
                 <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -850,7 +850,7 @@
                     <label data-i18n="ui.to">To:</label><input type="date" id="datesToDate" onchange="applyDatesDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
-                <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑️ Clear Filters</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑 Clear Filters</button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -915,7 +915,7 @@
                 <div><h2 data-i18n="bom.title">BOM Explorer</h2></div>
             </div>
             <div class="info-banner info active">
-                <span class="icon">ℹ️</span>
+                <span class="icon">ℹ</span>
                 <p><strong>Note:</strong> <span data-i18n="bom.note">BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</span></p>
             </div>
             <div class="tabs">
@@ -959,7 +959,7 @@
                     <label data-i18n="ui.columns">Columns:</label>
                     <span id="allDataColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
-                <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑️ <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="allDataGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
                 <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -2712,7 +2712,7 @@
             headers.push(
                 { key: 'dueDate', label: t('col.dueDate') }, { key: 'daysUntil', label: t('col.daysUntil') },
                 { key: 'weight', label: t('col.weight') }, { key: 'dimensions', label: t('col.dimensions') },
-                { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: 'ðŸ"¦' }
+                { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: '📦' }
             );
             document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersStagedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
         }
