@@ -3590,7 +3590,8 @@
             
             document.getElementById('historyStatCurrent').textContent = formatNumber(current);
             document.getElementById('historyStatCurrent').style.color = belowMin ? 'var(--danger)' : 'var(--accent)';
-            document.getElementById('historyStatMin').textContent = formatNumber(minVal);
+            document.getElementById('historyStatMin').textContent = formatNumber(minimum);  // Show threshold, not historical low
+            document.getElementById('historyStatMin').style.color = minimum > 0 ? 'var(--warning)' : 'var(--text-secondary)';
             document.getElementById('historyStatMax').textContent = formatNumber(maxVal);
             document.getElementById('historyStatAvg').textContent = formatNumber(avg);
             
@@ -3966,7 +3967,7 @@
                             <div class="history-part-stat-label">${t('inv.current')}</div>
                         </div>
                         <div class="history-part-stat-item">
-                            <div class="history-part-stat-value">${formatNumber(min)}</div>
+                            <div class="history-part-stat-value" style="color: ${minimum > 0 ? 'var(--warning)' : 'var(--text-secondary)'}">${formatNumber(minimum)}</div>
                             <div class="history-part-stat-label">${t('inv.minimum')}</div>
                         </div>
                         <div class="history-part-stat-item">
