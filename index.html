@@ -659,13 +659,13 @@
                 <button class="toolbar-btn" onclick="exportSalesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Total Revenue</div><div class="value" id="salesStatRevenue">-</div><div class="sub" id="salesStatOrderCount">- orders</div></div>
-                <div class="stat-card"><div class="label">Total P/L</div><div class="value" id="salesStatPL">-</div><div class="sub" id="salesStatMargin">Margin: -%</div></div>
-                <div class="stat-card"><div class="label">Shipped P/L</div><div class="value" id="salesStatShippedPL">-</div><div class="sub" id="salesStatShippedCount">- shipped</div></div>
-                <div class="stat-card"><div class="label">Forecasted P/L</div><div class="value" id="salesStatForecastPL">-</div><div class="sub" id="salesStatForecastCount">- pending</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value" id="salesStatRevenue">-</div><div class="sub" id="salesStatOrderCount">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.totalPL">Total P/L</div><div class="value" id="salesStatPL">-</div><div class="sub" id="salesStatMargin">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.shippedPL">Shipped P/L</div><div class="value" id="salesStatShippedPL">-</div><div class="sub" id="salesStatShippedCount">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.forecastedPL">Forecasted P/L</div><div class="value" id="salesStatForecastPL">-</div><div class="sub" id="salesStatForecastCount">-</div></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Monthly P/L Trend</h3></div>
+                <div class="chart-header"><h3 data-i18n="chart.monthlyPLTrend">Monthly P/L Trend</h3></div>
                 <div class="chart-wrapper large"><canvas id="salesTrendChart"></canvas></div>
             </div>
         </div>
@@ -673,7 +673,7 @@
         <!-- SALES BY PARTS PAGE -->
         <div id="sales-parts" class="page">
             <div class="page-header">
-                <div><h2>P/L by Part Number</h2></div>
+                <div><h2 data-i18n="parts.title">P/L by Part Number</h2></div>
                 <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← Back</button>
             </div>
             <div class="toolbar">
@@ -696,11 +696,11 @@
                 <button class="toolbar-btn" onclick="exportPartsCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>All Parts P/L Analysis</h3></div>
+                <div class="chart-header"><h3 data-i18n="chart.allPartsPL">All Parts P/L Analysis</h3></div>
                 <div class="chart-wrapper large"><canvas id="partsBarChart"></canvas></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Parts Details</h3><span style="color:var(--text-secondary);font-size:12px;" id="partsTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.partsDetails">Parts Details</h3><span style="color:var(--text-secondary);font-size:12px;" id="partsTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table"><thead><tr id="partsTableHeader"></tr></thead><tbody id="partsTableBody"></tbody></table>
                 </div>
@@ -710,7 +710,7 @@
                 <div class="drilldown-header">
                     <div>
                         <div class="breadcrumb">Parts › <span id="partsCustomerDrilldownPart">-</span></div>
-                        <h3>Customer Breakdown</h3>
+                        <h3 data-i18n="drilldown.customerBreakdown">Customer Breakdown</h3>
                     </div>
                     <button class="close-btn" onclick="closePartsCustomerDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                 </div>
@@ -727,7 +727,7 @@
                 <div class="drilldown-header">
                     <div>
                         <div class="breadcrumb">Parts › <span id="partsOrdersBreadcrumbPart">-</span> › <span id="partsOrdersBreadcrumbCustomer">-</span></div>
-                        <h3>Orders & Price History</h3>
+                        <h3 data-i18n="drilldown.ordersHistory">Orders & Price History</h3>
                     </div>
                     <div>
                         <button class="back-btn" onclick="backToPartsCustomers()">← Back</button>
@@ -751,7 +751,7 @@
         <!-- SALES BY CUSTOMERS PAGE -->
         <div id="sales-customers" class="page">
             <div class="page-header">
-                <div><h2>P/L by Customer</h2></div>
+                <div><h2 data-i18n="customers.title">P/L by Customer</h2></div>
                 <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← Back</button>
             </div>
             <div class="toolbar">
@@ -774,11 +774,11 @@
                 <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Customer P/L Distribution (Top 10)</h3></div>
+                <div class="chart-header"><h3 data-i18n="chart.customerPLDist">Customer P/L Distribution (Top 10)</h3></div>
                 <div class="chart-wrapper large"><canvas id="customersChart"></canvas></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Customer Details</h3><span style="color:var(--text-secondary);font-size:12px;" id="customersTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.customerDetails">Customer Details</h3><span style="color:var(--text-secondary);font-size:12px;" id="customersTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table"><thead><tr id="customersTableHeader"></tr></thead><tbody id="customersTableBody"></tbody></table>
                 </div>
@@ -788,7 +788,7 @@
                 <div class="drilldown-header">
                     <div>
                         <div class="breadcrumb">Customers › <span id="customersProductDrilldownCustomer">-</span></div>
-                        <h3>Product Breakdown</h3>
+                        <h3 data-i18n="drilldown.productBreakdown">Product Breakdown</h3>
                     </div>
                     <button class="close-btn" onclick="closeCustomersProductDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                 </div>
@@ -805,7 +805,7 @@
                 <div class="drilldown-header">
                     <div>
                         <div class="breadcrumb">Customers › <span id="customersOrdersBreadcrumbCustomer">-</span> › <span id="customersOrdersBreadcrumbPart">-</span></div>
-                        <h3>Orders Breakdown</h3>
+                        <h3 data-i18n="drilldown.ordersHistory">Orders & Price History</h3>
                     </div>
                     <div>
                         <button class="back-btn" onclick="backToCustomersProducts()">← Back</button>
@@ -829,7 +829,7 @@
         <!-- SALES BY DATE PAGE -->
         <div id="sales-dates" class="page">
             <div class="page-header">
-                <div><h2>P/L by Date</h2></div>
+                <div><h2 data-i18n="dates.title">P/L by Date</h2></div>
                 <button class="toolbar-btn" onclick="navigateTo('sales-overview')">← Back</button>
             </div>
             <div class="toolbar">
@@ -850,17 +850,17 @@
                 <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
             <div class="stats-grid">
-                <div class="stat-card"><div class="label">Orders</div><div class="value" id="datesStatOrders">-</div><div class="sub" id="datesStatUnits">- units</div></div>
-                <div class="stat-card"><div class="label">Revenue</div><div class="value" id="datesStatRevenue">-</div></div>
-                <div class="stat-card"><div class="label">P/L</div><div class="value" id="datesStatPL">-</div><div class="sub" id="datesStatMargin">Margin: -%</div></div>
-                <div class="stat-card"><div class="label">Margin</div><div class="value" id="datesStatMarginPct">-</div><div class="sub" id="datesStatMonths">- months</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.orders">Orders</div><div class="value" id="datesStatOrders">-</div><div class="sub" id="datesStatUnits">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.revenue">Revenue</div><div class="value" id="datesStatRevenue">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.pl">P/L</div><div class="value" id="datesStatPL">-</div><div class="sub" id="datesStatMargin">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.margin">Margin</div><div class="value" id="datesStatMarginPct">-</div><div class="sub" id="datesStatMonths">-</div></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Monthly P/L Breakdown</h3></div>
+                <div class="chart-header"><h3 data-i18n="chart.monthlyPLBreakdown">Monthly P/L Breakdown</h3></div>
                 <div class="chart-wrapper large"><canvas id="datesBarChart"></canvas></div>
             </div>
             <div class="chart-container">
-                <div class="chart-header"><h3>Monthly Details</h3><span style="color:var(--text-secondary);font-size:12px;" id="datesTableCount">-</span></div>
+                <div class="chart-header"><h3 data-i18n="table.monthlyDetails">Monthly Details</h3><span style="color:var(--text-secondary);font-size:12px;" id="datesTableCount">-</span></div>
                 <div class="scrollable-table">
                     <table class="data-table"><thead><tr id="datesTableHeader"></tr></thead><tbody id="datesTableBody"></tbody></table>
                 </div>
@@ -870,7 +870,7 @@
                 <div class="drilldown-header">
                     <div>
                         <div class="breadcrumb">Months › <span id="datesCustomerDrilldownMonth">-</span></div>
-                        <h3>Customer Breakdown</h3>
+                        <h3 data-i18n="drilldown.customerBreakdown">Customer Breakdown</h3>
                     </div>
                     <button class="close-btn" onclick="closeDatesCustomerDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                 </div>
@@ -887,7 +887,7 @@
                 <div class="drilldown-header">
                     <div>
                         <div class="breadcrumb">Months › <span id="datesOrdersBreadcrumbMonth">-</span> › <span id="datesOrdersBreadcrumbCustomer">-</span></div>
-                        <h3>Orders Breakdown</h3>
+                        <h3 data-i18n="drilldown.ordersHistory">Orders & Price History</h3>
                     </div>
                     <div>
                         <button class="back-btn" onclick="backToDatesCustomers()">← Back</button>
@@ -1103,7 +1103,28 @@
                 'table.orders': 'Orders',
                 'table.ordersToMake': 'Orders to Make',
                 'table.readyToShip': 'Ready to Ship',
-                'table.shippedOrders': 'Shipped Orders'
+                'table.shippedOrders': 'Shipped Orders',
+                // Batch 3: Sales/Finance Pages
+                'stats.shippedPL': 'Shipped P/L',
+                'stats.forecastedPL': 'Forecasted P/L',
+                'stats.shipped': 'shipped',
+                'stats.pending': 'pending',
+                'stats.orders': 'Orders',
+                'stats.revenue': 'Revenue',
+                'stats.pl': 'P/L',
+                'chart.monthlyPLTrend': 'Monthly P/L Trend',
+                'chart.allPartsPL': 'All Parts P/L Analysis',
+                'chart.customerPLDist': 'Customer P/L Distribution (Top 10)',
+                'chart.monthlyPLBreakdown': 'Monthly P/L Breakdown',
+                'table.partsDetails': 'Parts Details',
+                'table.customerDetails': 'Customer Details',
+                'table.monthlyDetails': 'Monthly Details',
+                'parts.title': 'P/L by Part Number',
+                'customers.title': 'P/L by Customer',
+                'dates.title': 'P/L by Date',
+                'drilldown.customerBreakdown': 'Customer Breakdown',
+                'drilldown.productBreakdown': 'Product Breakdown',
+                'drilldown.ordersHistory': 'Orders & Price History'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones',
@@ -1233,7 +1254,28 @@
                 'table.orders': 'Órdenes',
                 'table.ordersToMake': 'Órdenes a Fabricar',
                 'table.readyToShip': 'Listo para Enviar',
-                'table.shippedOrders': 'Órdenes Enviadas'
+                'table.shippedOrders': 'Órdenes Enviadas',
+                // Batch 3: Sales/Finance Pages
+                'stats.shippedPL': 'P/L Enviados',
+                'stats.forecastedPL': 'P/L Proyectado',
+                'stats.shipped': 'enviados',
+                'stats.pending': 'pendientes',
+                'stats.orders': 'Órdenes',
+                'stats.revenue': 'Ingresos',
+                'stats.pl': 'P/L',
+                'chart.monthlyPLTrend': 'Tendencia Mensual P/L',
+                'chart.allPartsPL': 'Análisis P/L de Partes',
+                'chart.customerPLDist': 'Distribución P/L por Cliente (Top 10)',
+                'chart.monthlyPLBreakdown': 'Desglose Mensual P/L',
+                'table.partsDetails': 'Detalles de Partes',
+                'table.customerDetails': 'Detalles de Clientes',
+                'table.monthlyDetails': 'Detalles Mensuales',
+                'parts.title': 'P/L por Número de Parte',
+                'customers.title': 'P/L por Cliente',
+                'dates.title': 'P/L por Fecha',
+                'drilldown.customerBreakdown': 'Desglose por Cliente',
+                'drilldown.productBreakdown': 'Desglose por Producto',
+                'drilldown.ordersHistory': 'Historial de Órdenes y Precios'
             }
         };
         
@@ -1261,6 +1303,10 @@
                 else if (currentPage === 'orders-shipped') updateOrdersShippedPage();
             } else if (currentPage === 'inventory') updateInventoryPage();
             else if (currentPage === 'main') updateMainDashboard();
+            else if (currentPage === 'sales-overview') updateSalesOverview();
+            else if (currentPage === 'sales-parts') updateSalesPartsPage();
+            else if (currentPage === 'sales-customers') updateSalesCustomersPage();
+            else if (currentPage === 'sales-dates') updateSalesDatesPage();
         }
         
         function t(key) { return translations[currentLang][key] || key; }
@@ -3060,16 +3106,16 @@
             const margin = totalRevenue ? ((totalPL / totalRevenue) * 100).toFixed(2) : 0;
             
             document.getElementById('salesStatRevenue').textContent = formatCurrency(totalRevenue);
-            document.getElementById('salesStatOrderCount').textContent = `${data.length} orders`;
+            document.getElementById('salesStatOrderCount').textContent = `${data.length} ${t('ui.orders')}`;
             document.getElementById('salesStatPL').textContent = formatCurrency(totalPL);
             document.getElementById('salesStatPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('salesStatMargin').textContent = `Margin: ${margin}%`;
+            document.getElementById('salesStatMargin').textContent = `${t('stats.margin')}: ${margin}%`;
             document.getElementById('salesStatShippedPL').textContent = formatCurrency(shippedPL);
             document.getElementById('salesStatShippedPL').className = `value ${shippedPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('salesStatShippedCount').textContent = `${shippedCount} shipped`;
+            document.getElementById('salesStatShippedCount').textContent = `${shippedCount} ${t('stats.shipped')}`;
             document.getElementById('salesStatForecastPL').textContent = formatCurrency(forecastPL);
             document.getElementById('salesStatForecastPL').className = `value ${forecastPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('salesStatForecastCount').textContent = `${forecastCount} pending`;
+            document.getElementById('salesStatForecastCount').textContent = `${forecastCount} ${t('stats.pending')}`;
             
             // Render the Monthly P/L Trend chart
             renderSalesTrendChart(data);
@@ -3886,14 +3932,14 @@
             const monthCount = Object.keys(monthStats).length;
             
             document.getElementById('datesStatOrders').textContent = formatNumber(totalOrders);
-            document.getElementById('datesStatUnits').textContent = `${formatNumber(totalUnits)} units`;
+            document.getElementById('datesStatUnits').textContent = `${formatNumber(totalUnits)} ${t('ui.units')}`;
             document.getElementById('datesStatRevenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('datesStatPL').textContent = formatCurrency(totalPL);
             document.getElementById('datesStatPL').className = `value ${totalPL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('datesStatMargin').textContent = `Margin: ${margin.toFixed(1)}%`;
+            document.getElementById('datesStatMargin').textContent = `${t('stats.margin')}: ${margin.toFixed(1)}%`;
             document.getElementById('datesStatMarginPct').textContent = `${margin.toFixed(1)}%`;
             document.getElementById('datesStatMarginPct').className = `value ${margin >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('datesStatMonths').textContent = `${monthCount} months`;
+            document.getElementById('datesStatMonths').textContent = `${monthCount} ${t('ui.months')}`;
             
             // Convert to array for filtering and sorting
             let monthsArray = Object.entries(monthStats).map(([month, stats]) => {
