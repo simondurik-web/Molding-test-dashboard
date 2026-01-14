@@ -619,7 +619,7 @@
                 <input type="text" class="search-box" id="invSearch" data-i18n-placeholder="ui.search" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
-                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠  Low Stock</button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠  <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑️ <span data-i18n="filter.clearFilters">Clear Filters</span></button>
@@ -1311,11 +1311,11 @@
                 'drilldown.ordersHistory': 'Historial de Órdenes y Precios',
                 // Batch 4: Inventory + BOM + All Data
                 'filter.all': 'Todos',
-                'filter.lowStock': 'Stock Bajo',
+                'filter.lowStock': 'Inventario Bajo',
                 'filter.needsProduction': 'Requiere Producción',
                 'filter.clearFilters': 'Limpiar Filtros',
                 'stats.totalItems': 'Total de Artículos',
-                'stats.lowStock': 'Stock Bajo',
+                'stats.lowStock': 'Inventario Bajo',
                 'stats.needsProduction': 'Requiere Producción',
                 'stats.adequateStock': 'Stock Adecuado',
                 'table.inventoryStatus': 'Estado del Inventario',
