@@ -914,10 +914,6 @@
             <div class="page-header">
                 <div><h2 data-i18n="bom.title">BOM Explorer</h2></div>
             </div>
-            <div class="info-banner info active">
-                <span class="icon">ℹ</span>
-                <p><strong>Note:</strong> <span data-i18n="bom.note">BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</span></p>
-            </div>
             <div class="tabs">
                 <div class="tab active" data-bomtab="final" onclick="switchBomTab('final')" data-i18n="bom.finalAssembly">Final Assembly</div>
                 <div class="tab" data-bomtab="sub" onclick="switchBomTab('sub')" data-i18n="bom.subAssembly">Sub Assembly</div>
@@ -1391,6 +1387,9 @@
         const PROD_DATA_TOTALS_GID = '148810546';
         const CONFIG_GID = '912029812';
         const PALLET_PICTURES_GID = '1879462508';
+        const BOM_FINAL_GID = '751106736';
+        const BOM_SUB_GID = '206288913';
+        const BOM_INDIVIDUAL_GID = '74377031';
         
         const COL = {
             CATEGORY: 'Category',
@@ -2118,16 +2117,11 @@
         
         async function loadBOMData() {
             try {
-                const configData = await fetchSheetData(CONFIG_GID);
-                config = {};
-                configData.forEach(row => {
-                    if (row['Dashboard Name'] === 'P&L Dashboard' && row['GID Number']) {
-                        config[row['Tab Name']] = { gid: row['GID Number'] };
-                    }
-                });
-                if (config['BOM individual items Reference data']) bomIndividualData = await fetchSheetData(config['BOM individual items Reference data'].gid);
-                if (config['BOM Sub assembly Reference data']) bomSubData = await fetchSheetData(config['BOM Sub assembly Reference data'].gid);
-                if (config['BOM Final assembly Reference data']) bomFinalData = await fetchSheetData(config['BOM Final assembly Reference data'].gid);
+                // Load BOM data directly from dedicated tabs
+                bomFinalData = await fetchSheetData(BOM_FINAL_GID);
+                bomSubData = await fetchSheetData(BOM_SUB_GID);
+                bomIndividualData = await fetchSheetData(BOM_INDIVIDUAL_GID);
+                console.log('BOM data loaded:', { final: bomFinalData.length, sub: bomSubData.length, individual: bomIndividualData.length });
             } catch (e) { console.warn('BOM load error:', e); }
         }
         
