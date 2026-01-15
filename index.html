@@ -395,15 +395,15 @@
         .history-legend-color { width: 20px; height: 4px; border-radius: 2px; }
         .history-legend-below { font-size: 10px; color: var(--danger); margin-left: 4px; }
         .history-page-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; max-height: 150px; overflow-y: auto; }
-        .history-part-stat-card { background: var(--bg-dark); border-radius: 10px; padding: 12px; }
+        .history-part-stat-card { background: var(--bg-dark); border-radius: 10px; padding: 12px; min-width: 280px; }
         .history-part-stat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-        .history-part-stat-color { width: 12px; height: 12px; border-radius: 3px; }
-        .history-part-stat-name { font-weight: 600; font-size: 12px; flex: 1; }
-        .history-part-stat-values { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .history-part-stat-item { text-align: center; }
-        .history-part-stat-value { font-size: 14px; font-weight: 600; color: var(--accent); }
+        .history-part-stat-color { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+        .history-part-stat-name { font-weight: 600; font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .history-part-stat-values { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .history-part-stat-item { text-align: center; min-width: 0; }
+        .history-part-stat-value { font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .history-part-stat-value.below-min { color: var(--danger); }
-        .history-part-stat-label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
+        .history-part-stat-label { font-size: 8px; color: var(--text-secondary); text-transform: uppercase; }
         @media (max-width: 900px) {
             .history-page-layout { grid-template-columns: 1fr; height: auto; }
             .history-parts-panel { max-height: 300px; }
@@ -549,7 +549,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.9</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.10</div>
     </div>
 
     <div class="main-content">
@@ -761,7 +761,7 @@
                 <input type="text" class="search-box" id="invSearch" data-i18n-placeholder="ui.search" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
-                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">📊 <span data-i18n="filter.lowStock">Low Stock</span></button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">âš   <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
@@ -789,7 +789,7 @@
         <div id="inventory-history" class="page">
             <div class="page-header">
                 <div>
-                    <h2 data-i18n="inv.historyPageTitle">📈 Inventory History</h2>
+                    <h2><span class="icon">📈</span> <span data-i18n="inv.historyPageTitle">Inventory History</span></h2>
                     <p data-i18n="inv.historyPageSubtitle">Compare inventory levels over time for multiple parts</p>
                 </div>
                 <button class="toolbar-btn" onclick="navigateTo('inventory')">← <span data-i18n="btn.back">Back</span></button>
@@ -1273,7 +1273,7 @@
                 'inv.maximum': 'Maximum',
                 'inv.average': 'Average',
                 'inv.noHistory': 'No history data available for this part',
-                'inv.historyPageTitle': '📈 Inventory History',
+                'inv.historyPageTitle': 'Inventory History',
                 'inv.historyPageSubtitle': 'Compare inventory levels over time for multiple parts',
                 'inv.selectParts': 'Select Parts',
                 'inv.selected': 'selected',
@@ -1477,7 +1477,7 @@
                 'inv.maximum': 'Máximo',
                 'inv.average': 'Promedio',
                 'inv.noHistory': 'No hay datos históricos disponibles para esta pieza',
-                'inv.historyPageTitle': '📈 Historial de Inventario',
+                'inv.historyPageTitle': 'Historial de Inventario',
                 'inv.historyPageSubtitle': 'Compare niveles de inventario a lo largo del tiempo para múltiples piezas',
                 'inv.selectParts': 'Seleccionar Piezas',
                 'inv.selected': 'seleccionadas',
