@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Roll Tech Operations Dashboard</title>
+    <title>Molding Operations Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         :root {
@@ -395,15 +395,15 @@
         .history-legend-color { width: 20px; height: 4px; border-radius: 2px; }
         .history-legend-below { font-size: 10px; color: var(--danger); margin-left: 4px; }
         .history-page-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; max-height: 150px; overflow-y: auto; }
-        .history-part-stat-card { background: var(--bg-dark); border-radius: 10px; padding: 12px; min-width: 280px; }
+        .history-part-stat-card { background: var(--bg-dark); border-radius: 10px; padding: 12px; }
         .history-part-stat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-        .history-part-stat-color { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
-        .history-part-stat-name { font-weight: 600; font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .history-part-stat-values { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        .history-part-stat-item { text-align: center; min-width: 0; }
-        .history-part-stat-value { font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-part-stat-color { width: 12px; height: 12px; border-radius: 3px; }
+        .history-part-stat-name { font-weight: 600; font-size: 12px; flex: 1; }
+        .history-part-stat-values { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .history-part-stat-item { text-align: center; }
+        .history-part-stat-value { font-size: 14px; font-weight: 600; color: var(--accent); }
         .history-part-stat-value.below-min { color: var(--danger); }
-        .history-part-stat-label { font-size: 8px; color: var(--text-secondary); text-transform: uppercase; }
+        .history-part-stat-label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
         @media (max-width: 900px) {
             .history-page-layout { grid-template-columns: 1fr; height: auto; }
             .history-parts-panel { max-height: 300px; }
@@ -494,13 +494,13 @@
     </div>
 
     <div class="mobile-header">
-        <div><h1>Roll Tech</h1><span style="font-size:10px;color:var(--text-secondary);">Operations</span></div>
+        <div><h1>Molding</h1><span style="font-size:10px;color:var(--text-secondary);">Operations Dashboard</span></div>
         <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
     </div>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="sidebar">
-        <div class="logo"><h1>Roll Tech</h1><span id="logoSubtitle">Operations Dashboard</span></div>
+        <div class="logo"><h1>Molding</h1><span id="logoSubtitle">Operations Dashboard</span></div>
         <div class="lang-toggle">
             <button class="lang-btn active" id="langEN" onclick="setLanguage('en')">English</button>
             <button class="lang-btn" id="langES" onclick="setLanguage('es')">Español</button>
@@ -549,7 +549,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.10</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.9</div>
     </div>
 
     <div class="main-content">
@@ -558,7 +558,7 @@
         <!-- MAIN DASHBOARD -->
         <div id="main" class="page">
             <div class="page-header">
-                <div><h2 data-i18n="main.title">Operations Dashboard</h2><p data-i18n="main.subtitle">Real-time overview of Roll Tech manufacturing operations</p></div>
+                <div><h2 data-i18n="main.title">Operations Dashboard</h2><p data-i18n="main.subtitle">Real-time overview of manufacturing operations</p></div>
                 <div class="last-updated"><span class="dot"></span><span id="lastUpdated">Loading...</span></div>
             </div>
             <div class="quick-stats">
@@ -789,7 +789,7 @@
         <div id="inventory-history" class="page">
             <div class="page-header">
                 <div>
-                    <h2><span class="icon">📈</span> <span data-i18n="inv.historyPageTitle">Inventory History</span></h2>
+                    <h2 data-i18n="inv.historyPageTitle">📈 Inventory History</h2>
                     <p data-i18n="inv.historyPageSubtitle">Compare inventory levels over time for multiple parts</p>
                 </div>
                 <button class="toolbar-btn" onclick="navigateTo('inventory')">← <span data-i18n="btn.back">Back</span></button>
@@ -1117,10 +1117,6 @@
             <div class="page-header">
                 <div><h2 data-i18n="bom.title">BOM Explorer</h2></div>
             </div>
-            <div class="info-banner info active">
-                <span class="icon">ℹ</span>
-                <p><strong>Note:</strong> <span data-i18n="bom.note">BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.</span></p>
-            </div>
             <div class="tabs">
                 <div class="tab active" data-bomtab="final" onclick="switchBomTab('final')" data-i18n="bom.finalAssembly">Final Assembly</div>
                 <div class="tab" data-bomtab="sub" onclick="switchBomTab('sub')" data-i18n="bom.subAssembly">Sub Assembly</div>
@@ -1205,7 +1201,7 @@
                 'allData.subtitle': 'Complete spreadsheet data - Columns A through AX',
                 'loading': 'Loading data from Google Sheets...',
                 'main.title': 'Operations Dashboard',
-                'main.subtitle': 'Real-time overview of Roll Tech manufacturing operations',
+                'main.subtitle': 'Real-time overview of manufacturing operations',
                 'stats.needToMake': 'Need to Make',
                 'stats.making': 'Making',
                 'stats.readyToShip': 'Ready to Ship',
@@ -1273,7 +1269,7 @@
                 'inv.maximum': 'Maximum',
                 'inv.average': 'Average',
                 'inv.noHistory': 'No history data available for this part',
-                'inv.historyPageTitle': 'Inventory History',
+                'inv.historyPageTitle': '📈 Inventory History',
                 'inv.historyPageSubtitle': 'Compare inventory levels over time for multiple parts',
                 'inv.selectParts': 'Select Parts',
                 'inv.selected': 'selected',
@@ -1363,7 +1359,6 @@
                 'stats.needsProduction': 'Needs Production',
                 'stats.adequateStock': 'Adequate Stock',
                 'table.inventoryStatus': 'Inventory Status',
-                'bom.note': 'Note: BOM data reflects current filter state in Google Sheets. If items appear missing, check that no filters are active in the source sheets.',
                 'bom.selectPart': 'Select a part to view BOM',
                 'bom.searchParts': 'Search parts...',
                 'ui.globalSearch': 'Global search...',
@@ -1388,7 +1383,7 @@
                 'ui.customers': 'customers'
             },
             es: {
-                'logoSubtitle': 'Panel de Operaciones',
+                'logoSubtitle': 'Panel de Operaciones de Moldeo',
                 'nav.main': 'Panel Principal',
                 'nav.production': 'PRODUCCIÓN',
                 'nav.ordersData': 'Datos de Órdenes',
@@ -1477,7 +1472,7 @@
                 'inv.maximum': 'Máximo',
                 'inv.average': 'Promedio',
                 'inv.noHistory': 'No hay datos históricos disponibles para esta pieza',
-                'inv.historyPageTitle': 'Historial de Inventario',
+                'inv.historyPageTitle': '📈 Historial de Inventario',
                 'inv.historyPageSubtitle': 'Compare niveles de inventario a lo largo del tiempo para múltiples piezas',
                 'inv.selectParts': 'Seleccionar Piezas',
                 'inv.selected': 'seleccionadas',
@@ -1567,7 +1562,6 @@
                 'stats.needsProduction': 'Requiere Producción',
                 'stats.adequateStock': 'Stock Adecuado',
                 'table.inventoryStatus': 'Estado del Inventario',
-                'bom.note': 'Nota: Los datos BOM reflejan el estado actual de filtros en Google Sheets. Si faltan artículos, verifique que no haya filtros activos en las hojas de origen.',
                 'bom.selectPart': 'Seleccione una parte para ver BOM',
                 'bom.searchParts': 'Buscar partes...',
                 'ui.globalSearch': 'Búsqueda global...',
@@ -1635,6 +1629,9 @@
         const PROD_DATA_TOTALS_GID = '148810546';
         const CONFIG_GID = '912029812';
         const PALLET_PICTURES_GID = '1879462508';
+        const BOM_FINAL_GID = '74377031';
+        const BOM_SUB_GID = '206288913';
+        const BOM_INDIVIDUAL_GID = '751106736';
         const INVENTORY_HISTORY_GID = '171540940';  // Fusion records export (daily snapshots)
         
         const COL = {
@@ -2452,16 +2449,9 @@
         
         async function loadBOMData() {
             try {
-                const configData = await fetchSheetData(CONFIG_GID);
-                config = {};
-                configData.forEach(row => {
-                    if (row['Dashboard Name'] === 'P&L Dashboard' && row['GID Number']) {
-                        config[row['Tab Name']] = { gid: row['GID Number'] };
-                    }
-                });
-                if (config['BOM individual items Reference data']) bomIndividualData = await fetchSheetData(config['BOM individual items Reference data'].gid);
-                if (config['BOM Sub assembly Reference data']) bomSubData = await fetchSheetData(config['BOM Sub assembly Reference data'].gid);
-                if (config['BOM Final assembly Reference data']) bomFinalData = await fetchSheetData(config['BOM Final assembly Reference data'].gid);
+                bomIndividualData = await fetchSheetData(BOM_INDIVIDUAL_GID);
+                bomSubData = await fetchSheetData(BOM_SUB_GID);
+                bomFinalData = await fetchSheetData(BOM_FINAL_GID);
             } catch (e) { console.warn('BOM load error:', e); }
         }
         
