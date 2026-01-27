@@ -27,13 +27,15 @@
             --sidebar-width: 260px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-x: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, var(--bg-dark) 0%, #0d1421 100%);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
-            font-size: 14px;
+            font-size: 17px;
+            overflow-x: hidden;
         }
         .sidebar {
             position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh;
@@ -67,7 +69,7 @@
         .lang-toggle { display: flex; gap: 4px; background: var(--bg-dark); border-radius: 8px; padding: 3px; margin: 10px 8px; }
         .lang-btn { flex: 1; padding: 6px 10px; border: none; background: transparent; color: var(--text-secondary); font-size: 11px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
         .lang-btn.active { background: var(--accent); color: white; }
-        .main-content { margin-left: var(--sidebar-width); padding: 20px 24px; min-height: 100vh; }
+        .main-content { margin-left: var(--sidebar-width); padding: 20px 24px; min-height: 100vh; max-width: calc(100vw - var(--sidebar-width)); overflow-x: hidden; }
         .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -297,8 +299,8 @@
         .zoom-reset-btn { width: 100%; margin-top: 8px; padding: 6px; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-size: 10px; cursor: pointer; transition: all 0.2s; }
         .zoom-reset-btn:hover { border-color: var(--accent); color: var(--accent); }
         
-        /* Zoomed main content */
-        .main-content.zoomed { transform-origin: top left; }
+        /* Dashboard wrapper for zoom - applies to both sidebar and content */
+        .dashboard-wrapper { zoom: 1; }
         
         /* Pallet Pictures Gallery Styles */
         .pallet-drilldown { display: none; margin-top: 20px; background: var(--bg-card); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
@@ -2832,11 +2834,8 @@
             if (value > 200) value = 200;
             currentZoom = value;
             document.getElementById('zoomInput').value = value;
-            const mainContent = document.querySelector('.main-content');
-            mainContent.style.transform = `scale(${value / 100})`;
-            mainContent.style.transformOrigin = 'top left';
-            mainContent.style.width = `${10000 / value}%`;
-            mainContent.classList.add('zoomed');
+            // Apply CSS zoom to html element - this scales everything including sidebar
+            document.documentElement.style.zoom = value / 100;
             // Save to localStorage
             try { localStorage.setItem('rolltech_zoom', value); } catch(e) {}
         }
