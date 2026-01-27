@@ -137,6 +137,9 @@
         .category-btn.molding { border-color: var(--warning); color: var(--warning); background: transparent; }
         .category-btn.molding.active { background: var(--warning); color: #1a202c; }
         .category-btn.molding .indicator { background: var(--warning); }
+        .category-btn.snappad { border-color: #9f7aea; color: #9f7aea; background: transparent; }
+        .category-btn.snappad.active { background: #9f7aea; color: white; }
+        .category-btn.snappad .indicator { background: #9f7aea; }
         .category-btn:not(.active) { opacity: 0.5; }
         .category-btn:not(.active):hover { opacity: 0.8; }
         .status-filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -618,6 +621,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersDataBtnRollTech" onclick="toggleOrdersDataCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersDataBtnMolding" onclick="toggleOrdersDataCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersDataBtnSnapPad" onclick="toggleOrdersDataCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group status-filters">
                     <label data-i18n="ui.status">Status:</label>
@@ -660,6 +664,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersQueueBtnSnapPad" onclick="toggleOrdersQueueCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="ordersQueueClearFiltersBtn" onclick="clearAllTableFilters('ordersQueue')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <button class="toolbar-btn show-hidden-btn" id="ordersQueueShowHiddenBtn" onclick="showAllColumns('ordersQueue')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
@@ -696,6 +701,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersStagedBtnRollTech" onclick="toggleOrdersStagedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersStagedBtnMolding" onclick="toggleOrdersStagedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersStagedBtnSnapPad" onclick="toggleOrdersStagedCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="ordersStagedClearFiltersBtn" onclick="clearAllTableFilters('ordersStaged')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <button class="toolbar-btn show-hidden-btn" id="ordersStagedShowHiddenBtn" onclick="showAllColumns('ordersStaged')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
@@ -740,6 +746,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersShippedBtnRollTech" onclick="toggleOrdersShippedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersShippedBtnMolding" onclick="toggleOrdersShippedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersShippedBtnSnapPad" onclick="toggleOrdersShippedCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="ordersShippedFromDate" onchange="applyShippedDateFilter()">
@@ -879,6 +886,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="salesBtnRollTech" onclick="toggleSalesCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="salesBtnMolding" onclick="toggleSalesCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="salesBtnSnapPad" onclick="toggleSalesCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportSalesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -906,6 +914,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="partsBtnRollTech" onclick="togglePartsCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="partsBtnMolding" onclick="togglePartsCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="partsBtnSnapPad" onclick="togglePartsCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="partsFromDate" onchange="applyPartsDateFilter()">
@@ -985,6 +994,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="customersBtnRollTech" onclick="toggleCustomersCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="customersBtnMolding" onclick="toggleCustomersCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="customersBtnSnapPad" onclick="toggleCustomersCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="customersFromDate" onchange="applyCustomersDateFilter()">
@@ -1064,6 +1074,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="datesBtnRollTech" onclick="toggleDatesCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="datesBtnMolding" onclick="toggleDatesCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="datesBtnSnapPad" onclick="toggleDatesCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="datesFromDate" onchange="applyDatesDateFilter()">
@@ -1445,6 +1456,7 @@
                 'ui.loading': 'Loading...',
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Molding',
+                'category.snappad': 'Snap Pad',
                 'ui.from': 'From:',
                 'ui.to': 'To:',
                 // Batch 2: Production Pages
@@ -1659,6 +1671,7 @@
                 'ui.loading': 'Cargando...',
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Moldeo',
+                'category.snappad': 'Snap Pad',
                 'ui.from': 'Desde:',
                 'ui.to': 'Hasta:',
                 // Batch 2: Production Pages
@@ -1893,14 +1906,14 @@
         let currentPalletOrder = null; // Currently viewed pallet order
         
         // Filter states for each page
-        let ordersDataFilters = { categories: { rolltech: true, molding: true }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
-        let ordersQueueFilters = { categories: { rolltech: true, molding: true } };
-        let ordersStagedFilters = { categories: { rolltech: true, molding: true } };
-        let ordersShippedFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null };
-        let salesFilters = { categories: { rolltech: true, molding: true } };
-        let datesFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null };
-        let partsFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null, watchlistOnly: false };
-        let customersFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null, watchlistOnly: false };
+        let ordersDataFilters = { categories: { rolltech: true, molding: true, snappad: true }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
+        let ordersQueueFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let ordersStagedFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let ordersShippedFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null };
+        let salesFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let datesFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null };
+        let partsFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null, watchlistOnly: false };
+        let customersFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null, watchlistOnly: false };
         
         // Sort states
         let ordersDataSort = { field: 'daysUntil', asc: true };
@@ -2020,6 +2033,7 @@
             const cat = (getVal(row, 'CATEGORY') || '').toLowerCase();
             if (cat.includes('roll tech')) return 'rolltech';
             if (cat.includes('molding')) return 'molding';
+            if (cat.includes('snap pad')) return 'snappad';
             return 'other';
         };
         
@@ -3008,9 +3022,10 @@
         // ============================================================
         function toggleOrdersDataCategory(cat) {
             ordersDataFilters.categories[cat] = !ordersDataFilters.categories[cat];
-            if (!ordersDataFilters.categories.rolltech && !ordersDataFilters.categories.molding) { ordersDataFilters.categories[cat] = true; return; }
+            if (!ordersDataFilters.categories.rolltech && !ordersDataFilters.categories.molding && !ordersDataFilters.categories.snappad) { ordersDataFilters.categories[cat] = true; return; }
             document.getElementById('ordersDataBtnRollTech').classList.toggle('active', ordersDataFilters.categories.rolltech);
             document.getElementById('ordersDataBtnMolding').classList.toggle('active', ordersDataFilters.categories.molding);
+            document.getElementById('ordersDataBtnSnapPad').classList.toggle('active', ordersDataFilters.categories.snappad);
             updateOrdersDataPage();
         }
         
@@ -3067,15 +3082,16 @@
             // Apply column filters
             let sorted = [...data].filter(r => {
                 const status = getStatus(r);
+                const isRollTech = getCategory(r) === 'rolltech';
                 if (!passesColumnFilter('ordersData', 'line', getVal(r, 'LINE') || '-')) return false;
                 if (!passesColumnFilter('ordersData', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
                 if (!passesColumnFilter('ordersData', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
                 if (!passesColumnFilter('ordersData', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
                 if (!passesColumnFilter('ordersData', 'part', getVal(r, 'PART') || '-')) return false;
                 if (!passesColumnFilter('ordersData', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
-                if (!passesColumnFilter('ordersData', 'tire', getVal(r, 'TIRE') || '-')) return false;
-                if (!passesColumnFilter('ordersData', 'hub', getVal(r, 'HUB') || '-')) return false;
-                if (!passesColumnFilter('ordersData', 'bearings', getVal(r, 'BEARINGS') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'tire', isRollTech ? (getVal(r, 'TIRE') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'hub', isRollTech ? (getVal(r, 'HUB') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'bearings', isRollTech ? (getVal(r, 'BEARINGS') || '-') : 'N/A')) return false;
                 if (!passesColumnFilter('ordersData', 'status', status)) return false;
                 return true;
             });
@@ -3106,12 +3122,20 @@
             tbody.innerHTML = sorted.map(r => {
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
-                const isMissing = isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS'));
+                const isRollTech = getCategory(r) === 'rolltech';
+                // Only show missing warning for Roll Tech items
+                const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
                 const lineNum = getVal(r, 'LINE') || '-';
                 const status = getStatus(r);
-                const isStaged = status === 'staged';
-                const rowClass = isStaged ? 'clickable-row' : '';
-                const rowClick = isStaged ? `onclick="openPalletDrilldownFromData('${lineNum}')"` : '';
+                // Make all rows clickable to show order details
+                const rowClass = 'clickable-row';
+                const rowClick = `onclick="openOrderDrilldown('${lineNum}')"`;
+                
+                // Helper for component cells - show N/A for non-Roll Tech
+                const formatComponentForCategory = (value) => {
+                    if (!isRollTech) return '<span style="color:var(--text-secondary);">N/A</span>';
+                    return formatComponent(value);
+                };
                 
                 let cells = '';
                 if (!isColumnHidden('ordersData', 'line')) cells += `<td><strong>${lineNum}</strong></td>`;
@@ -3120,9 +3144,9 @@
                 if (!isColumnHidden('ordersData', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
                 if (!isColumnHidden('ordersData', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
                 if (!isColumnHidden('ordersData', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
-                if (!isColumnHidden('ordersData', 'tire')) cells += `<td>${formatComponent(getVal(r, 'TIRE'))}</td>`;
-                if (!isColumnHidden('ordersData', 'hub')) cells += `<td>${formatComponent(getVal(r, 'HUB'))}</td>`;
-                if (!isColumnHidden('ordersData', 'bearings')) cells += `<td>${formatComponent(getVal(r, 'BEARINGS'))}</td>`;
+                if (!isColumnHidden('ordersData', 'tire')) cells += `<td>${formatComponentForCategory(getVal(r, 'TIRE'))}</td>`;
+                if (!isColumnHidden('ordersData', 'hub')) cells += `<td>${formatComponentForCategory(getVal(r, 'HUB'))}</td>`;
+                if (!isColumnHidden('ordersData', 'bearings')) cells += `<td>${formatComponentForCategory(getVal(r, 'BEARINGS'))}</td>`;
                 if (!isColumnHidden('ordersData', 'status')) cells += `<td>${getStatusBadge(status)}</td>`;
                 
                 return `<tr class="${rowClass}" ${rowClick} style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
@@ -3130,6 +3154,14 @@
             
             updateClearAllButton('ordersData');
             updateShowHiddenButton('ordersData');
+        }
+        
+        function openOrderDrilldown(lineNum) {
+            // Find the order by line number and open appropriate drilldown
+            const order = allData.find(r => getVal(r, 'LINE') === lineNum);
+            if (order) {
+                openPalletDrilldown(order, lineNum);
+            }
         }
         
         function openPalletDrilldownFromData(lineNum) {
@@ -3160,9 +3192,10 @@
         // ============================================================
         function toggleOrdersQueueCategory(cat) {
             ordersQueueFilters.categories[cat] = !ordersQueueFilters.categories[cat];
-            if (!ordersQueueFilters.categories.rolltech && !ordersQueueFilters.categories.molding) { ordersQueueFilters.categories[cat] = true; return; }
+            if (!ordersQueueFilters.categories.rolltech && !ordersQueueFilters.categories.molding && !ordersQueueFilters.categories.snappad) { ordersQueueFilters.categories[cat] = true; return; }
             document.getElementById('ordersQueueBtnRollTech').classList.toggle('active', ordersQueueFilters.categories.rolltech);
             document.getElementById('ordersQueueBtnMolding').classList.toggle('active', ordersQueueFilters.categories.molding);
+            document.getElementById('ordersQueueBtnSnapPad').classList.toggle('active', ordersQueueFilters.categories.snappad);
             updateOrdersQueuePage();
         }
         
@@ -3317,9 +3350,10 @@
         // ============================================================
         function toggleOrdersStagedCategory(cat) {
             ordersStagedFilters.categories[cat] = !ordersStagedFilters.categories[cat];
-            if (!ordersStagedFilters.categories.rolltech && !ordersStagedFilters.categories.molding) { ordersStagedFilters.categories[cat] = true; return; }
+            if (!ordersStagedFilters.categories.rolltech && !ordersStagedFilters.categories.molding && !ordersStagedFilters.categories.snappad) { ordersStagedFilters.categories[cat] = true; return; }
             document.getElementById('ordersStagedBtnRollTech').classList.toggle('active', ordersStagedFilters.categories.rolltech);
             document.getElementById('ordersStagedBtnMolding').classList.toggle('active', ordersStagedFilters.categories.molding);
+            document.getElementById('ordersStagedBtnSnapPad').classList.toggle('active', ordersStagedFilters.categories.snappad);
             updateOrdersStagedPage();
         }
         
@@ -3571,9 +3605,10 @@
         // ============================================================
         function toggleOrdersShippedCategory(cat) {
             ordersShippedFilters.categories[cat] = !ordersShippedFilters.categories[cat];
-            if (!ordersShippedFilters.categories.rolltech && !ordersShippedFilters.categories.molding) { ordersShippedFilters.categories[cat] = true; return; }
+            if (!ordersShippedFilters.categories.rolltech && !ordersShippedFilters.categories.molding && !ordersShippedFilters.categories.snappad) { ordersShippedFilters.categories[cat] = true; return; }
             document.getElementById('ordersShippedBtnRollTech').classList.toggle('active', ordersShippedFilters.categories.rolltech);
             document.getElementById('ordersShippedBtnMolding').classList.toggle('active', ordersShippedFilters.categories.molding);
+            document.getElementById('ordersShippedBtnSnapPad').classList.toggle('active', ordersShippedFilters.categories.snappad);
             updateOrdersShippedPage();
         }
         
@@ -4452,9 +4487,10 @@
         // ============================================================
         function toggleSalesCategory(cat) {
             salesFilters.categories[cat] = !salesFilters.categories[cat];
-            if (!salesFilters.categories.rolltech && !salesFilters.categories.molding) { salesFilters.categories[cat] = true; return; }
+            if (!salesFilters.categories.rolltech && !salesFilters.categories.molding && !salesFilters.categories.snappad) { salesFilters.categories[cat] = true; return; }
             document.getElementById('salesBtnRollTech').classList.toggle('active', salesFilters.categories.rolltech);
             document.getElementById('salesBtnMolding').classList.toggle('active', salesFilters.categories.molding);
+            document.getElementById('salesBtnSnapPad').classList.toggle('active', salesFilters.categories.snappad);
             updateSalesOverview();
         }
         
@@ -4654,9 +4690,10 @@
         // ============================================================
         function togglePartsCategory(cat) {
             partsFilters.categories[cat] = !partsFilters.categories[cat];
-            if (!partsFilters.categories.rolltech && !partsFilters.categories.molding) { partsFilters.categories[cat] = true; return; }
+            if (!partsFilters.categories.rolltech && !partsFilters.categories.molding && !partsFilters.categories.snappad) { partsFilters.categories[cat] = true; return; }
             document.getElementById('partsBtnRollTech').classList.toggle('active', partsFilters.categories.rolltech);
             document.getElementById('partsBtnMolding').classList.toggle('active', partsFilters.categories.molding);
+            document.getElementById('partsBtnSnapPad').classList.toggle('active', partsFilters.categories.snappad);
             updateSalesPartsPage();
         }
         
@@ -5000,9 +5037,10 @@
         // ============================================================
         function toggleCustomersCategory(cat) {
             customersFilters.categories[cat] = !customersFilters.categories[cat];
-            if (!customersFilters.categories.rolltech && !customersFilters.categories.molding) { customersFilters.categories[cat] = true; return; }
+            if (!customersFilters.categories.rolltech && !customersFilters.categories.molding && !customersFilters.categories.snappad) { customersFilters.categories[cat] = true; return; }
             document.getElementById('customersBtnRollTech').classList.toggle('active', customersFilters.categories.rolltech);
             document.getElementById('customersBtnMolding').classList.toggle('active', customersFilters.categories.molding);
+            document.getElementById('customersBtnSnapPad').classList.toggle('active', customersFilters.categories.snappad);
             updateSalesCustomersPage();
         }
         
@@ -5290,9 +5328,10 @@
         // ============================================================
         function toggleDatesCategory(cat) {
             datesFilters.categories[cat] = !datesFilters.categories[cat];
-            if (!datesFilters.categories.rolltech && !datesFilters.categories.molding) { datesFilters.categories[cat] = true; return; }
+            if (!datesFilters.categories.rolltech && !datesFilters.categories.molding && !datesFilters.categories.snappad) { datesFilters.categories[cat] = true; return; }
             document.getElementById('datesBtnRollTech').classList.toggle('active', datesFilters.categories.rolltech);
             document.getElementById('datesBtnMolding').classList.toggle('active', datesFilters.categories.molding);
+            document.getElementById('datesBtnSnapPad').classList.toggle('active', datesFilters.categories.snappad);
             updateSalesDatesPage();
         }
         
