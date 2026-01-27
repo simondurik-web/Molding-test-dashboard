@@ -764,7 +764,7 @@
                 <input type="text" class="search-box" id="invSearch" data-i18n-placeholder="ui.search" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
-                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">âš   <span data-i18n="filter.lowStock">Low Stock</span></button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠  <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
@@ -2416,6 +2416,10 @@
             const res = await fetch(url);
             const text = await res.text();
             const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+            // Debug: log raw columns for Production Data Totals
+            if (gid === PROD_DATA_TOTALS_GID) {
+                console.log('PROD_DATA_TOTALS raw cols:', json.table.cols.map((c, i) => ({ index: i, id: c.id, label: c.label, type: c.type })));
+            }
             const headers = json.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim());
             if (captureHeaders) allRawHeaders = headers.filter(h => h); // Store non-empty headers
             return json.table.rows.map(r => {
@@ -2457,47 +2461,27 @@
                 const fusionData = await fetchSheetData(FUSION_EXPORT_GID);
                 const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
                 console.log('Inventory Debug v7.5 - Prod Totals columns:', prodTotalsData.length > 0 ? Object.keys(prodTotalsData[0]) : 'No data');
-                console.log('Inventory Debug v7.7 - First Prod Totals row:', prodTotalsData[0]);
-                console.log('Inventory Debug v7.7 - Column headers:', prodTotalsData[0] ? Object.keys(prodTotalsData[0]) : 'No data');
-                
-                // Helper function to find column value by partial key match (handles invisible chars)
-                function findColumnValue(row, searchTerm) {
-                    const keys = Object.keys(row);
-                    const normalizedSearch = searchTerm.toLowerCase().replace(/[^a-z]/g, '');
-                    for (const key of keys) {
-                        const normalizedKey = key.toLowerCase().replace(/[^a-z]/g, '');
-                        if (normalizedKey === normalizedSearch || normalizedKey.includes(normalizedSearch)) {
-                            return row[key];
-                        }
-                    }
-                    return undefined;
-                }
-                
+                console.log('Inventory Debug v7.5 - First Prod Totals row:', prodTotalsData[0]);
                 const prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
                     let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
                     if (partNum) {
-                        const fusionInv = parseNumber(row['Fusion inventory']) || parseNumber(row['Fusion Inventory']) || parseNumber(findColumnValue(row, 'fusioninventory'));
-                        // Manual Target - use dynamic key finder to handle invisible characters
-                        const manualTargetRaw = findColumnValue(row, 'manualtarget');
-                        const manualTargetValue = parseNumber(manualTargetRaw) || 0;
-                        if (partNum === 'TR-30PK-BLK' || partNum === 'TR-BLK') {
-                            console.log('Inventory Debug v7.7 - ' + partNum + ':', { 
-                                manualTarget: manualTargetValue,
-                                manualTargetRaw: manualTargetRaw,
-                                fusionInventory: fusionInv,
-                                minimums: row['Minimums'],
-                                allKeys: Object.keys(row)
+                        const fusionInv = parseNumber(row['Fusion inventory']) || parseNumber(row['Fusion Inventory']);
+                        if (partNum === 'FS-TPO' || partNum === 'FS-URTH-BRN') {
+                            console.log('Inventory Debug v7.5 - ' + partNum + ':', { 
+                                fusionInventory: fusionInv, 
+                                rawLower: row['Fusion inventory'], 
+                                rawUpper: row['Fusion Inventory'] 
                             });
                         }
                         prodTotalsMap[partNum] = {
                             product: row['Product'] || '',
                             qtyNeeded: parseNumber(row['Quantity Needed']),
                             minimums: parseNumber(row['Minimums']),
-                            manualTarget: manualTargetValue,
-                            moldType: row['Mold type'] || findColumnValue(row, 'moldtype') || '',
+                            manualTarget: parseNumber(row['Manual target']),
+                            moldType: row['Mold type'] || '',
                             fusionInventory: fusionInv,
-                            partsToBeMade: parseNumber(row['Parts to be made']) || parseNumber(findColumnValue(row, 'partstobemade'))
+                            partsToBeMade: parseNumber(row['Parts to be made'])
                         };
                     }
                 });
