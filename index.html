@@ -2509,6 +2509,16 @@
             const res = await fetch(url);
             const text = await res.text();
             const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+            // DEBUG: Log raw column info for PROD_DATA_TOTALS
+            if (gid === '148810546') {
+                console.log('=== fetchSheetData DEBUG for PROD_DATA_TOTALS ===');
+                console.log('Raw cols from API:', json.table.cols.map((c, i) => ({ index: i, label: c.label, type: c.type })));
+                console.log('Number of columns:', json.table.cols.length);
+                if (json.table.rows.length > 0) {
+                    console.log('First row raw r.c array length:', json.table.rows[0].c ? json.table.rows[0].c.length : 'no c array');
+                    console.log('First row r.c[4] (Manual target index):', json.table.rows[0].c ? json.table.rows[0].c[4] : 'N/A');
+                }
+            }
             const headers = json.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim());
             if (captureHeaders) allRawHeaders = headers.filter(h => h); // Store non-empty headers
             return json.table.rows.map(r => {
@@ -2549,17 +2559,23 @@
             try {
                 const fusionData = await fetchSheetData(FUSION_EXPORT_GID);
                 const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
-                console.log('Inventory Debug v7.5 - Prod Totals columns:', prodTotalsData.length > 0 ? Object.keys(prodTotalsData[0]) : 'No data');
-                console.log('Inventory Debug v7.5 - First Prod Totals row:', prodTotalsData[0]);
-                // Debug: Log Manual Target column variations
+                console.log('=== MANUAL TARGET DEBUG v7.13 ===');
+                console.log('Prod Totals rows loaded:', prodTotalsData.length);
                 if (prodTotalsData.length > 0) {
-                    const firstRow = prodTotalsData[0];
-                    console.log('Manual Target Debug:', {
-                        'Manual target': firstRow['Manual target'],
-                        'Manual Target': firstRow['Manual Target'],
-                        'manual target': firstRow['manual target'],
-                        allKeys: Object.keys(firstRow).filter(k => k.toLowerCase().includes('manual'))
-                    });
+                    console.log('ALL column headers:', Object.keys(prodTotalsData[0]));
+                    console.log('Headers containing "manual" (case insensitive):', Object.keys(prodTotalsData[0]).filter(k => k.toLowerCase().includes('manual')));
+                    console.log('Headers containing "target" (case insensitive):', Object.keys(prodTotalsData[0]).filter(k => k.toLowerCase().includes('target')));
+                }
+                // Find TR-30PK-BLK specifically
+                const tr30Row = prodTotalsData.find(r => (r['Part Number'] || '').toString().includes('TR-30PK-BLK'));
+                if (tr30Row) {
+                    console.log('=== TR-30PK-BLK RAW DATA ===');
+                    console.log('Full row object:', tr30Row);
+                    console.log('Manual target value:', tr30Row['Manual target']);
+                    console.log('Manual Target value:', tr30Row['Manual Target']);
+                    console.log('All keys with values:', Object.entries(tr30Row).filter(([k,v]) => v !== '' && v !== null && v !== undefined));
+                } else {
+                    console.log('TR-30PK-BLK NOT FOUND in Prod Totals Data');
                 }
                 const prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
