@@ -282,6 +282,8 @@
         .filter-dropdown-footer .apply-btn:hover { background: var(--primary-light); }
         .clear-all-filters-btn { background: var(--bg-dark) !important; }
         .clear-all-filters-btn.has-filters { background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%) !important; color: #1a202c !important; border-color: var(--warning) !important; }
+        .show-hidden-btn { display: none; background: var(--bg-dark) !important; }
+        .show-hidden-btn.has-hidden { display: inline-flex; background: linear-gradient(135deg, var(--accent) 0%, #4299e1 100%) !important; color: white !important; border-color: var(--accent) !important; }
         .watchlist-star { cursor: pointer; color: var(--text-secondary); transition: color 0.2s; }
         .watchlist-star:hover { color: var(--warning); }
         .watchlist-star.active { color: var(--warning); }
@@ -434,6 +436,7 @@
         <div class="filter-values-list" id="filterValuesList"></div>
         <div class="filter-dropdown-footer">
             <button class="clear-btn" onclick="clearColumnFilter()" data-i18n="ui.clear">Clear</button>
+            <button class="hide-col-btn" onclick="hideCurrentColumn()" style="background:var(--bg-dark);border-color:var(--border);" data-i18n="ui.hideColumn">👁 Hide</button>
             <button class="apply-btn" onclick="applyColumnFilter()" data-i18n="ui.apply">Apply</button>
         </div>
     </div>
@@ -770,6 +773,7 @@
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="inventoryShowHiddenBtn" onclick="showAllColumns('inventory')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportInvCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -904,6 +908,7 @@
                 <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑 Clear Filters</button>
+                <button class="toolbar-btn show-hidden-btn" id="partsShowHiddenBtn" onclick="showAllColumns('parts')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" data-i18n-placeholder="ui.search" placeholder="Search parts..." oninput="filterPartsTable()">
                 <button class="toolbar-btn" onclick="exportPartsCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -982,6 +987,7 @@
                 <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑 Clear Filters</button>
+                <button class="toolbar-btn show-hidden-btn" id="customersShowHiddenBtn" onclick="showAllColumns('customers')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" data-i18n-placeholder="ui.search" placeholder="Search customers..." oninput="filterCustomersTable()">
                 <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1059,6 +1065,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑 Clear Filters</button>
+                <button class="toolbar-btn show-hidden-btn" id="datesShowHiddenBtn" onclick="showAllColumns('dates')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -1164,6 +1171,7 @@
                     <span id="allDataColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="allDataShowHiddenBtn" onclick="showAllColumns('allData')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="allDataGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
                 <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1197,6 +1205,7 @@
                     <span id="fpRefColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="fpRefClearFiltersBtn" onclick="clearAllTableFilters('fpRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="fpRefShowHiddenBtn" onclick="showAllColumns('fpRef')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="fpRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterFpRefTable()">
                 <button class="toolbar-btn" onclick="exportFpRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1230,6 +1239,7 @@
                     <span id="custRefColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="custRefClearFiltersBtn" onclick="clearAllTableFilters('custRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="custRefShowHiddenBtn" onclick="showAllColumns('custRef')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="custRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterCustRefTable()">
                 <button class="toolbar-btn" onclick="exportCustRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1263,6 +1273,7 @@
                     <span id="quotesColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="quotesClearFiltersBtn" onclick="clearAllTableFilters('quotes')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="quotesShowHiddenBtn" onclick="showAllColumns('quotes')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="quotesGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterQuotesTable()">
                 <button class="toolbar-btn" onclick="exportQuotesToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1407,6 +1418,8 @@
                 'ui.deselectAll': 'Deselect All',
                 'ui.clear': 'Clear',
                 'ui.apply': 'Apply',
+                'ui.hideColumn': '👁 Hide',
+                'ui.showHidden': 'Show Hidden',
                 'ui.filterColumn': 'Filter Column',
                 'ui.search': 'Search...',
                 'ui.export': 'Export',
@@ -1619,6 +1632,8 @@
                 'ui.deselectAll': 'Deseleccionar Todo',
                 'ui.clear': 'Limpiar',
                 'ui.apply': 'Aplicar',
+                'ui.hideColumn': '👁 Ocultar',
+                'ui.showHidden': 'Mostrar Ocultas',
                 'ui.filterColumn': 'Filtrar Columna',
                 'ui.search': 'Buscar...',
                 'ui.export': 'Exportar',
@@ -1898,6 +1913,7 @@
         
         // Column Filter System State
         let columnFilters = {}; // { tableId: { columnKey: Set(selectedValues) } }
+        let hiddenColumns = {}; // { tableId: Set(columnKeys) }
         let activeFilterDropdown = null; // { tableId, columnKey, allValues, selectedValues }
         
         // Drilldown state
@@ -2224,6 +2240,59 @@
         function passesColumnFilter(tableId, columnKey, value) {
             if (!columnFilters[tableId] || !columnFilters[tableId][columnKey]) return true;
             return columnFilters[tableId][columnKey].has(value);
+        }
+        
+        // ============================================================
+        // HIDE COLUMNS SYSTEM
+        // ============================================================
+        function initHiddenColumns(tableId) {
+            if (!hiddenColumns[tableId]) hiddenColumns[tableId] = new Set();
+        }
+        
+        function isColumnHidden(tableId, columnKey) {
+            return hiddenColumns[tableId] && hiddenColumns[tableId].has(columnKey);
+        }
+        
+        function hideCurrentColumn() {
+            if (!activeFilterDropdown) return;
+            const { tableId, columnKey } = activeFilterDropdown;
+            hideColumn(tableId, columnKey);
+            closeFilterDropdown();
+        }
+        
+        function hideColumn(tableId, columnKey) {
+            initHiddenColumns(tableId);
+            hiddenColumns[tableId].add(columnKey);
+            updateShowHiddenButton(tableId);
+            refreshTableAfterFilter(tableId);
+        }
+        
+        function showAllColumns(tableId) {
+            if (hiddenColumns[tableId]) {
+                hiddenColumns[tableId].clear();
+            }
+            updateShowHiddenButton(tableId);
+            refreshTableAfterFilter(tableId);
+        }
+        
+        function updateShowHiddenButton(tableId) {
+            const btnId = tableId + 'ShowHiddenBtn';
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                const hiddenCount = hiddenColumns[tableId] ? hiddenColumns[tableId].size : 0;
+                const hasHidden = hiddenCount > 0;
+                btn.classList.toggle('has-hidden', hasHidden);
+                // Update button text with count
+                const spanEl = btn.querySelector('span');
+                if (spanEl) {
+                    spanEl.textContent = hasHidden ? `${t('ui.showHidden')} (${hiddenCount})` : t('ui.showHidden');
+                }
+            }
+        }
+        
+        function getVisibleHeaders(tableId, allHeaders) {
+            if (!hiddenColumns[tableId] || hiddenColumns[tableId].size === 0) return allHeaders;
+            return allHeaders.filter((h, i) => !hiddenColumns[tableId].has(h) && !hiddenColumns[tableId].has(`col_${i}`));
         }
         
         function getUniqueValuesForColumn(tableId, columnKey) {
@@ -5688,9 +5757,12 @@
         // FP Reference Data Functions
         function renderFpRefTableHeader() {
             initTableFilters('fpRef');
-            document.getElementById('fpRefTableHeader').innerHTML = fpReferenceHeaders.map((h, i) => 
-                createFilterHeader('fpRef', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('fpRef');
+            document.getElementById('fpRefTableHeader').innerHTML = fpReferenceHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('fpRef', colKey)) return '';
+                return createFilterHeader('fpRef', colKey, h, true);
+            }).join('');
         }
         
         function renderFpRefTable() {
@@ -5738,20 +5810,25 @@
                 });
             }
             
-            // Render table body
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('fpRefTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${fpReferenceHeaders.map(h => {
+                return `<tr>${fpReferenceHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('fpRef', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     return `<td>${val}</td>`;
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = fpReferenceHeaders.filter((h, i) => !isColumnHidden('fpRef', `col_${i}`)).length;
             document.getElementById('fpRefRowCount').textContent = data.length;
-            document.getElementById('fpRefColCount').textContent = fpReferenceHeaders.length;
+            document.getElementById('fpRefColCount').textContent = visibleColCount;
             document.getElementById('fpRefLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
             updateClearAllButton('fpRef');
+            updateShowHiddenButton('fpRef');
         }
         
         function sortFpRefTable(field) {
@@ -5800,9 +5877,12 @@
         // Customer Reference Data Functions
         function renderCustRefTableHeader() {
             initTableFilters('custRef');
-            document.getElementById('custRefTableHeader').innerHTML = customerReferenceHeaders.map((h, i) => 
-                createFilterHeader('custRef', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('custRef');
+            document.getElementById('custRefTableHeader').innerHTML = customerReferenceHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('custRef', colKey)) return '';
+                return createFilterHeader('custRef', colKey, h, true);
+            }).join('');
         }
         
         function renderCustRefTable() {
@@ -5850,10 +5930,12 @@
                 });
             }
             
-            // Render table body
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('custRefTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${customerReferenceHeaders.map(h => {
+                return `<tr>${customerReferenceHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('custRef', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     // Format currency values
@@ -5867,10 +5949,13 @@
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = customerReferenceHeaders.filter((h, i) => !isColumnHidden('custRef', `col_${i}`)).length;
             document.getElementById('custRefRowCount').textContent = data.length;
-            document.getElementById('custRefColCount').textContent = customerReferenceHeaders.length;
+            document.getElementById('custRefColCount').textContent = visibleColCount;
             document.getElementById('custRefLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
             updateClearAllButton('custRef');
+            updateShowHiddenButton('custRef');
         }
         
         function sortCustRefTable(field) {
@@ -5919,9 +6004,12 @@
         // Quotes Registry Functions
         function renderQuotesTableHeader() {
             initTableFilters('quotes');
-            document.getElementById('quotesTableHeader').innerHTML = quotesRegistryHeaders.map((h, i) => 
-                createFilterHeader('quotes', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('quotes');
+            document.getElementById('quotesTableHeader').innerHTML = quotesRegistryHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('quotes', colKey)) return '';
+                return createFilterHeader('quotes', colKey, h, true);
+            }).join('');
         }
         
         function renderQuotesTable() {
@@ -5969,10 +6057,12 @@
                 });
             }
             
-            // Render table body
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('quotesTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${quotesRegistryHeaders.map(h => {
+                return `<tr>${quotesRegistryHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('quotes', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     // Make Drive Link clickable (case-insensitive check)
@@ -5988,10 +6078,13 @@
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = quotesRegistryHeaders.filter((h, i) => !isColumnHidden('quotes', `col_${i}`)).length;
             document.getElementById('quotesRowCount').textContent = data.length;
-            document.getElementById('quotesColCount').textContent = quotesRegistryHeaders.length;
+            document.getElementById('quotesColCount').textContent = visibleColCount;
             document.getElementById('quotesLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
             updateClearAllButton('quotes');
+            updateShowHiddenButton('quotes');
         }
         
         function sortQuotesTable(field) {
