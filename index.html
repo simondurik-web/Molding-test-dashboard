@@ -626,6 +626,8 @@
                     <button class="status-btn staged active" id="ordersDataStatusStaged" onclick="toggleOrdersDataStatus('staged')"><span data-i18n="status.readyToShip">Ready to Ship</span></button>
                     <button class="status-btn shipped" id="ordersDataStatusShipped" onclick="toggleOrdersDataStatus('shipped')"><span data-i18n="status.shipped">Shipped</span></button>
                 </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersDataClearFiltersBtn" onclick="clearAllTableFilters('ordersData')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersDataShowHiddenBtn" onclick="showAllColumns('ordersData')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersDataSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersDataTable()">
                 <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -659,6 +661,8 @@
                     <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersQueueClearFiltersBtn" onclick="clearAllTableFilters('ordersQueue')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersQueueShowHiddenBtn" onclick="showAllColumns('ordersQueue')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersQueueSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersQueueTable()">
                 <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -693,6 +697,8 @@
                     <button class="category-btn rolltech active" id="ordersStagedBtnRollTech" onclick="toggleOrdersStagedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersStagedBtnMolding" onclick="toggleOrdersStagedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
                 </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersStagedClearFiltersBtn" onclick="clearAllTableFilters('ordersStaged')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersStagedShowHiddenBtn" onclick="showAllColumns('ordersStaged')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersStagedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersStagedTable()">
                 <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -742,6 +748,8 @@
                     <label data-i18n="ui.to">To:</label><input type="date" id="ordersShippedToDate" onchange="applyShippedDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetShippedDateFilter()">🔄 Reset</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersShippedClearFiltersBtn" onclick="clearAllTableFilters('ordersShipped')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersShippedShowHiddenBtn" onclick="showAllColumns('ordersShipped')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersShippedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersShippedTable()">
                 <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -3038,6 +3046,8 @@
         }
         
         function renderOrdersDataTableHeader() {
+            initTableFilters('ordersData');
+            initHiddenColumns('ordersData');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
                 { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'customer', label: t('col.customer') },
@@ -3045,11 +3055,32 @@
                 { key: 'tire', label: t('col.tire') }, { key: 'hub', label: t('col.hub') },
                 { key: 'bearings', label: t('col.bearings') }, { key: 'status', label: t('col.status') }
             ];
-            document.getElementById('ordersDataTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersDataTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersDataTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersData', h.key)) return '';
+                return createFilterHeader('ordersData', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersDataTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersDataTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const status = getStatus(r);
+                if (!passesColumnFilter('ordersData', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
+                if (!passesColumnFilter('ordersData', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersData', 'tire', getVal(r, 'TIRE') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'hub', getVal(r, 'HUB') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'bearings', getVal(r, 'BEARINGS') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'status', status)) return false;
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 switch(ordersDataSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
@@ -3076,19 +3107,37 @@
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const isMissing = isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS'));
-                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
-                    <td class="${daysClass}">${daysUntil || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td>${formatComponent(getVal(r, 'TIRE'))}</td>
-                    <td>${formatComponent(getVal(r, 'HUB'))}</td>
-                    <td>${formatComponent(getVal(r, 'BEARINGS'))}</td>
-                    <td>${getStatusBadge(getStatus(r))}</td>
-                </tr>`;
+                const lineNum = getVal(r, 'LINE') || '-';
+                const status = getStatus(r);
+                const isStaged = status === 'staged';
+                const rowClass = isStaged ? 'clickable-row' : '';
+                const rowClick = isStaged ? `onclick="openPalletDrilldownFromData('${lineNum}')"` : '';
+                
+                let cells = '';
+                if (!isColumnHidden('ordersData', 'line')) cells += `<td><strong>${lineNum}</strong></td>`;
+                if (!isColumnHidden('ordersData', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
+                if (!isColumnHidden('ordersData', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
+                if (!isColumnHidden('ordersData', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersData', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersData', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersData', 'tire')) cells += `<td>${formatComponent(getVal(r, 'TIRE'))}</td>`;
+                if (!isColumnHidden('ordersData', 'hub')) cells += `<td>${formatComponent(getVal(r, 'HUB'))}</td>`;
+                if (!isColumnHidden('ordersData', 'bearings')) cells += `<td>${formatComponent(getVal(r, 'BEARINGS'))}</td>`;
+                if (!isColumnHidden('ordersData', 'status')) cells += `<td>${getStatusBadge(status)}</td>`;
+                
+                return `<tr class="${rowClass}" ${rowClick} style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersData');
+            updateShowHiddenButton('ordersData');
+        }
+        
+        function openPalletDrilldownFromData(lineNum) {
+            // Find the order by line number and open pallet drilldown
+            const order = allData.find(r => getVal(r, 'LINE') === lineNum);
+            if (order) {
+                openPalletDrilldown(order, lineNum);
+            }
         }
         
         function sortOrdersDataTable(field) {
@@ -3152,6 +3201,8 @@
         }
         
         function renderOrdersQueueTableHeader() {
+            initTableFilters('ordersQueue');
+            initHiddenColumns('ordersQueue');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
                 { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'dueDate', label: t('col.dueDate') },
@@ -3161,11 +3212,36 @@
                 { key: 'hub', label: t('col.hub') }, { key: 'hubMold', label: t('col.hubMold') },
                 { key: 'bearings', label: t('col.bearings') }, { key: 'assigned', label: t('col.assigned') }
             ];
-            document.getElementById('ordersQueueTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersQueueTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersQueueTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersQueue', h.key)) return '';
+                return createFilterHeader('ordersQueue', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersQueueTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersQueueTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const isRollTech = getCategory(r) === 'rolltech';
+                if (!passesColumnFilter('ordersQueue', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'dueDate', r[COL.REQUESTED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'tire', isRollTech ? (getVal(r, 'TIRE') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'hub', isRollTech ? (getVal(r, 'HUB') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'hubMold', getVal(r, 'HUB_MOLD') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'bearings', isRollTech ? (getVal(r, 'BEARINGS') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 switch(ordersQueueSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
@@ -3193,28 +3269,32 @@
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const isRollTech = getCategory(r) === 'rolltech';
                 const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
-                // For Molding items, show "N/A" instead of checking for missing components
-                const formatComponentCell = (value, field) => {
+                const formatComponentCell = (value) => {
                     if (!isRollTech) return '<span style="color:var(--text-secondary);">N/A</span>';
                     return formatComponent(value);
                 };
-                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
-                    <td class="${daysClass}">${daysUntil || '-'}</td>
-                    <td>${r[COL.REQUESTED_DATE] || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td>${getVal(r, 'IF_NUM') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                    <td>${formatComponentCell(getVal(r, 'TIRE'), 'TIRE')}</td>
-                    <td>${formatComponentCell(getVal(r, 'HUB'), 'HUB')}</td>
-                    <td>${getVal(r, 'HUB_MOLD') || '-'}</td>
-                    <td>${formatComponentCell(getVal(r, 'BEARINGS'), 'BEARINGS')}</td>
-                    <td>${getVal(r, 'ASSIGNED') || '-'}</td>
-                </tr>`;
+                
+                let cells = '';
+                if (!isColumnHidden('ordersQueue', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersQueue', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'dueDate')) cells += `<td>${r[COL.REQUESTED_DATE] || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersQueue', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'packaging')) cells += `<td>${getVal(r, 'PACKAGING') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'tire')) cells += `<td>${formatComponentCell(getVal(r, 'TIRE'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'hub')) cells += `<td>${formatComponentCell(getVal(r, 'HUB'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'hubMold')) cells += `<td>${getVal(r, 'HUB_MOLD') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'bearings')) cells += `<td>${formatComponentCell(getVal(r, 'BEARINGS'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'assigned')) cells += `<td>${getVal(r, 'ASSIGNED') || '-'}</td>`;
+                
+                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersQueue');
+            updateShowHiddenButton('ordersQueue');
         }
         
         function sortOrdersQueueTable(field) {
@@ -3266,6 +3346,8 @@
         }
         
         function renderOrdersStagedTableHeader() {
+            initTableFilters('ordersStaged');
+            initHiddenColumns('ordersStaged');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'customer', label: t('col.customer') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
@@ -3280,11 +3362,40 @@
                 { key: 'weight', label: t('col.weight') }, { key: 'dimensions', label: t('col.dimensions') },
                 { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: '📦' }
             );
-            document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersStagedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersStaged', h.key)) return '';
+                return createFilterHeader('ordersStaged', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersStagedTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersStagedTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const line = getVal(r, 'LINE');
+                const pallets = getPalletDataForOrder(line);
+                const hasPallets = pallets.length > 0;
+                const totalWeight = hasPallets ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : 0;
+                const firstDimensions = hasPallets && pallets[0].dimensions ? pallets[0].dimensions : '-';
+                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                
+                if (!passesColumnFilter('ordersStaged', 'line', line || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersStaged', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (salesUnlocked && !passesColumnFilter('ordersStaged', 'revenue', formatCurrency(parseNumber(r[COL.REVENUE])))) return false;
+                if (!passesColumnFilter('ordersStaged', 'dueDate', r[COL.REQUESTED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'daysUntil', String(daysUntil || '-'))) return false;
+                if (!passesColumnFilter('ordersStaged', 'weight', hasPallets ? formatNumber(totalWeight) + ' lbs' : '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'dimensions', firstDimensions)) return false;
+                if (!passesColumnFilter('ordersStaged', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'pallets', hasPallets ? String(pallets.length) : '-')) return false;
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 const lineA = getVal(a, 'LINE');
                 const lineB = getVal(b, 'LINE');
@@ -3337,22 +3448,26 @@
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const palletIndicator = hasPallets ? `<span class="pallet-indicator" title="${pallets.length} ${t('pallet.pallets').toLowerCase()}">📷 ${pallets.length}</span>` : '-';
                 const clickHandler = hasPallets ? `onclick="showPalletPictures('${line}')" style="cursor:pointer;"` : '';
-                const revenueCell = salesUnlocked ? `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>` : '';
-                return `<tr class="${hasPallets ? 'clickable-row' : ''}" ${clickHandler}>
-                <td><strong>${line || '-'}</strong></td>
-                <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                ${revenueCell}
-                <td>${r[COL.REQUESTED_DATE] || '-'}</td>
-                <td class="${daysClass}">${daysUntil || '-'}</td>
-                <td>${hasPallets ? formatNumber(totalWeight) + ' lbs' : '-'}</td>
-                <td>${firstDimensions}</td>
-                <td>${getVal(r, 'ASSIGNED') || '-'}</td>
-                <td>${palletIndicator}</td>
-            </tr>`;
+                
+                let cells = '';
+                if (!isColumnHidden('ordersStaged', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersStaged', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersStaged', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersStaged', 'packaging')) cells += `<td>${getVal(r, 'PACKAGING') || '-'}</td>`;
+                if (salesUnlocked && !isColumnHidden('ordersStaged', 'revenue')) cells += `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>`;
+                if (!isColumnHidden('ordersStaged', 'dueDate')) cells += `<td>${r[COL.REQUESTED_DATE] || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'weight')) cells += `<td>${hasPallets ? formatNumber(totalWeight) + ' lbs' : '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'dimensions')) cells += `<td>${firstDimensions}</td>`;
+                if (!isColumnHidden('ordersStaged', 'assigned')) cells += `<td>${getVal(r, 'ASSIGNED') || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'pallets')) cells += `<td>${palletIndicator}</td>`;
+                
+                return `<tr class="${hasPallets ? 'clickable-row' : ''}" ${clickHandler}>${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersStaged');
+            updateShowHiddenButton('ordersStaged');
         }
         
         // Get pallet data for a specific order (by Line number)
@@ -3514,6 +3629,8 @@
         }
         
         function renderOrdersShippedTableHeader() {
+            initTableFilters('ordersShipped');
+            initHiddenColumns('ordersShipped');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'shippedDate', label: t('col.shippedDate') },
                 { key: 'customer', label: t('col.customer') }, { key: 'part', label: t('col.part') },
@@ -3524,11 +3641,31 @@
                 headers.push({ key: 'revenue', label: t('col.revenue') });
                 headers.push({ key: 'pl', label: t('col.pl') });
             }
-            document.getElementById('ordersShippedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersShippedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersShippedTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersShipped', h.key)) return '';
+                return createFilterHeader('ordersShipped', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersShippedTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersShippedTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const pl = getPLValue(r);
+                if (!passesColumnFilter('ordersShipped', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'shippedDate', r[COL.SHIPPED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (salesUnlocked) {
+                    if (!passesColumnFilter('ordersShipped', 'revenue', formatCurrency(parseNumber(r[COL.REVENUE])))) return false;
+                    if (!passesColumnFilter('ordersShipped', 'pl', formatCurrency(pl))) return false;
+                }
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 switch(ordersShippedSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
@@ -3553,17 +3690,21 @@
             const tbody = document.getElementById('ordersShippedTableBody');
             tbody.innerHTML = sorted.map(r => {
                 const pl = getPLValue(r);
-                const financialCells = salesUnlocked ? `
-                    <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
-                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>` : '';
-                return `<tr>
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${r[COL.SHIPPED_DATE] || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>${financialCells}
-                </tr>`;
+                
+                let cells = '';
+                if (!isColumnHidden('ordersShipped', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersShipped', 'shippedDate')) cells += `<td>${r[COL.SHIPPED_DATE] || '-'}</td>`;
+                if (!isColumnHidden('ordersShipped', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersShipped', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersShipped', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (salesUnlocked && !isColumnHidden('ordersShipped', 'revenue')) cells += `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>`;
+                if (salesUnlocked && !isColumnHidden('ordersShipped', 'pl')) cells += `<td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>`;
+                
+                return `<tr>${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersShipped');
+            updateShowHiddenButton('ordersShipped');
         }
         
         function sortOrdersShippedTable(field) {
