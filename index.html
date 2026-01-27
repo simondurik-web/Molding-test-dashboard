@@ -784,7 +784,7 @@
                 <input type="text" class="search-box" id="invSearch" data-i18n-placeholder="ui.search" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
-                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">âš   <span data-i18n="filter.lowStock">Low Stock</span></button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠️ <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
@@ -2513,7 +2513,7 @@
             if (captureHeaders) allRawHeaders = headers.filter(h => h); // Store non-empty headers
             return json.table.rows.map(r => {
                 const obj = {};
-                headers.forEach((h, i) => { if (h && r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
+                headers.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
                 return obj;
             });
         }
@@ -5914,7 +5914,7 @@
                 fpReferenceHeaders = fpJson.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(h => h);
                 fpReferenceData = fpJson.table.rows.map(r => {
                     const obj = {};
-                    fpReferenceHeaders.forEach((h, i) => { if (h && r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
+                    fpReferenceHeaders.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
                     return obj;
                 }).filter(row => Object.values(row).some(v => v !== undefined && v !== null && v !== ''));
                 console.log('Loaded FP Reference:', fpReferenceData.length, 'rows');
@@ -5927,7 +5927,7 @@
                 customerReferenceHeaders = custJson.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(h => h);
                 customerReferenceData = custJson.table.rows.map(r => {
                     const obj = {};
-                    customerReferenceHeaders.forEach((h, i) => { if (h && r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
+                    customerReferenceHeaders.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
                     return obj;
                 }).filter(row => Object.values(row).some(v => v !== undefined && v !== null && v !== ''));
                 console.log('Loaded Customer Reference:', customerReferenceData.length, 'rows');
@@ -5942,7 +5942,7 @@
                 quotesRegistryHeaders = allQuotesHeaders.slice(0, 10).filter(h => h); // Only columns A-J
                 quotesRegistryData = quotesJson.table.rows.map(r => {
                     const obj = {};
-                    quotesRegistryHeaders.forEach((h, i) => { if (r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
+                    quotesRegistryHeaders.forEach((h, i) => { obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
                     return obj;
                 }).filter(row => {
                     // Filter out rows without Quote Number and filter out the header row if it got included as data
