@@ -2524,7 +2524,7 @@
                 allRawData = raw; // Store ALL raw data for All Data page
                 allData = raw.filter(r => {
                     const cat = getCategory(r);
-                    return (cat === 'rolltech' || cat === 'molding') && getVal(r, 'PART');
+                    return (cat === 'rolltech' || cat === 'molding' || cat === 'snappad') && getVal(r, 'PART');
                 });
                 if (allData.length === 0) allData = raw.filter(r => getVal(r, 'PART'));
                 
