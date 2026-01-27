@@ -2513,7 +2513,7 @@
             if (captureHeaders) allRawHeaders = headers.filter(h => h); // Store non-empty headers
             return json.table.rows.map(r => {
                 const obj = {};
-                headers.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
+                headers.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f ?? r.c[i].v ?? '') : ''; });
                 return obj;
             });
         }
@@ -2551,6 +2551,16 @@
                 const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
                 console.log('Inventory Debug v7.5 - Prod Totals columns:', prodTotalsData.length > 0 ? Object.keys(prodTotalsData[0]) : 'No data');
                 console.log('Inventory Debug v7.5 - First Prod Totals row:', prodTotalsData[0]);
+                // Debug: Log Manual Target column variations
+                if (prodTotalsData.length > 0) {
+                    const firstRow = prodTotalsData[0];
+                    console.log('Manual Target Debug:', {
+                        'Manual target': firstRow['Manual target'],
+                        'Manual Target': firstRow['Manual Target'],
+                        'manual target': firstRow['manual target'],
+                        allKeys: Object.keys(firstRow).filter(k => k.toLowerCase().includes('manual'))
+                    });
+                }
                 const prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
                     let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
@@ -2567,10 +2577,10 @@
                             product: row['Product'] || '',
                             qtyNeeded: parseNumber(row['Quantity Needed']),
                             minimums: parseNumber(row['Minimums']),
-                            manualTarget: parseNumber(row['Manual target']),
-                            moldType: row['Mold type'] || '',
+                            manualTarget: parseNumber(row['Manual target']) || parseNumber(row['Manual Target']),
+                            moldType: row['Mold type'] || row['Mold Type'] || '',
                             fusionInventory: fusionInv,
-                            partsToBeMade: parseNumber(row['Parts to be made'])
+                            partsToBeMade: parseNumber(row['Parts to be made']) || parseNumber(row['Parts to be Made'])
                         };
                     }
                 });
@@ -5914,7 +5924,7 @@
                 fpReferenceHeaders = fpJson.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(h => h);
                 fpReferenceData = fpJson.table.rows.map(r => {
                     const obj = {};
-                    fpReferenceHeaders.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
+                    fpReferenceHeaders.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f ?? r.c[i].v ?? '') : ''; });
                     return obj;
                 }).filter(row => Object.values(row).some(v => v !== undefined && v !== null && v !== ''));
                 console.log('Loaded FP Reference:', fpReferenceData.length, 'rows');
@@ -5927,7 +5937,7 @@
                 customerReferenceHeaders = custJson.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(h => h);
                 customerReferenceData = custJson.table.rows.map(r => {
                     const obj = {};
-                    customerReferenceHeaders.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
+                    customerReferenceHeaders.forEach((h, i) => { if (h) obj[h] = (r.c && r.c[i]) ? (r.c[i].f ?? r.c[i].v ?? '') : ''; });
                     return obj;
                 }).filter(row => Object.values(row).some(v => v !== undefined && v !== null && v !== ''));
                 console.log('Loaded Customer Reference:', customerReferenceData.length, 'rows');
@@ -5942,7 +5952,7 @@
                 quotesRegistryHeaders = allQuotesHeaders.slice(0, 10).filter(h => h); // Only columns A-J
                 quotesRegistryData = quotesJson.table.rows.map(r => {
                     const obj = {};
-                    quotesRegistryHeaders.forEach((h, i) => { obj[h] = (r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; });
+                    quotesRegistryHeaders.forEach((h, i) => { obj[h] = (r.c && r.c[i]) ? (r.c[i].f ?? r.c[i].v ?? '') : ''; });
                     return obj;
                 }).filter(row => {
                     // Filter out rows without Quote Number and filter out the header row if it got included as data
