@@ -3626,16 +3626,22 @@
         }
         
         function renderInvTableHeader() {
-            document.getElementById('invTableHeader').innerHTML = 
-                createFilterHeader('inventory', 'product', 'Product Type') +
-                createFilterHeader('inventory', 'partNumber', 'Part Number') +
-                createFilterHeader('inventory', 'fusionQty', 'Fusion Qty') +
-                createFilterHeader('inventory', 'minimum', 'Minimum') +
-                createFilterHeader('inventory', 'manualTarget', 'Manual Target') +
-                createFilterHeader('inventory', 'qtyNeeded', 'Qty Needed') +
-                createFilterHeader('inventory', 'partsToBeMade', 'Parts to Make') +
-                createFilterHeader('inventory', 'moldType', 'Mold Type') +
-                createFilterHeader('inventory', 'status', 'Status');
+            initHiddenColumns('inventory');
+            const cols = [
+                { key: 'product', label: 'Product Type' },
+                { key: 'partNumber', label: 'Part Number' },
+                { key: 'fusionQty', label: 'Fusion Qty' },
+                { key: 'minimum', label: 'Minimum' },
+                { key: 'manualTarget', label: 'Manual Target' },
+                { key: 'qtyNeeded', label: 'Qty Needed' },
+                { key: 'partsToBeMade', label: 'Parts to Make' },
+                { key: 'moldType', label: 'Mold Type' },
+                { key: 'status', label: 'Status' }
+            ];
+            document.getElementById('invTableHeader').innerHTML = cols.map(col => {
+                if (isColumnHidden('inventory', col.key)) return '';
+                return createFilterHeader('inventory', col.key, col.label);
+            }).join('');
         }
         
         function renderInvTable() {
@@ -3682,20 +3688,24 @@
                 const rowClass = isLow ? 'inv-low clickable-row' : (needsMake ? 'inv-warning clickable-row' : 'clickable-row');
                 const statusBadge = isLow ? `<span class="badge" style="background:var(--danger);color:white;">${t('status.low')}</span>` : (needsMake ? `<span class="badge" style="background:var(--warning);color:#1a202c;">${t('status.make')}</span>` : `<span class="badge" style="background:var(--success);color:white;">${t('status.ok')}</span>`);
                 const escapedPart = (i.partNumber || '').replace(/'/g, "\\'");
-                return `<tr class="${rowClass}" onclick="openInventoryHistoryModal('${escapedPart}')" title="${t('inv.clickHistory')}">
-                    <td>${i.product || '-'}</td>
-                    <td><strong>${i.partNumber}</strong><button class="inv-history-btn" onclick="event.stopPropagation(); openInventoryHistoryModal('${escapedPart}')">📈</button></td>
-                    <td>${formatNumber(i.fusionQty)}</td>
-                    <td>${formatNumber(i.minimum)}</td>
-                    <td>${formatNumber(i.manualTarget)}</td>
-                    <td>${formatNumber(i.qtyNeeded)}</td>
-                    <td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>
-                    <td>${i.moldType || '-'}</td>
-                    <td>${statusBadge}</td>
-                </tr>`;
+                
+                // Build row with hidden column support
+                let cells = '';
+                if (!isColumnHidden('inventory', 'product')) cells += `<td>${i.product || '-'}</td>`;
+                if (!isColumnHidden('inventory', 'partNumber')) cells += `<td><strong>${i.partNumber}</strong><button class="inv-history-btn" onclick="event.stopPropagation(); openInventoryHistoryModal('${escapedPart}')">📈</button></td>`;
+                if (!isColumnHidden('inventory', 'fusionQty')) cells += `<td>${formatNumber(i.fusionQty)}</td>`;
+                if (!isColumnHidden('inventory', 'minimum')) cells += `<td>${formatNumber(i.minimum)}</td>`;
+                if (!isColumnHidden('inventory', 'manualTarget')) cells += `<td>${formatNumber(i.manualTarget)}</td>`;
+                if (!isColumnHidden('inventory', 'qtyNeeded')) cells += `<td>${formatNumber(i.qtyNeeded)}</td>`;
+                if (!isColumnHidden('inventory', 'partsToBeMade')) cells += `<td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>`;
+                if (!isColumnHidden('inventory', 'moldType')) cells += `<td>${i.moldType || '-'}</td>`;
+                if (!isColumnHidden('inventory', 'status')) cells += `<td>${statusBadge}</td>`;
+                
+                return `<tr class="${rowClass}" onclick="openInventoryHistoryModal('${escapedPart}')" title="${t('inv.clickHistory')}">${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('inventory');
+            updateShowHiddenButton('inventory');
         }
         
         function filterInvTable() { renderInvTable(); }
@@ -5441,9 +5451,12 @@
         
         function renderAllDataTableHeader() {
             initTableFilters('allData');
-            document.getElementById('allDataTableHeader').innerHTML = allRawHeaders.map((h, i) => 
-                createFilterHeader('allData', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('allData');
+            document.getElementById('allDataTableHeader').innerHTML = allRawHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('allData', colKey)) return '';
+                return createFilterHeader('allData', colKey, h, true);
+            }).join('');
         }
         
         function renderAllDataTable() {
@@ -5496,10 +5509,15 @@
                 });
             }
             
-            // Render table body
+            // Render table header (with hidden columns support)
+            renderAllDataTableHeader();
+            
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('allDataTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${allRawHeaders.map(h => {
+                return `<tr>${allRawHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('allData', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     // Format currency values
@@ -5514,7 +5532,11 @@
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = allRawHeaders.filter((h, i) => !isColumnHidden('allData', `col_${i}`)).length;
             document.getElementById('allDataRowCount').textContent = data.length;
+            document.getElementById('allDataColCount').textContent = visibleColCount;
+            updateShowHiddenButton('allData');
         }
         
         function sortAllDataTable(field) {
