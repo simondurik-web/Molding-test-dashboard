@@ -536,6 +536,9 @@
         <div class="nav-section" id="rawDataNavSection">
             <div class="nav-section-title" data-i18n="nav.rawData">Raw Data</div>
             <div class="nav-item locked-item" id="allDataNavItem" data-page="all-data" onclick="handleAllDataClick()"><span class="icon">🗃</span> <span data-i18n="nav.allData">All Data</span></div>
+            <div class="nav-item locked-item" id="fpRefNavItem" data-page="fp-reference" onclick="handleRefDataClick('fp-reference')"><span class="icon">📋</span> <span data-i18n="nav.fpReference">FP Reference</span></div>
+            <div class="nav-item locked-item" id="custRefNavItem" data-page="customer-reference" onclick="handleRefDataClick('customer-reference')"><span class="icon">👥</span> <span data-i18n="nav.customerReference">Customer Reference</span></div>
+            <div class="nav-item locked-item" id="quotesNavItem" data-page="quotes-registry" onclick="handleRefDataClick('quotes-registry')"><span class="icon">📝</span> <span data-i18n="nav.quotesRegistry">Quotes Registry</span></div>
         </div>
         <div class="nav-divider"></div>
         <div class="zoom-controls">
@@ -549,7 +552,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.9</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.12</div>
     </div>
 
     <div class="main-content">
@@ -1172,6 +1175,105 @@
                 </div>
             </div>
         </div>
+
+        <!-- FP REFERENCE DATA PAGE -->
+        <div id="fp-reference" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="fpRef.title">FP Reference Data</h2><p data-i18n="fpRef.subtitle">Finished Part specifications and attributes</p></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <div class="last-updated"><span class="dot"></span><span id="fpRefLastUpdated">-</span></div>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <label data-i18n="ui.rows">Rows:</label>
+                    <span id="fpRefRowCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="ui.columns">Columns:</label>
+                    <span id="fpRefColCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="fpRefClearFiltersBtn" onclick="clearAllTableFilters('fpRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="fpRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterFpRefTable()">
+                <button class="toolbar-btn" onclick="exportFpRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+            </div>
+            <div class="chart-container" style="padding:10px;">
+                <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
+                    <table class="data-table" id="fpRefTable">
+                        <thead><tr id="fpRefTableHeader"></tr></thead>
+                        <tbody id="fpRefTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CUSTOMER REFERENCE DATA PAGE -->
+        <div id="customer-reference" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="custRef.title">Customer Reference Data</h2><p data-i18n="custRef.subtitle">Customer pricing tiers and payment terms</p></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <div class="last-updated"><span class="dot"></span><span id="custRefLastUpdated">-</span></div>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <label data-i18n="ui.rows">Rows:</label>
+                    <span id="custRefRowCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="ui.columns">Columns:</label>
+                    <span id="custRefColCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="custRefClearFiltersBtn" onclick="clearAllTableFilters('custRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="custRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterCustRefTable()">
+                <button class="toolbar-btn" onclick="exportCustRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+            </div>
+            <div class="chart-container" style="padding:10px;">
+                <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
+                    <table class="data-table" id="custRefTable">
+                        <thead><tr id="custRefTableHeader"></tr></thead>
+                        <tbody id="custRefTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUOTES REGISTRY PAGE -->
+        <div id="quotes-registry" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="quotes.title">Quotes Registry</h2><p data-i18n="quotes.subtitle">Quote records and customer quotations</p></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <div class="last-updated"><span class="dot"></span><span id="quotesLastUpdated">-</span></div>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <label data-i18n="ui.rows">Rows:</label>
+                    <span id="quotesRowCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="ui.columns">Columns:</label>
+                    <span id="quotesColCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="quotesClearFiltersBtn" onclick="clearAllTableFilters('quotes')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="quotesGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterQuotesTable()">
+                <button class="toolbar-btn" onclick="exportQuotesToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+            </div>
+            <div class="chart-container" style="padding:10px;">
+                <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
+                    <table class="data-table" id="quotesTable">
+                        <thead><tr id="quotesTableHeader"></tr></thead>
+                        <tbody id="quotesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1197,6 +1299,15 @@
                 'nav.bomExplorer': 'BOM Explorer',
                 'nav.rawData': 'RAW DATA',
                 'nav.allData': 'All Data',
+                'nav.fpReference': 'FP Reference',
+                'nav.customerReference': 'Customer Reference',
+                'nav.quotesRegistry': 'Quotes Registry',
+                'fpRef.title': 'FP Reference Data',
+                'fpRef.subtitle': 'Finished Part specifications and attributes',
+                'custRef.title': 'Customer Reference Data',
+                'custRef.subtitle': 'Customer pricing tiers and payment terms',
+                'quotes.title': 'Quotes Registry',
+                'quotes.subtitle': 'Quote records and customer quotations',
                 'allData.title': 'All Data (Raw)',
                 'allData.subtitle': 'Complete spreadsheet data - Columns A through AX',
                 'loading': 'Loading data from Google Sheets...',
@@ -1400,6 +1511,15 @@
                 'nav.bomExplorer': 'Explorador BOM',
                 'nav.rawData': 'DATOS CRUDOS',
                 'nav.allData': 'Todos los Datos',
+                'nav.fpReference': 'Referencia FP',
+                'nav.customerReference': 'Referencia de Clientes',
+                'nav.quotesRegistry': 'Registro de Cotizaciones',
+                'fpRef.title': 'Datos de Referencia FP',
+                'fpRef.subtitle': 'Especificaciones y atributos de partes terminadas',
+                'custRef.title': 'Datos de Referencia de Clientes',
+                'custRef.subtitle': 'Niveles de precios y términos de pago por cliente',
+                'quotes.title': 'Registro de Cotizaciones',
+                'quotes.subtitle': 'Registros de cotizaciones a clientes',
                 'allData.title': 'Todos los Datos (Crudo)',
                 'allData.subtitle': 'Datos completos de la hoja - Columnas A hasta AX',
                 'loading': 'Cargando datos de Google Sheets...',
@@ -1616,6 +1736,9 @@
             else if (currentPage === 'sales-parts') updateSalesPartsPage();
             else if (currentPage === 'sales-customers') updateSalesCustomersPage();
             else if (currentPage === 'sales-dates') updateSalesDatesPage();
+            else if (currentPage === 'fp-reference') renderFpRefTable();
+            else if (currentPage === 'customer-reference') renderCustRefTable();
+            else if (currentPage === 'quotes-registry') renderQuotesTable();
         }
         
         function t(key) { return translations[currentLang][key] || key; }
@@ -1633,6 +1756,9 @@
         const BOM_SUB_GID = '206288913';
         const BOM_INDIVIDUAL_GID = '751106736';
         const INVENTORY_HISTORY_GID = '171540940';  // Fusion records export (daily snapshots)
+        const FP_REFERENCE_GID = '944406361';  // FP Reference data
+        const CUSTOMER_REFERENCE_GID = '336333220';  // Customer Reference data Dashboard
+        const QUOTES_REGISTRY_GID = '1279128282';  // Quotes Registry
         
         const COL = {
             CATEGORY: 'Category',
@@ -1713,6 +1839,14 @@
         let bomFinalData = [], bomSubData = [], bomIndividualData = [];
         let currentBomTab = 'final';
         
+        // Reference Data state (FP Reference, Customer Reference, Quotes Registry)
+        let fpReferenceData = [];
+        let fpReferenceHeaders = [];
+        let customerReferenceData = [];
+        let customerReferenceHeaders = [];
+        let quotesRegistryData = [];
+        let quotesRegistryHeaders = ['Quote Number', 'Customer', 'Created Date', 'Modified Date', 'Amount', 'Drive Link', 'Sales Rep', 'Revision', 'Payment Terms', 'Priority', 'Notes'];
+        
         // Inventory History state (for historical tracking charts)
         let inventoryHistoryData = [];      // Raw data: [{partNumber, dataByDate: {date: qty}}]
         let inventoryHistoryDates = [];     // Array of available dates (sorted)
@@ -1756,6 +1890,9 @@
         let partsCustomerDrilldownSort = { field: 'pl', asc: false };
         let customersProductDrilldownSort = { field: 'pl', asc: false };
         let allDataSort = { field: null, asc: true };
+        let fpRefSort = { field: null, asc: true };
+        let custRefSort = { field: null, asc: true };
+        let quotesSort = { field: null, asc: true };
         
         // Column Filter System State
         let columnFilters = {}; // { tableId: { columnKey: Set(selectedValues) } }
@@ -1940,6 +2077,9 @@
                 case 'inventory': sortInvTable(columnKey); break;
                 case 'dates': sortDatesTable(columnKey); break;
                 case 'allData': sortAllDataTable(columnKey); break;
+                case 'fpRef': sortFpRefTable(columnKey); break;
+                case 'custRef': sortCustRefTable(columnKey); break;
+                case 'quotes': sortQuotesTable(columnKey); break;
             }
         }
         
@@ -2073,6 +2213,9 @@
                 case 'inventory': renderInvTable(); break;
                 case 'dates': updateSalesDatesPage(); break;
                 case 'allData': renderAllDataTable(); break;
+                case 'fpRef': renderFpRefTable(); break;
+                case 'custRef': renderCustRefTable(); break;
+                case 'quotes': renderQuotesTable(); break;
             }
         }
         
@@ -2100,6 +2243,12 @@
                     return getUniqueDatesColumnValues(columnKey);
                 case 'allData':
                     return getUniqueAllDataColumnValues(columnKey);
+                case 'fpRef':
+                    return getUniqueFpRefColumnValues(columnKey);
+                case 'custRef':
+                    return getUniqueCustRefColumnValues(columnKey);
+                case 'quotes':
+                    return getUniqueQuotesColumnValues(columnKey);
             }
             return Array.from(values).sort();
         }
@@ -2571,6 +2720,27 @@
                 allDataNav.classList.remove('locked-item');
                 allDataNav.onclick = function() { navigateTo('all-data'); };
                 
+                // Unlock FP Reference nav item
+                const fpRefNav = document.getElementById('fpRefNavItem');
+                if (fpRefNav) {
+                    fpRefNav.classList.remove('locked-item');
+                    fpRefNav.onclick = function() { navigateTo('fp-reference'); };
+                }
+                
+                // Unlock Customer Reference nav item
+                const custRefNav = document.getElementById('custRefNavItem');
+                if (custRefNav) {
+                    custRefNav.classList.remove('locked-item');
+                    custRefNav.onclick = function() { navigateTo('customer-reference'); };
+                }
+                
+                // Unlock Quotes Registry nav item
+                const quotesNav = document.getElementById('quotesNavItem');
+                if (quotesNav) {
+                    quotesNav.classList.remove('locked-item');
+                    quotesNav.onclick = function() { navigateTo('quotes-registry'); };
+                }
+                
                 // Remove financial-hidden class from body to show financial data
                 document.body.classList.remove('financial-hidden');
             } else {
@@ -2638,6 +2808,9 @@
                 case 'sales-dates': updateSalesDatesPage(); break;
                 case 'bom': initBomExplorer(); break;
                 case 'all-data': updateAllDataPage(); break;
+                case 'fp-reference': updateFpReferencePage(); break;
+                case 'customer-reference': updateCustReferencePage(); break;
+                case 'quotes-registry': updateQuotesRegistryPage(); break;
             }
             document.querySelector('.sidebar').classList.remove('open');
             document.querySelector('.sidebar-overlay').classList.remove('active');
@@ -5420,6 +5593,443 @@
                 content += `</div></div>`;
             }
             document.getElementById('bomContent').innerHTML = content;
+        }
+
+        // ============================================================
+        // REFERENCE DATA SECTIONS (FP Reference, Customer Reference, Quotes Registry)
+        // ============================================================
+        
+        function handleRefDataClick(page) {
+            if (!salesUnlocked) {
+                promptSalesPassword();
+                return;
+            }
+            navigateTo(page);
+        }
+        
+        // Track if reference data has been loaded
+        let referenceDataLoaded = false;
+        
+        async function updateFpReferencePage() {
+            if (!referenceDataLoaded) {
+                await loadReferenceData();
+                referenceDataLoaded = true;
+            }
+            renderFpRefTable();
+        }
+        
+        async function updateCustReferencePage() {
+            if (!referenceDataLoaded) {
+                await loadReferenceData();
+                referenceDataLoaded = true;
+            }
+            renderCustRefTable();
+        }
+        
+        async function updateQuotesRegistryPage() {
+            if (!referenceDataLoaded) {
+                await loadReferenceData();
+                referenceDataLoaded = true;
+            }
+            renderQuotesTable();
+        }
+        
+        async function loadReferenceData() {
+            try {
+                // Load FP Reference Data
+                const fpRefUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${FP_REFERENCE_GID}`;
+                const fpRes = await fetch(fpRefUrl);
+                const fpText = await fpRes.text();
+                const fpJson = JSON.parse(fpText.substring(fpText.indexOf('{'), fpText.lastIndexOf('}') + 1));
+                fpReferenceHeaders = fpJson.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(h => h);
+                fpReferenceData = fpJson.table.rows.map(r => {
+                    const obj = {};
+                    fpReferenceHeaders.forEach((h, i) => { if (h && r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
+                    return obj;
+                }).filter(row => Object.values(row).some(v => v !== undefined && v !== null && v !== ''));
+                console.log('Loaded FP Reference:', fpReferenceData.length, 'rows');
+                
+                // Load Customer Reference Data
+                const custRefUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${CUSTOMER_REFERENCE_GID}`;
+                const custRes = await fetch(custRefUrl);
+                const custText = await custRes.text();
+                const custJson = JSON.parse(custText.substring(custText.indexOf('{'), custText.lastIndexOf('}') + 1));
+                customerReferenceHeaders = custJson.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(h => h);
+                customerReferenceData = custJson.table.rows.map(r => {
+                    const obj = {};
+                    customerReferenceHeaders.forEach((h, i) => { if (h && r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
+                    return obj;
+                }).filter(row => Object.values(row).some(v => v !== undefined && v !== null && v !== ''));
+                console.log('Loaded Customer Reference:', customerReferenceData.length, 'rows');
+                
+                // Load Quotes Registry Data
+                const quotesUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${QUOTES_REGISTRY_GID}`;
+                const quotesRes = await fetch(quotesUrl);
+                const quotesText = await quotesRes.text();
+                const quotesJson = JSON.parse(quotesText.substring(quotesText.indexOf('{'), quotesText.lastIndexOf('}') + 1));
+                // For quotes, the data doesn't have headers so we use predefined headers
+                quotesRegistryData = quotesJson.table.rows.map(r => {
+                    const obj = {};
+                    quotesRegistryHeaders.forEach((h, i) => { if (r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
+                    return obj;
+                }).filter(row => row['Quote Number']);
+                console.log('Loaded Quotes Registry:', quotesRegistryData.length, 'rows');
+                
+            } catch (e) {
+                console.error('Reference data load error:', e);
+            }
+        }
+        
+        // FP Reference Data Functions
+        function renderFpRefTableHeader() {
+            initTableFilters('fpRef');
+            document.getElementById('fpRefTableHeader').innerHTML = fpReferenceHeaders.map((h, i) => 
+                createFilterHeader('fpRef', `col_${i}`, h, true)
+            ).join('');
+        }
+        
+        function renderFpRefTable() {
+            if (fpReferenceHeaders.length === 0) {
+                document.getElementById('fpRefTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                return;
+            }
+            
+            renderFpRefTableHeader();
+            let data = [...fpReferenceData];
+            
+            // Global search filter
+            const globalSearch = (document.getElementById('fpRefGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => {
+                    return fpReferenceHeaders.some(h => {
+                        const val = row[h];
+                        return val && String(val).toLowerCase().includes(globalSearch);
+                    });
+                });
+            }
+            
+            // Apply column filters
+            data = data.filter(row => {
+                return fpReferenceHeaders.every((h, i) => {
+                    const colKey = `col_${i}`;
+                    const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    return passesColumnFilter('fpRef', colKey, val);
+                });
+            });
+            
+            // Apply sort
+            if (fpRefSort.field !== null) {
+                const colIndex = parseInt(fpRefSort.field.replace('col_', ''));
+                const header = fpReferenceHeaders[colIndex];
+                data.sort((a, b) => {
+                    let va = a[header], vb = b[header];
+                    const numA = parseNumber(va), numB = parseNumber(vb);
+                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
+                        return fpRefSort.asc ? numA - numB : numB - numA;
+                    }
+                    va = va !== undefined && va !== null ? String(va) : '';
+                    vb = vb !== undefined && vb !== null ? String(vb) : '';
+                    return fpRefSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                });
+            }
+            
+            // Render table body
+            const tbody = document.getElementById('fpRefTableBody');
+            tbody.innerHTML = data.map(row => {
+                return `<tr>${fpReferenceHeaders.map(h => {
+                    let val = row[h];
+                    if (val === undefined || val === null) val = '';
+                    return `<td>${val}</td>`;
+                }).join('')}</tr>`;
+            }).join('');
+            
+            document.getElementById('fpRefRowCount').textContent = data.length;
+            document.getElementById('fpRefColCount').textContent = fpReferenceHeaders.length;
+            document.getElementById('fpRefLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+            updateClearAllButton('fpRef');
+        }
+        
+        function sortFpRefTable(field) {
+            if (fpRefSort.field === field) {
+                fpRefSort.asc = !fpRefSort.asc;
+            } else {
+                fpRefSort.field = field;
+                fpRefSort.asc = true;
+            }
+            renderFpRefTable();
+        }
+        
+        function filterFpRefTable() { renderFpRefTable(); }
+        
+        function getUniqueFpRefColumnValues(columnKey) {
+            const colIndex = parseInt(columnKey.replace('col_', ''));
+            const header = fpReferenceHeaders[colIndex];
+            const values = new Set();
+            fpReferenceData.forEach(row => {
+                const val = row[header];
+                if (val !== undefined && val !== null && val !== '') {
+                    values.add(String(val));
+                }
+            });
+            const arr = Array.from(values);
+            arr.sort((a, b) => {
+                const numA = parseFloat(a), numB = parseFloat(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.localeCompare(b);
+            });
+            return arr;
+        }
+        
+        function exportFpRefToCSV() {
+            const headers = fpReferenceHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = fpReferenceData.map(row => 
+                fpReferenceHeaders.map(h => {
+                    const val = row[h];
+                    if (val === undefined || val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+            downloadCSV([headers, ...rows].join('\n'), `fp_reference_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+        
+        // Customer Reference Data Functions
+        function renderCustRefTableHeader() {
+            initTableFilters('custRef');
+            document.getElementById('custRefTableHeader').innerHTML = customerReferenceHeaders.map((h, i) => 
+                createFilterHeader('custRef', `col_${i}`, h, true)
+            ).join('');
+        }
+        
+        function renderCustRefTable() {
+            if (customerReferenceHeaders.length === 0) {
+                document.getElementById('custRefTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                return;
+            }
+            
+            renderCustRefTableHeader();
+            let data = [...customerReferenceData];
+            
+            // Global search filter
+            const globalSearch = (document.getElementById('custRefGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => {
+                    return customerReferenceHeaders.some(h => {
+                        const val = row[h];
+                        return val && String(val).toLowerCase().includes(globalSearch);
+                    });
+                });
+            }
+            
+            // Apply column filters
+            data = data.filter(row => {
+                return customerReferenceHeaders.every((h, i) => {
+                    const colKey = `col_${i}`;
+                    const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    return passesColumnFilter('custRef', colKey, val);
+                });
+            });
+            
+            // Apply sort
+            if (custRefSort.field !== null) {
+                const colIndex = parseInt(custRefSort.field.replace('col_', ''));
+                const header = customerReferenceHeaders[colIndex];
+                data.sort((a, b) => {
+                    let va = a[header], vb = b[header];
+                    const numA = parseNumber(va), numB = parseNumber(vb);
+                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
+                        return custRefSort.asc ? numA - numB : numB - numA;
+                    }
+                    va = va !== undefined && va !== null ? String(va) : '';
+                    vb = vb !== undefined && vb !== null ? String(vb) : '';
+                    return custRefSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                });
+            }
+            
+            // Render table body
+            const tbody = document.getElementById('custRefTableBody');
+            tbody.innerHTML = data.map(row => {
+                return `<tr>${customerReferenceHeaders.map(h => {
+                    let val = row[h];
+                    if (val === undefined || val === null) val = '';
+                    // Format currency values
+                    if (typeof val === 'number' || (typeof val === 'string' && val.startsWith('$'))) {
+                        const num = parseNumber(val);
+                        if (!isNaN(num) && (h.toLowerCase().includes('price') || h.toLowerCase().includes('cost') || h.toLowerCase().includes('sell'))) {
+                            return `<td>${formatCurrency(num)}</td>`;
+                        }
+                    }
+                    return `<td>${val}</td>`;
+                }).join('')}</tr>`;
+            }).join('');
+            
+            document.getElementById('custRefRowCount').textContent = data.length;
+            document.getElementById('custRefColCount').textContent = customerReferenceHeaders.length;
+            document.getElementById('custRefLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+            updateClearAllButton('custRef');
+        }
+        
+        function sortCustRefTable(field) {
+            if (custRefSort.field === field) {
+                custRefSort.asc = !custRefSort.asc;
+            } else {
+                custRefSort.field = field;
+                custRefSort.asc = true;
+            }
+            renderCustRefTable();
+        }
+        
+        function filterCustRefTable() { renderCustRefTable(); }
+        
+        function getUniqueCustRefColumnValues(columnKey) {
+            const colIndex = parseInt(columnKey.replace('col_', ''));
+            const header = customerReferenceHeaders[colIndex];
+            const values = new Set();
+            customerReferenceData.forEach(row => {
+                const val = row[header];
+                if (val !== undefined && val !== null && val !== '') {
+                    values.add(String(val));
+                }
+            });
+            const arr = Array.from(values);
+            arr.sort((a, b) => {
+                const numA = parseFloat(a), numB = parseFloat(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.localeCompare(b);
+            });
+            return arr;
+        }
+        
+        function exportCustRefToCSV() {
+            const headers = customerReferenceHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = customerReferenceData.map(row => 
+                customerReferenceHeaders.map(h => {
+                    const val = row[h];
+                    if (val === undefined || val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+            downloadCSV([headers, ...rows].join('\n'), `customer_reference_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+        
+        // Quotes Registry Functions
+        function renderQuotesTableHeader() {
+            initTableFilters('quotes');
+            document.getElementById('quotesTableHeader').innerHTML = quotesRegistryHeaders.map((h, i) => 
+                createFilterHeader('quotes', `col_${i}`, h, true)
+            ).join('');
+        }
+        
+        function renderQuotesTable() {
+            if (quotesRegistryData.length === 0) {
+                document.getElementById('quotesTableBody').innerHTML = '<tr><td colspan="11">Loading data...</td></tr>';
+                return;
+            }
+            
+            renderQuotesTableHeader();
+            let data = [...quotesRegistryData];
+            
+            // Global search filter
+            const globalSearch = (document.getElementById('quotesGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => {
+                    return quotesRegistryHeaders.some(h => {
+                        const val = row[h];
+                        return val && String(val).toLowerCase().includes(globalSearch);
+                    });
+                });
+            }
+            
+            // Apply column filters
+            data = data.filter(row => {
+                return quotesRegistryHeaders.every((h, i) => {
+                    const colKey = `col_${i}`;
+                    const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    return passesColumnFilter('quotes', colKey, val);
+                });
+            });
+            
+            // Apply sort
+            if (quotesSort.field !== null) {
+                const colIndex = parseInt(quotesSort.field.replace('col_', ''));
+                const header = quotesRegistryHeaders[colIndex];
+                data.sort((a, b) => {
+                    let va = a[header], vb = b[header];
+                    const numA = parseNumber(va), numB = parseNumber(vb);
+                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
+                        return quotesSort.asc ? numA - numB : numB - numA;
+                    }
+                    va = va !== undefined && va !== null ? String(va) : '';
+                    vb = vb !== undefined && vb !== null ? String(vb) : '';
+                    return quotesSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                });
+            }
+            
+            // Render table body
+            const tbody = document.getElementById('quotesTableBody');
+            tbody.innerHTML = data.map(row => {
+                return `<tr>${quotesRegistryHeaders.map(h => {
+                    let val = row[h];
+                    if (val === undefined || val === null) val = '';
+                    // Make Drive Link clickable
+                    if (h === 'Drive Link' && val && val.startsWith('http')) {
+                        return `<td><a href="${val}" target="_blank" style="color:var(--accent);">📄 View</a></td>`;
+                    }
+                    // Format Amount as currency
+                    if (h === 'Amount' && val) {
+                        const num = parseNumber(val);
+                        if (!isNaN(num)) return `<td>${formatCurrency(num)}</td>`;
+                    }
+                    return `<td>${val}</td>`;
+                }).join('')}</tr>`;
+            }).join('');
+            
+            document.getElementById('quotesRowCount').textContent = data.length;
+            document.getElementById('quotesColCount').textContent = quotesRegistryHeaders.length;
+            document.getElementById('quotesLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+            updateClearAllButton('quotes');
+        }
+        
+        function sortQuotesTable(field) {
+            if (quotesSort.field === field) {
+                quotesSort.asc = !quotesSort.asc;
+            } else {
+                quotesSort.field = field;
+                quotesSort.asc = true;
+            }
+            renderQuotesTable();
+        }
+        
+        function filterQuotesTable() { renderQuotesTable(); }
+        
+        function getUniqueQuotesColumnValues(columnKey) {
+            const colIndex = parseInt(columnKey.replace('col_', ''));
+            const header = quotesRegistryHeaders[colIndex];
+            const values = new Set();
+            quotesRegistryData.forEach(row => {
+                const val = row[header];
+                if (val !== undefined && val !== null && val !== '') {
+                    values.add(String(val));
+                }
+            });
+            const arr = Array.from(values);
+            arr.sort((a, b) => {
+                const numA = parseFloat(a), numB = parseFloat(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.localeCompare(b);
+            });
+            return arr;
+        }
+        
+        function exportQuotesToCSV() {
+            const headers = quotesRegistryHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = quotesRegistryData.map(row => 
+                quotesRegistryHeaders.map(h => {
+                    const val = row[h];
+                    if (val === undefined || val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+            downloadCSV([headers, ...rows].join('\n'), `quotes_registry_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
         // Initialize
