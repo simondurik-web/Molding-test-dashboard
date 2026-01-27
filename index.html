@@ -1845,7 +1845,7 @@
         let customerReferenceData = [];
         let customerReferenceHeaders = [];
         let quotesRegistryData = [];
-        let quotesRegistryHeaders = ['Quote Number', 'Customer', 'Created Date', 'Modified Date', 'Amount', 'Drive Link', 'Sales Rep', 'Revision', 'Payment Terms', 'Priority', 'Notes'];
+        let quotesRegistryHeaders = []; // Now loaded from spreadsheet (columns A-J only)
         
         // Inventory History state (for historical tracking charts)
         let inventoryHistoryData = [];      // Raw data: [{partNumber, dataByDate: {date: qty}}]
@@ -5662,18 +5662,24 @@
                 }).filter(row => Object.values(row).some(v => v !== undefined && v !== null && v !== ''));
                 console.log('Loaded Customer Reference:', customerReferenceData.length, 'rows');
                 
-                // Load Quotes Registry Data
+                // Load Quotes Registry Data (with headers from spreadsheet, columns A-J only)
                 const quotesUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${QUOTES_REGISTRY_GID}`;
                 const quotesRes = await fetch(quotesUrl);
                 const quotesText = await quotesRes.text();
                 const quotesJson = JSON.parse(quotesText.substring(quotesText.indexOf('{'), quotesText.lastIndexOf('}') + 1));
-                // For quotes, the data doesn't have headers so we use predefined headers
+                // Get headers from spreadsheet columns A-J (first 10 columns only)
+                const allQuotesHeaders = quotesJson.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim());
+                quotesRegistryHeaders = allQuotesHeaders.slice(0, 10).filter(h => h); // Only columns A-J
                 quotesRegistryData = quotesJson.table.rows.map(r => {
                     const obj = {};
                     quotesRegistryHeaders.forEach((h, i) => { if (r.c && r.c[i]) obj[h] = r.c[i].f || r.c[i].v; });
                     return obj;
-                }).filter(row => row['Quote Number']);
-                console.log('Loaded Quotes Registry:', quotesRegistryData.length, 'rows');
+                }).filter(row => {
+                    // Filter out rows without Quote Number and filter out the header row if it got included as data
+                    const quoteNum = row['Quote Number'] || row[quotesRegistryHeaders[0]];
+                    return quoteNum && quoteNum !== 'Quote Number';
+                });
+                console.log('Loaded Quotes Registry:', quotesRegistryData.length, 'rows, Headers:', quotesRegistryHeaders);
                 
             } catch (e) {
                 console.error('Reference data load error:', e);
@@ -5970,14 +5976,14 @@
                 return `<tr>${quotesRegistryHeaders.map(h => {
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
-                    // Make Drive Link clickable
-                    if (h === 'Drive Link' && val && val.startsWith('http')) {
+                    // Make Drive Link clickable (case-insensitive check)
+                    if (h.toLowerCase().includes('drive') && h.toLowerCase().includes('link') && val && String(val).startsWith('http')) {
                         return `<td><a href="${val}" target="_blank" style="color:var(--accent);">📄 View</a></td>`;
                     }
-                    // Format Amount as currency
-                    if (h === 'Amount' && val) {
+                    // Format Amount as currency (case-insensitive check)
+                    if (h.toLowerCase() === 'amount' && val) {
                         const num = parseNumber(val);
-                        if (!isNaN(num)) return `<td>${formatCurrency(num)}</td>`;
+                        if (!isNaN(num) && num !== 0) return `<td>${formatCurrency(num)}</td>`;
                     }
                     return `<td>${val}</td>`;
                 }).join('')}</tr>`;
