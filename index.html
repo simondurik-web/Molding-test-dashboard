@@ -27,13 +27,15 @@
             --sidebar-width: 260px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-x: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, var(--bg-dark) 0%, #0d1421 100%);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
-            font-size: 14px;
+            font-size: 17px;
+            overflow-x: hidden;
         }
         .sidebar {
             position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh;
@@ -67,7 +69,7 @@
         .lang-toggle { display: flex; gap: 4px; background: var(--bg-dark); border-radius: 8px; padding: 3px; margin: 10px 8px; }
         .lang-btn { flex: 1; padding: 6px 10px; border: none; background: transparent; color: var(--text-secondary); font-size: 11px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
         .lang-btn.active { background: var(--accent); color: white; }
-        .main-content { margin-left: var(--sidebar-width); padding: 20px 24px; min-height: 100vh; }
+        .main-content { margin-left: var(--sidebar-width); padding: 20px 24px; min-height: 100vh; max-width: calc(100vw - var(--sidebar-width)); overflow-x: hidden; }
         .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -135,6 +137,9 @@
         .category-btn.molding { border-color: var(--warning); color: var(--warning); background: transparent; }
         .category-btn.molding.active { background: var(--warning); color: #1a202c; }
         .category-btn.molding .indicator { background: var(--warning); }
+        .category-btn.snappad { border-color: #9f7aea; color: #9f7aea; background: transparent; }
+        .category-btn.snappad.active { background: #9f7aea; color: white; }
+        .category-btn.snappad .indicator { background: #9f7aea; }
         .category-btn:not(.active) { opacity: 0.5; }
         .category-btn:not(.active):hover { opacity: 0.8; }
         .status-filters { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -280,6 +285,8 @@
         .filter-dropdown-footer .apply-btn:hover { background: var(--primary-light); }
         .clear-all-filters-btn { background: var(--bg-dark) !important; }
         .clear-all-filters-btn.has-filters { background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%) !important; color: #1a202c !important; border-color: var(--warning) !important; }
+        .show-hidden-btn { display: none; background: var(--bg-dark) !important; }
+        .show-hidden-btn.has-hidden { display: inline-flex; background: linear-gradient(135deg, var(--accent) 0%, #4299e1 100%) !important; color: white !important; border-color: var(--accent) !important; }
         .watchlist-star { cursor: pointer; color: var(--text-secondary); transition: color 0.2s; }
         .watchlist-star:hover { color: var(--warning); }
         .watchlist-star.active { color: var(--warning); }
@@ -297,8 +304,8 @@
         .zoom-reset-btn { width: 100%; margin-top: 8px; padding: 6px; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-size: 10px; cursor: pointer; transition: all 0.2s; }
         .zoom-reset-btn:hover { border-color: var(--accent); color: var(--accent); }
         
-        /* Zoomed main content */
-        .main-content.zoomed { transform-origin: top left; }
+        /* Dashboard wrapper for zoom - applies to both sidebar and content */
+        .dashboard-wrapper { zoom: 1; }
         
         /* Pallet Pictures Gallery Styles */
         .pallet-drilldown { display: none; margin-top: 20px; background: var(--bg-card); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
@@ -432,6 +439,7 @@
         <div class="filter-values-list" id="filterValuesList"></div>
         <div class="filter-dropdown-footer">
             <button class="clear-btn" onclick="clearColumnFilter()" data-i18n="ui.clear">Clear</button>
+            <button class="hide-col-btn" onclick="hideCurrentColumn()" style="background:var(--bg-dark);border-color:var(--border);" data-i18n="ui.hideColumn">👁 Hide</button>
             <button class="apply-btn" onclick="applyColumnFilter()" data-i18n="ui.apply">Apply</button>
         </div>
     </div>
@@ -613,6 +621,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersDataBtnRollTech" onclick="toggleOrdersDataCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersDataBtnMolding" onclick="toggleOrdersDataCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersDataBtnSnapPad" onclick="toggleOrdersDataCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group status-filters">
                     <label data-i18n="ui.status">Status:</label>
@@ -621,6 +630,8 @@
                     <button class="status-btn staged active" id="ordersDataStatusStaged" onclick="toggleOrdersDataStatus('staged')"><span data-i18n="status.readyToShip">Ready to Ship</span></button>
                     <button class="status-btn shipped" id="ordersDataStatusShipped" onclick="toggleOrdersDataStatus('shipped')"><span data-i18n="status.shipped">Shipped</span></button>
                 </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersDataClearFiltersBtn" onclick="clearAllTableFilters('ordersData')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersDataShowHiddenBtn" onclick="showAllColumns('ordersData')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersDataSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersDataTable()">
                 <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -653,7 +664,10 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersQueueBtnSnapPad" onclick="toggleOrdersQueueCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersQueueClearFiltersBtn" onclick="clearAllTableFilters('ordersQueue')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersQueueShowHiddenBtn" onclick="showAllColumns('ordersQueue')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersQueueSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersQueueTable()">
                 <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -687,7 +701,10 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersStagedBtnRollTech" onclick="toggleOrdersStagedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersStagedBtnMolding" onclick="toggleOrdersStagedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersStagedBtnSnapPad" onclick="toggleOrdersStagedCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersStagedClearFiltersBtn" onclick="clearAllTableFilters('ordersStaged')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersStagedShowHiddenBtn" onclick="showAllColumns('ordersStaged')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersStagedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersStagedTable()">
                 <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -729,6 +746,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="ordersShippedBtnRollTech" onclick="toggleOrdersShippedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersShippedBtnMolding" onclick="toggleOrdersShippedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersShippedBtnSnapPad" onclick="toggleOrdersShippedCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="ordersShippedFromDate" onchange="applyShippedDateFilter()">
@@ -737,6 +755,8 @@
                     <label data-i18n="ui.to">To:</label><input type="date" id="ordersShippedToDate" onchange="applyShippedDateFilter()">
                 </div>
                 <button class="toolbar-btn" onclick="resetShippedDateFilter()">🔄 Reset</button>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersShippedClearFiltersBtn" onclick="clearAllTableFilters('ordersShipped')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="ordersShippedShowHiddenBtn" onclick="showAllColumns('ordersShipped')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersShippedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersShippedTable()">
                 <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -764,10 +784,11 @@
                 <input type="text" class="search-box" id="invSearch" data-i18n-placeholder="ui.search" placeholder="Search items..." oninput="filterInvTable()">
                 <div class="toolbar-group">
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
-                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠  <span data-i18n="filter.lowStock">Low Stock</span></button>
+                    <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">âš   <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="inventoryShowHiddenBtn" onclick="showAllColumns('inventory')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportInvCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -865,6 +886,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="salesBtnRollTech" onclick="toggleSalesCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="salesBtnMolding" onclick="toggleSalesCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="salesBtnSnapPad" onclick="toggleSalesCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportSalesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -892,6 +914,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="partsBtnRollTech" onclick="togglePartsCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="partsBtnMolding" onclick="togglePartsCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="partsBtnSnapPad" onclick="togglePartsCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="partsFromDate" onchange="applyPartsDateFilter()">
@@ -902,6 +925,7 @@
                 <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑 Clear Filters</button>
+                <button class="toolbar-btn show-hidden-btn" id="partsShowHiddenBtn" onclick="showAllColumns('parts')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" data-i18n-placeholder="ui.search" placeholder="Search parts..." oninput="filterPartsTable()">
                 <button class="toolbar-btn" onclick="exportPartsCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -970,6 +994,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="customersBtnRollTech" onclick="toggleCustomersCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="customersBtnMolding" onclick="toggleCustomersCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="customersBtnSnapPad" onclick="toggleCustomersCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="customersFromDate" onchange="applyCustomersDateFilter()">
@@ -980,6 +1005,7 @@
                 <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑 Clear Filters</button>
+                <button class="toolbar-btn show-hidden-btn" id="customersShowHiddenBtn" onclick="showAllColumns('customers')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" data-i18n-placeholder="ui.search" placeholder="Search customers..." oninput="filterCustomersTable()">
                 <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1048,6 +1074,7 @@
                     <label data-i18n="ui.category">Category:</label>
                     <button class="category-btn rolltech active" id="datesBtnRollTech" onclick="toggleDatesCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="datesBtnMolding" onclick="toggleDatesCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="datesBtnSnapPad" onclick="toggleDatesCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-group">
                     <label data-i18n="ui.from">From:</label><input type="date" id="datesFromDate" onchange="applyDatesDateFilter()">
@@ -1057,6 +1084,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑 Clear Filters</button>
+                <button class="toolbar-btn show-hidden-btn" id="datesShowHiddenBtn" onclick="showAllColumns('dates')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -1162,6 +1190,7 @@
                     <span id="allDataColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="allDataShowHiddenBtn" onclick="showAllColumns('allData')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="allDataGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
                 <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1195,6 +1224,7 @@
                     <span id="fpRefColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="fpRefClearFiltersBtn" onclick="clearAllTableFilters('fpRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="fpRefShowHiddenBtn" onclick="showAllColumns('fpRef')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="fpRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterFpRefTable()">
                 <button class="toolbar-btn" onclick="exportFpRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1228,6 +1258,7 @@
                     <span id="custRefColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="custRefClearFiltersBtn" onclick="clearAllTableFilters('custRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="custRefShowHiddenBtn" onclick="showAllColumns('custRef')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="custRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterCustRefTable()">
                 <button class="toolbar-btn" onclick="exportCustRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1261,6 +1292,7 @@
                     <span id="quotesColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="quotesClearFiltersBtn" onclick="clearAllTableFilters('quotes')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="quotesShowHiddenBtn" onclick="showAllColumns('quotes')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="quotesGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterQuotesTable()">
                 <button class="toolbar-btn" onclick="exportQuotesToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1405,6 +1437,8 @@
                 'ui.deselectAll': 'Deselect All',
                 'ui.clear': 'Clear',
                 'ui.apply': 'Apply',
+                'ui.hideColumn': '👁 Hide',
+                'ui.showHidden': 'Show Hidden',
                 'ui.filterColumn': 'Filter Column',
                 'ui.search': 'Search...',
                 'ui.export': 'Export',
@@ -1422,6 +1456,7 @@
                 'ui.loading': 'Loading...',
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Molding',
+                'category.snappad': 'Snap Pad',
                 'ui.from': 'From:',
                 'ui.to': 'To:',
                 // Batch 2: Production Pages
@@ -1617,6 +1652,8 @@
                 'ui.deselectAll': 'Deseleccionar Todo',
                 'ui.clear': 'Limpiar',
                 'ui.apply': 'Aplicar',
+                'ui.hideColumn': '👁 Ocultar',
+                'ui.showHidden': 'Mostrar Ocultas',
                 'ui.filterColumn': 'Filtrar Columna',
                 'ui.search': 'Buscar...',
                 'ui.export': 'Exportar',
@@ -1634,6 +1671,7 @@
                 'ui.loading': 'Cargando...',
                 'category.rollTech': 'Roll Tech',
                 'category.molding': 'Moldeo',
+                'category.snappad': 'Snap Pad',
                 'ui.from': 'Desde:',
                 'ui.to': 'Hasta:',
                 // Batch 2: Production Pages
@@ -1868,14 +1906,14 @@
         let currentPalletOrder = null; // Currently viewed pallet order
         
         // Filter states for each page
-        let ordersDataFilters = { categories: { rolltech: true, molding: true }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
-        let ordersQueueFilters = { categories: { rolltech: true, molding: true } };
-        let ordersStagedFilters = { categories: { rolltech: true, molding: true } };
-        let ordersShippedFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null };
-        let salesFilters = { categories: { rolltech: true, molding: true } };
-        let datesFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null };
-        let partsFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null, watchlistOnly: false };
-        let customersFilters = { categories: { rolltech: true, molding: true }, fromDate: null, toDate: null, watchlistOnly: false };
+        let ordersDataFilters = { categories: { rolltech: true, molding: true, snappad: true }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
+        let ordersQueueFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let ordersStagedFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let ordersShippedFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null };
+        let salesFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let datesFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null };
+        let partsFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null, watchlistOnly: false };
+        let customersFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null, watchlistOnly: false };
         
         // Sort states
         let ordersDataSort = { field: 'daysUntil', asc: true };
@@ -1896,6 +1934,7 @@
         
         // Column Filter System State
         let columnFilters = {}; // { tableId: { columnKey: Set(selectedValues) } }
+        let hiddenColumns = {}; // { tableId: Set(columnKeys) }
         let activeFilterDropdown = null; // { tableId, columnKey, allValues, selectedValues }
         
         // Drilldown state
@@ -1994,6 +2033,7 @@
             const cat = (getVal(row, 'CATEGORY') || '').toLowerCase();
             if (cat.includes('roll tech')) return 'rolltech';
             if (cat.includes('molding')) return 'molding';
+            if (cat.includes('snap pad')) return 'snappad';
             return 'other';
         };
         
@@ -2224,6 +2264,59 @@
             return columnFilters[tableId][columnKey].has(value);
         }
         
+        // ============================================================
+        // HIDE COLUMNS SYSTEM
+        // ============================================================
+        function initHiddenColumns(tableId) {
+            if (!hiddenColumns[tableId]) hiddenColumns[tableId] = new Set();
+        }
+        
+        function isColumnHidden(tableId, columnKey) {
+            return hiddenColumns[tableId] && hiddenColumns[tableId].has(columnKey);
+        }
+        
+        function hideCurrentColumn() {
+            if (!activeFilterDropdown) return;
+            const { tableId, columnKey } = activeFilterDropdown;
+            hideColumn(tableId, columnKey);
+            closeFilterDropdown();
+        }
+        
+        function hideColumn(tableId, columnKey) {
+            initHiddenColumns(tableId);
+            hiddenColumns[tableId].add(columnKey);
+            updateShowHiddenButton(tableId);
+            refreshTableAfterFilter(tableId);
+        }
+        
+        function showAllColumns(tableId) {
+            if (hiddenColumns[tableId]) {
+                hiddenColumns[tableId].clear();
+            }
+            updateShowHiddenButton(tableId);
+            refreshTableAfterFilter(tableId);
+        }
+        
+        function updateShowHiddenButton(tableId) {
+            const btnId = tableId + 'ShowHiddenBtn';
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                const hiddenCount = hiddenColumns[tableId] ? hiddenColumns[tableId].size : 0;
+                const hasHidden = hiddenCount > 0;
+                btn.classList.toggle('has-hidden', hasHidden);
+                // Update button text with count
+                const spanEl = btn.querySelector('span');
+                if (spanEl) {
+                    spanEl.textContent = hasHidden ? `${t('ui.showHidden')} (${hiddenCount})` : t('ui.showHidden');
+                }
+            }
+        }
+        
+        function getVisibleHeaders(tableId, allHeaders) {
+            if (!hiddenColumns[tableId] || hiddenColumns[tableId].size === 0) return allHeaders;
+            return allHeaders.filter((h, i) => !hiddenColumns[tableId].has(h) && !hiddenColumns[tableId].has(`col_${i}`));
+        }
+        
         function getUniqueValuesForColumn(tableId, columnKey) {
             const values = new Set();
             
@@ -2416,10 +2509,6 @@
             const res = await fetch(url);
             const text = await res.text();
             const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-            // Debug: log raw columns for Production Data Totals
-            if (gid === PROD_DATA_TOTALS_GID) {
-                console.log('PROD_DATA_TOTALS raw cols:', json.table.cols.map((c, i) => ({ index: i, id: c.id, label: c.label, type: c.type })));
-            }
             const headers = json.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim());
             if (captureHeaders) allRawHeaders = headers.filter(h => h); // Store non-empty headers
             return json.table.rows.map(r => {
@@ -2435,7 +2524,7 @@
                 allRawData = raw; // Store ALL raw data for All Data page
                 allData = raw.filter(r => {
                     const cat = getCategory(r);
-                    return (cat === 'rolltech' || cat === 'molding') && getVal(r, 'PART');
+                    return (cat === 'rolltech' || cat === 'molding' || cat === 'snappad') && getVal(r, 'PART');
                 });
                 if (allData.length === 0) allData = raw.filter(r => getVal(r, 'PART'));
                 
@@ -2836,11 +2925,8 @@
             if (value > 200) value = 200;
             currentZoom = value;
             document.getElementById('zoomInput').value = value;
-            const mainContent = document.querySelector('.main-content');
-            mainContent.style.transform = `scale(${value / 100})`;
-            mainContent.style.transformOrigin = 'top left';
-            mainContent.style.width = `${10000 / value}%`;
-            mainContent.classList.add('zoomed');
+            // Apply CSS zoom to html element - this scales everything including sidebar
+            document.documentElement.style.zoom = value / 100;
             // Save to localStorage
             try { localStorage.setItem('rolltech_zoom', value); } catch(e) {}
         }
@@ -2936,9 +3022,10 @@
         // ============================================================
         function toggleOrdersDataCategory(cat) {
             ordersDataFilters.categories[cat] = !ordersDataFilters.categories[cat];
-            if (!ordersDataFilters.categories.rolltech && !ordersDataFilters.categories.molding) { ordersDataFilters.categories[cat] = true; return; }
+            if (!ordersDataFilters.categories.rolltech && !ordersDataFilters.categories.molding && !ordersDataFilters.categories.snappad) { ordersDataFilters.categories[cat] = true; return; }
             document.getElementById('ordersDataBtnRollTech').classList.toggle('active', ordersDataFilters.categories.rolltech);
             document.getElementById('ordersDataBtnMolding').classList.toggle('active', ordersDataFilters.categories.molding);
+            document.getElementById('ordersDataBtnSnapPad').classList.toggle('active', ordersDataFilters.categories.snappad);
             updateOrdersDataPage();
         }
         
@@ -2974,6 +3061,8 @@
         }
         
         function renderOrdersDataTableHeader() {
+            initTableFilters('ordersData');
+            initHiddenColumns('ordersData');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
                 { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'customer', label: t('col.customer') },
@@ -2981,11 +3070,33 @@
                 { key: 'tire', label: t('col.tire') }, { key: 'hub', label: t('col.hub') },
                 { key: 'bearings', label: t('col.bearings') }, { key: 'status', label: t('col.status') }
             ];
-            document.getElementById('ordersDataTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersDataTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersDataTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersData', h.key)) return '';
+                return createFilterHeader('ordersData', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersDataTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersDataTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const status = getStatus(r);
+                const isRollTech = getCategory(r) === 'rolltech';
+                if (!passesColumnFilter('ordersData', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
+                if (!passesColumnFilter('ordersData', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersData', 'tire', isRollTech ? (getVal(r, 'TIRE') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'hub', isRollTech ? (getVal(r, 'HUB') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'bearings', isRollTech ? (getVal(r, 'BEARINGS') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'status', status)) return false;
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 switch(ordersDataSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
@@ -3011,20 +3122,54 @@
             tbody.innerHTML = sorted.map(r => {
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
-                const isMissing = isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS'));
-                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
-                    <td class="${daysClass}">${daysUntil || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td>${formatComponent(getVal(r, 'TIRE'))}</td>
-                    <td>${formatComponent(getVal(r, 'HUB'))}</td>
-                    <td>${formatComponent(getVal(r, 'BEARINGS'))}</td>
-                    <td>${getStatusBadge(getStatus(r))}</td>
-                </tr>`;
+                const isRollTech = getCategory(r) === 'rolltech';
+                // Only show missing warning for Roll Tech items
+                const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
+                const lineNum = getVal(r, 'LINE') || '-';
+                const status = getStatus(r);
+                // Make all rows clickable to show order details
+                const rowClass = 'clickable-row';
+                const rowClick = `onclick="openOrderDrilldown('${lineNum}')"`;
+                
+                // Helper for component cells - show N/A for non-Roll Tech
+                const formatComponentForCategory = (value) => {
+                    if (!isRollTech) return '<span style="color:var(--text-secondary);">N/A</span>';
+                    return formatComponent(value);
+                };
+                
+                let cells = '';
+                if (!isColumnHidden('ordersData', 'line')) cells += `<td><strong>${lineNum}</strong></td>`;
+                if (!isColumnHidden('ordersData', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
+                if (!isColumnHidden('ordersData', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
+                if (!isColumnHidden('ordersData', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersData', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersData', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersData', 'tire')) cells += `<td>${formatComponentForCategory(getVal(r, 'TIRE'))}</td>`;
+                if (!isColumnHidden('ordersData', 'hub')) cells += `<td>${formatComponentForCategory(getVal(r, 'HUB'))}</td>`;
+                if (!isColumnHidden('ordersData', 'bearings')) cells += `<td>${formatComponentForCategory(getVal(r, 'BEARINGS'))}</td>`;
+                if (!isColumnHidden('ordersData', 'status')) cells += `<td>${getStatusBadge(status)}</td>`;
+                
+                return `<tr class="${rowClass}" ${rowClick} style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersData');
+            updateShowHiddenButton('ordersData');
+        }
+        
+        function openOrderDrilldown(lineNum) {
+            // Find the order by line number and open appropriate drilldown
+            const order = allData.find(r => getVal(r, 'LINE') === lineNum);
+            if (order) {
+                openPalletDrilldown(order, lineNum);
+            }
+        }
+        
+        function openPalletDrilldownFromData(lineNum) {
+            // Find the order by line number and open pallet drilldown
+            const order = allData.find(r => getVal(r, 'LINE') === lineNum);
+            if (order) {
+                openPalletDrilldown(order, lineNum);
+            }
         }
         
         function sortOrdersDataTable(field) {
@@ -3047,9 +3192,10 @@
         // ============================================================
         function toggleOrdersQueueCategory(cat) {
             ordersQueueFilters.categories[cat] = !ordersQueueFilters.categories[cat];
-            if (!ordersQueueFilters.categories.rolltech && !ordersQueueFilters.categories.molding) { ordersQueueFilters.categories[cat] = true; return; }
+            if (!ordersQueueFilters.categories.rolltech && !ordersQueueFilters.categories.molding && !ordersQueueFilters.categories.snappad) { ordersQueueFilters.categories[cat] = true; return; }
             document.getElementById('ordersQueueBtnRollTech').classList.toggle('active', ordersQueueFilters.categories.rolltech);
             document.getElementById('ordersQueueBtnMolding').classList.toggle('active', ordersQueueFilters.categories.molding);
+            document.getElementById('ordersQueueBtnSnapPad').classList.toggle('active', ordersQueueFilters.categories.snappad);
             updateOrdersQueuePage();
         }
         
@@ -3088,6 +3234,8 @@
         }
         
         function renderOrdersQueueTableHeader() {
+            initTableFilters('ordersQueue');
+            initHiddenColumns('ordersQueue');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
                 { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'dueDate', label: t('col.dueDate') },
@@ -3097,11 +3245,36 @@
                 { key: 'hub', label: t('col.hub') }, { key: 'hubMold', label: t('col.hubMold') },
                 { key: 'bearings', label: t('col.bearings') }, { key: 'assigned', label: t('col.assigned') }
             ];
-            document.getElementById('ordersQueueTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersQueueTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersQueueTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersQueue', h.key)) return '';
+                return createFilterHeader('ordersQueue', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersQueueTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersQueueTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const isRollTech = getCategory(r) === 'rolltech';
+                if (!passesColumnFilter('ordersQueue', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'dueDate', r[COL.REQUESTED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'tire', isRollTech ? (getVal(r, 'TIRE') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'hub', isRollTech ? (getVal(r, 'HUB') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'hubMold', getVal(r, 'HUB_MOLD') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'bearings', isRollTech ? (getVal(r, 'BEARINGS') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 switch(ordersQueueSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
@@ -3129,28 +3302,32 @@
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const isRollTech = getCategory(r) === 'rolltech';
                 const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
-                // For Molding items, show "N/A" instead of checking for missing components
-                const formatComponentCell = (value, field) => {
+                const formatComponentCell = (value) => {
                     if (!isRollTech) return '<span style="color:var(--text-secondary);">N/A</span>';
                     return formatComponent(value);
                 };
-                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>
-                    <td class="${daysClass}">${daysUntil || '-'}</td>
-                    <td>${r[COL.REQUESTED_DATE] || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td>${getVal(r, 'IF_NUM') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                    <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                    <td>${formatComponentCell(getVal(r, 'TIRE'), 'TIRE')}</td>
-                    <td>${formatComponentCell(getVal(r, 'HUB'), 'HUB')}</td>
-                    <td>${getVal(r, 'HUB_MOLD') || '-'}</td>
-                    <td>${formatComponentCell(getVal(r, 'BEARINGS'), 'BEARINGS')}</td>
-                    <td>${getVal(r, 'ASSIGNED') || '-'}</td>
-                </tr>`;
+                
+                let cells = '';
+                if (!isColumnHidden('ordersQueue', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersQueue', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'dueDate')) cells += `<td>${r[COL.REQUESTED_DATE] || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersQueue', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'packaging')) cells += `<td>${getVal(r, 'PACKAGING') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'tire')) cells += `<td>${formatComponentCell(getVal(r, 'TIRE'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'hub')) cells += `<td>${formatComponentCell(getVal(r, 'HUB'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'hubMold')) cells += `<td>${getVal(r, 'HUB_MOLD') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'bearings')) cells += `<td>${formatComponentCell(getVal(r, 'BEARINGS'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'assigned')) cells += `<td>${getVal(r, 'ASSIGNED') || '-'}</td>`;
+                
+                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersQueue');
+            updateShowHiddenButton('ordersQueue');
         }
         
         function sortOrdersQueueTable(field) {
@@ -3173,9 +3350,10 @@
         // ============================================================
         function toggleOrdersStagedCategory(cat) {
             ordersStagedFilters.categories[cat] = !ordersStagedFilters.categories[cat];
-            if (!ordersStagedFilters.categories.rolltech && !ordersStagedFilters.categories.molding) { ordersStagedFilters.categories[cat] = true; return; }
+            if (!ordersStagedFilters.categories.rolltech && !ordersStagedFilters.categories.molding && !ordersStagedFilters.categories.snappad) { ordersStagedFilters.categories[cat] = true; return; }
             document.getElementById('ordersStagedBtnRollTech').classList.toggle('active', ordersStagedFilters.categories.rolltech);
             document.getElementById('ordersStagedBtnMolding').classList.toggle('active', ordersStagedFilters.categories.molding);
+            document.getElementById('ordersStagedBtnSnapPad').classList.toggle('active', ordersStagedFilters.categories.snappad);
             updateOrdersStagedPage();
         }
         
@@ -3202,6 +3380,8 @@
         }
         
         function renderOrdersStagedTableHeader() {
+            initTableFilters('ordersStaged');
+            initHiddenColumns('ordersStaged');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'customer', label: t('col.customer') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
@@ -3216,11 +3396,40 @@
                 { key: 'weight', label: t('col.weight') }, { key: 'dimensions', label: t('col.dimensions') },
                 { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: '📦' }
             );
-            document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersStagedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersStagedTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersStaged', h.key)) return '';
+                return createFilterHeader('ordersStaged', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersStagedTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersStagedTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const line = getVal(r, 'LINE');
+                const pallets = getPalletDataForOrder(line);
+                const hasPallets = pallets.length > 0;
+                const totalWeight = hasPallets ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : 0;
+                const firstDimensions = hasPallets && pallets[0].dimensions ? pallets[0].dimensions : '-';
+                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                
+                if (!passesColumnFilter('ordersStaged', 'line', line || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersStaged', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (salesUnlocked && !passesColumnFilter('ordersStaged', 'revenue', formatCurrency(parseNumber(r[COL.REVENUE])))) return false;
+                if (!passesColumnFilter('ordersStaged', 'dueDate', r[COL.REQUESTED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'daysUntil', String(daysUntil || '-'))) return false;
+                if (!passesColumnFilter('ordersStaged', 'weight', hasPallets ? formatNumber(totalWeight) + ' lbs' : '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'dimensions', firstDimensions)) return false;
+                if (!passesColumnFilter('ordersStaged', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'pallets', hasPallets ? String(pallets.length) : '-')) return false;
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 const lineA = getVal(a, 'LINE');
                 const lineB = getVal(b, 'LINE');
@@ -3273,22 +3482,26 @@
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const palletIndicator = hasPallets ? `<span class="pallet-indicator" title="${pallets.length} ${t('pallet.pallets').toLowerCase()}">📷 ${pallets.length}</span>` : '-';
                 const clickHandler = hasPallets ? `onclick="showPalletPictures('${line}')" style="cursor:pointer;"` : '';
-                const revenueCell = salesUnlocked ? `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>` : '';
-                return `<tr class="${hasPallets ? 'clickable-row' : ''}" ${clickHandler}>
-                <td><strong>${line || '-'}</strong></td>
-                <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>
-                <td>${getVal(r, 'PACKAGING') || '-'}</td>
-                ${revenueCell}
-                <td>${r[COL.REQUESTED_DATE] || '-'}</td>
-                <td class="${daysClass}">${daysUntil || '-'}</td>
-                <td>${hasPallets ? formatNumber(totalWeight) + ' lbs' : '-'}</td>
-                <td>${firstDimensions}</td>
-                <td>${getVal(r, 'ASSIGNED') || '-'}</td>
-                <td>${palletIndicator}</td>
-            </tr>`;
+                
+                let cells = '';
+                if (!isColumnHidden('ordersStaged', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersStaged', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersStaged', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersStaged', 'packaging')) cells += `<td>${getVal(r, 'PACKAGING') || '-'}</td>`;
+                if (salesUnlocked && !isColumnHidden('ordersStaged', 'revenue')) cells += `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>`;
+                if (!isColumnHidden('ordersStaged', 'dueDate')) cells += `<td>${r[COL.REQUESTED_DATE] || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'weight')) cells += `<td>${hasPallets ? formatNumber(totalWeight) + ' lbs' : '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'dimensions')) cells += `<td>${firstDimensions}</td>`;
+                if (!isColumnHidden('ordersStaged', 'assigned')) cells += `<td>${getVal(r, 'ASSIGNED') || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'pallets')) cells += `<td>${palletIndicator}</td>`;
+                
+                return `<tr class="${hasPallets ? 'clickable-row' : ''}" ${clickHandler}>${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersStaged');
+            updateShowHiddenButton('ordersStaged');
         }
         
         // Get pallet data for a specific order (by Line number)
@@ -3392,9 +3605,10 @@
         // ============================================================
         function toggleOrdersShippedCategory(cat) {
             ordersShippedFilters.categories[cat] = !ordersShippedFilters.categories[cat];
-            if (!ordersShippedFilters.categories.rolltech && !ordersShippedFilters.categories.molding) { ordersShippedFilters.categories[cat] = true; return; }
+            if (!ordersShippedFilters.categories.rolltech && !ordersShippedFilters.categories.molding && !ordersShippedFilters.categories.snappad) { ordersShippedFilters.categories[cat] = true; return; }
             document.getElementById('ordersShippedBtnRollTech').classList.toggle('active', ordersShippedFilters.categories.rolltech);
             document.getElementById('ordersShippedBtnMolding').classList.toggle('active', ordersShippedFilters.categories.molding);
+            document.getElementById('ordersShippedBtnSnapPad').classList.toggle('active', ordersShippedFilters.categories.snappad);
             updateOrdersShippedPage();
         }
         
@@ -3450,6 +3664,8 @@
         }
         
         function renderOrdersShippedTableHeader() {
+            initTableFilters('ordersShipped');
+            initHiddenColumns('ordersShipped');
             const headers = [
                 { key: 'line', label: t('col.line') }, { key: 'shippedDate', label: t('col.shippedDate') },
                 { key: 'customer', label: t('col.customer') }, { key: 'part', label: t('col.part') },
@@ -3460,11 +3676,31 @@
                 headers.push({ key: 'revenue', label: t('col.revenue') });
                 headers.push({ key: 'pl', label: t('col.pl') });
             }
-            document.getElementById('ordersShippedTableHeader').innerHTML = headers.map(h => `<th onclick="sortOrdersShippedTable('${h.key}')">${h.label} <span class="sort-indicator">↕</span></th>`).join('');
+            document.getElementById('ordersShippedTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersShipped', h.key)) return '';
+                return createFilterHeader('ordersShipped', h.key, h.label, true);
+            }).join('');
         }
         
         function renderOrdersShippedTable(data) {
-            let sorted = [...data].sort((a, b) => {
+            renderOrdersShippedTableHeader();
+            
+            // Apply column filters
+            let sorted = [...data].filter(r => {
+                const pl = getPLValue(r);
+                if (!passesColumnFilter('ordersShipped', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'shippedDate', r[COL.SHIPPED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (salesUnlocked) {
+                    if (!passesColumnFilter('ordersShipped', 'revenue', formatCurrency(parseNumber(r[COL.REVENUE])))) return false;
+                    if (!passesColumnFilter('ordersShipped', 'pl', formatCurrency(pl))) return false;
+                }
+                return true;
+            });
+            
+            sorted.sort((a, b) => {
                 let va, vb;
                 switch(ordersShippedSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
@@ -3489,17 +3725,21 @@
             const tbody = document.getElementById('ordersShippedTableBody');
             tbody.innerHTML = sorted.map(r => {
                 const pl = getPLValue(r);
-                const financialCells = salesUnlocked ? `
-                    <td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>
-                    <td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>` : '';
-                return `<tr>
-                    <td><strong>${getVal(r, 'LINE') || '-'}</strong></td>
-                    <td>${r[COL.SHIPPED_DATE] || '-'}</td>
-                    <td>${getVal(r, 'CUSTOMER') || '-'}</td>
-                    <td><strong>${getVal(r, 'PART') || '-'}</strong></td>
-                    <td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>${financialCells}
-                </tr>`;
+                
+                let cells = '';
+                if (!isColumnHidden('ordersShipped', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersShipped', 'shippedDate')) cells += `<td>${r[COL.SHIPPED_DATE] || '-'}</td>`;
+                if (!isColumnHidden('ordersShipped', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
+                if (!isColumnHidden('ordersShipped', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersShipped', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (salesUnlocked && !isColumnHidden('ordersShipped', 'revenue')) cells += `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>`;
+                if (salesUnlocked && !isColumnHidden('ordersShipped', 'pl')) cells += `<td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>`;
+                
+                return `<tr>${cells}</tr>`;
             }).join('');
+            
+            updateClearAllButton('ordersShipped');
+            updateShowHiddenButton('ordersShipped');
         }
         
         function sortOrdersShippedTable(field) {
@@ -3562,16 +3802,22 @@
         }
         
         function renderInvTableHeader() {
-            document.getElementById('invTableHeader').innerHTML = 
-                createFilterHeader('inventory', 'product', 'Product Type') +
-                createFilterHeader('inventory', 'partNumber', 'Part Number') +
-                createFilterHeader('inventory', 'fusionQty', 'Fusion Qty') +
-                createFilterHeader('inventory', 'minimum', 'Minimum') +
-                createFilterHeader('inventory', 'manualTarget', 'Manual Target') +
-                createFilterHeader('inventory', 'qtyNeeded', 'Qty Needed') +
-                createFilterHeader('inventory', 'partsToBeMade', 'Parts to Make') +
-                createFilterHeader('inventory', 'moldType', 'Mold Type') +
-                createFilterHeader('inventory', 'status', 'Status');
+            initHiddenColumns('inventory');
+            const cols = [
+                { key: 'product', label: 'Product Type' },
+                { key: 'partNumber', label: 'Part Number' },
+                { key: 'fusionQty', label: 'Fusion Qty' },
+                { key: 'minimum', label: 'Minimum' },
+                { key: 'manualTarget', label: 'Manual Target' },
+                { key: 'qtyNeeded', label: 'Qty Needed' },
+                { key: 'partsToBeMade', label: 'Parts to Make' },
+                { key: 'moldType', label: 'Mold Type' },
+                { key: 'status', label: 'Status' }
+            ];
+            document.getElementById('invTableHeader').innerHTML = cols.map(col => {
+                if (isColumnHidden('inventory', col.key)) return '';
+                return createFilterHeader('inventory', col.key, col.label);
+            }).join('');
         }
         
         function renderInvTable() {
@@ -3618,20 +3864,24 @@
                 const rowClass = isLow ? 'inv-low clickable-row' : (needsMake ? 'inv-warning clickable-row' : 'clickable-row');
                 const statusBadge = isLow ? `<span class="badge" style="background:var(--danger);color:white;">${t('status.low')}</span>` : (needsMake ? `<span class="badge" style="background:var(--warning);color:#1a202c;">${t('status.make')}</span>` : `<span class="badge" style="background:var(--success);color:white;">${t('status.ok')}</span>`);
                 const escapedPart = (i.partNumber || '').replace(/'/g, "\\'");
-                return `<tr class="${rowClass}" onclick="openInventoryHistoryModal('${escapedPart}')" title="${t('inv.clickHistory')}">
-                    <td>${i.product || '-'}</td>
-                    <td><strong>${i.partNumber}</strong><button class="inv-history-btn" onclick="event.stopPropagation(); openInventoryHistoryModal('${escapedPart}')">📈</button></td>
-                    <td>${formatNumber(i.fusionQty)}</td>
-                    <td>${formatNumber(i.minimum)}</td>
-                    <td>${formatNumber(i.manualTarget)}</td>
-                    <td>${formatNumber(i.qtyNeeded)}</td>
-                    <td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>
-                    <td>${i.moldType || '-'}</td>
-                    <td>${statusBadge}</td>
-                </tr>`;
+                
+                // Build row with hidden column support
+                let cells = '';
+                if (!isColumnHidden('inventory', 'product')) cells += `<td>${i.product || '-'}</td>`;
+                if (!isColumnHidden('inventory', 'partNumber')) cells += `<td><strong>${i.partNumber}</strong><button class="inv-history-btn" onclick="event.stopPropagation(); openInventoryHistoryModal('${escapedPart}')">📈</button></td>`;
+                if (!isColumnHidden('inventory', 'fusionQty')) cells += `<td>${formatNumber(i.fusionQty)}</td>`;
+                if (!isColumnHidden('inventory', 'minimum')) cells += `<td>${formatNumber(i.minimum)}</td>`;
+                if (!isColumnHidden('inventory', 'manualTarget')) cells += `<td>${formatNumber(i.manualTarget)}</td>`;
+                if (!isColumnHidden('inventory', 'qtyNeeded')) cells += `<td>${formatNumber(i.qtyNeeded)}</td>`;
+                if (!isColumnHidden('inventory', 'partsToBeMade')) cells += `<td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>`;
+                if (!isColumnHidden('inventory', 'moldType')) cells += `<td>${i.moldType || '-'}</td>`;
+                if (!isColumnHidden('inventory', 'status')) cells += `<td>${statusBadge}</td>`;
+                
+                return `<tr class="${rowClass}" onclick="openInventoryHistoryModal('${escapedPart}')" title="${t('inv.clickHistory')}">${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('inventory');
+            updateShowHiddenButton('inventory');
         }
         
         function filterInvTable() { renderInvTable(); }
@@ -4237,9 +4487,10 @@
         // ============================================================
         function toggleSalesCategory(cat) {
             salesFilters.categories[cat] = !salesFilters.categories[cat];
-            if (!salesFilters.categories.rolltech && !salesFilters.categories.molding) { salesFilters.categories[cat] = true; return; }
+            if (!salesFilters.categories.rolltech && !salesFilters.categories.molding && !salesFilters.categories.snappad) { salesFilters.categories[cat] = true; return; }
             document.getElementById('salesBtnRollTech').classList.toggle('active', salesFilters.categories.rolltech);
             document.getElementById('salesBtnMolding').classList.toggle('active', salesFilters.categories.molding);
+            document.getElementById('salesBtnSnapPad').classList.toggle('active', salesFilters.categories.snappad);
             updateSalesOverview();
         }
         
@@ -4439,9 +4690,10 @@
         // ============================================================
         function togglePartsCategory(cat) {
             partsFilters.categories[cat] = !partsFilters.categories[cat];
-            if (!partsFilters.categories.rolltech && !partsFilters.categories.molding) { partsFilters.categories[cat] = true; return; }
+            if (!partsFilters.categories.rolltech && !partsFilters.categories.molding && !partsFilters.categories.snappad) { partsFilters.categories[cat] = true; return; }
             document.getElementById('partsBtnRollTech').classList.toggle('active', partsFilters.categories.rolltech);
             document.getElementById('partsBtnMolding').classList.toggle('active', partsFilters.categories.molding);
+            document.getElementById('partsBtnSnapPad').classList.toggle('active', partsFilters.categories.snappad);
             updateSalesPartsPage();
         }
         
@@ -4785,9 +5037,10 @@
         // ============================================================
         function toggleCustomersCategory(cat) {
             customersFilters.categories[cat] = !customersFilters.categories[cat];
-            if (!customersFilters.categories.rolltech && !customersFilters.categories.molding) { customersFilters.categories[cat] = true; return; }
+            if (!customersFilters.categories.rolltech && !customersFilters.categories.molding && !customersFilters.categories.snappad) { customersFilters.categories[cat] = true; return; }
             document.getElementById('customersBtnRollTech').classList.toggle('active', customersFilters.categories.rolltech);
             document.getElementById('customersBtnMolding').classList.toggle('active', customersFilters.categories.molding);
+            document.getElementById('customersBtnSnapPad').classList.toggle('active', customersFilters.categories.snappad);
             updateSalesCustomersPage();
         }
         
@@ -5075,9 +5328,10 @@
         // ============================================================
         function toggleDatesCategory(cat) {
             datesFilters.categories[cat] = !datesFilters.categories[cat];
-            if (!datesFilters.categories.rolltech && !datesFilters.categories.molding) { datesFilters.categories[cat] = true; return; }
+            if (!datesFilters.categories.rolltech && !datesFilters.categories.molding && !datesFilters.categories.snappad) { datesFilters.categories[cat] = true; return; }
             document.getElementById('datesBtnRollTech').classList.toggle('active', datesFilters.categories.rolltech);
             document.getElementById('datesBtnMolding').classList.toggle('active', datesFilters.categories.molding);
+            document.getElementById('datesBtnSnapPad').classList.toggle('active', datesFilters.categories.snappad);
             updateSalesDatesPage();
         }
         
@@ -5377,9 +5631,12 @@
         
         function renderAllDataTableHeader() {
             initTableFilters('allData');
-            document.getElementById('allDataTableHeader').innerHTML = allRawHeaders.map((h, i) => 
-                createFilterHeader('allData', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('allData');
+            document.getElementById('allDataTableHeader').innerHTML = allRawHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('allData', colKey)) return '';
+                return createFilterHeader('allData', colKey, h, true);
+            }).join('');
         }
         
         function renderAllDataTable() {
@@ -5432,10 +5689,15 @@
                 });
             }
             
-            // Render table body
+            // Render table header (with hidden columns support)
+            renderAllDataTableHeader();
+            
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('allDataTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${allRawHeaders.map(h => {
+                return `<tr>${allRawHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('allData', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     // Format currency values
@@ -5450,7 +5712,11 @@
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = allRawHeaders.filter((h, i) => !isColumnHidden('allData', `col_${i}`)).length;
             document.getElementById('allDataRowCount').textContent = data.length;
+            document.getElementById('allDataColCount').textContent = visibleColCount;
+            updateShowHiddenButton('allData');
         }
         
         function sortAllDataTable(field) {
@@ -5693,9 +5959,12 @@
         // FP Reference Data Functions
         function renderFpRefTableHeader() {
             initTableFilters('fpRef');
-            document.getElementById('fpRefTableHeader').innerHTML = fpReferenceHeaders.map((h, i) => 
-                createFilterHeader('fpRef', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('fpRef');
+            document.getElementById('fpRefTableHeader').innerHTML = fpReferenceHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('fpRef', colKey)) return '';
+                return createFilterHeader('fpRef', colKey, h, true);
+            }).join('');
         }
         
         function renderFpRefTable() {
@@ -5743,20 +6012,25 @@
                 });
             }
             
-            // Render table body
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('fpRefTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${fpReferenceHeaders.map(h => {
+                return `<tr>${fpReferenceHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('fpRef', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     return `<td>${val}</td>`;
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = fpReferenceHeaders.filter((h, i) => !isColumnHidden('fpRef', `col_${i}`)).length;
             document.getElementById('fpRefRowCount').textContent = data.length;
-            document.getElementById('fpRefColCount').textContent = fpReferenceHeaders.length;
+            document.getElementById('fpRefColCount').textContent = visibleColCount;
             document.getElementById('fpRefLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
             updateClearAllButton('fpRef');
+            updateShowHiddenButton('fpRef');
         }
         
         function sortFpRefTable(field) {
@@ -5805,9 +6079,12 @@
         // Customer Reference Data Functions
         function renderCustRefTableHeader() {
             initTableFilters('custRef');
-            document.getElementById('custRefTableHeader').innerHTML = customerReferenceHeaders.map((h, i) => 
-                createFilterHeader('custRef', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('custRef');
+            document.getElementById('custRefTableHeader').innerHTML = customerReferenceHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('custRef', colKey)) return '';
+                return createFilterHeader('custRef', colKey, h, true);
+            }).join('');
         }
         
         function renderCustRefTable() {
@@ -5855,10 +6132,12 @@
                 });
             }
             
-            // Render table body
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('custRefTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${customerReferenceHeaders.map(h => {
+                return `<tr>${customerReferenceHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('custRef', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     // Format currency values
@@ -5872,10 +6151,13 @@
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = customerReferenceHeaders.filter((h, i) => !isColumnHidden('custRef', `col_${i}`)).length;
             document.getElementById('custRefRowCount').textContent = data.length;
-            document.getElementById('custRefColCount').textContent = customerReferenceHeaders.length;
+            document.getElementById('custRefColCount').textContent = visibleColCount;
             document.getElementById('custRefLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
             updateClearAllButton('custRef');
+            updateShowHiddenButton('custRef');
         }
         
         function sortCustRefTable(field) {
@@ -5924,9 +6206,12 @@
         // Quotes Registry Functions
         function renderQuotesTableHeader() {
             initTableFilters('quotes');
-            document.getElementById('quotesTableHeader').innerHTML = quotesRegistryHeaders.map((h, i) => 
-                createFilterHeader('quotes', `col_${i}`, h, true)
-            ).join('');
+            initHiddenColumns('quotes');
+            document.getElementById('quotesTableHeader').innerHTML = quotesRegistryHeaders.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('quotes', colKey)) return '';
+                return createFilterHeader('quotes', colKey, h, true);
+            }).join('');
         }
         
         function renderQuotesTable() {
@@ -5974,10 +6259,12 @@
                 });
             }
             
-            // Render table body
+            // Render table body (skip hidden columns)
             const tbody = document.getElementById('quotesTableBody');
             tbody.innerHTML = data.map(row => {
-                return `<tr>${quotesRegistryHeaders.map(h => {
+                return `<tr>${quotesRegistryHeaders.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('quotes', colKey)) return '';
                     let val = row[h];
                     if (val === undefined || val === null) val = '';
                     // Make Drive Link clickable (case-insensitive check)
@@ -5993,10 +6280,13 @@
                 }).join('')}</tr>`;
             }).join('');
             
+            // Count visible columns
+            const visibleColCount = quotesRegistryHeaders.filter((h, i) => !isColumnHidden('quotes', `col_${i}`)).length;
             document.getElementById('quotesRowCount').textContent = data.length;
-            document.getElementById('quotesColCount').textContent = quotesRegistryHeaders.length;
+            document.getElementById('quotesColCount').textContent = visibleColCount;
             document.getElementById('quotesLastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
             updateClearAllButton('quotes');
+            updateShowHiddenButton('quotes');
         }
         
         function sortQuotesTable(field) {
