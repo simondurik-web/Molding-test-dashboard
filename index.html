@@ -6528,36 +6528,55 @@
         async function loadPalletRecordsData() {
             if (palletRecordsLoaded) return;
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${PALLET_PICTURES_GID}`;
-                const res = await fetch(url);
-                const text = await res.text();
-                const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                // Use proven fetchSheetData function
+                const rawData = await fetchSheetData(PALLET_PICTURES_GID);
+                console.log('Pallet Records raw data sample:', rawData.length > 0 ? rawData[0] : 'no data');
+                console.log('Pallet Records raw data count:', rawData.length);
                 
-                // Map the raw data to our English headers
-                palletRecordsData = json.table.rows.map(r => {
-                    const cells = r.c || [];
-                    return {
-                        'Timestamp': cells[0] ? (cells[0].f ?? cells[0].v ?? '') : '',
-                        'Order Number': cells[1] ? (cells[1].f ?? cells[1].v ?? '') : '',
-                        'Pallet Number': cells[2] ? (cells[2].f ?? cells[2].v ?? '') : '',
-                        'Pallet Picture 1': cells[3] ? (cells[3].f ?? cells[3].v ?? '') : '',
-                        'Pallet Weight (lbs)': cells[4] ? (cells[4].f ?? cells[4].v ?? '') : '',
-                        'Pallet Dimensions': cells[5] ? (cells[5].f ?? cells[5].v ?? '') : '',
-                        'Pallet Picture 2': cells[6] ? (cells[6].f ?? cells[6].v ?? '') : '',
-                        'Pallet Picture 3': cells[7] ? (cells[7].f ?? cells[7].v ?? '') : '',
-                        'Pallet Picture 4': cells[8] ? (cells[8].f ?? cells[8].v ?? '') : '',
-                        'Pallet Picture 5': cells[9] ? (cells[9].f ?? cells[9].v ?? '') : '',
-                        'Parts/Boxes per Pallet': cells[10] ? (cells[10].f ?? cells[10].v ?? '') : '',
-                        'Customer': cells[11] ? (cells[11].f ?? cells[11].v ?? '') : '',
-                        'IF Number': cells[12] ? (cells[12].f ?? cells[12].v ?? '') : '',
-                        'Category': cells[13] ? (cells[13].f ?? cells[13].v ?? '') : ''
+                // Map the original bilingual headers to simplified English headers
+                // The headers in the spreadsheet are bilingual, so we need to find them
+                palletRecordsData = rawData.map(row => {
+                    // Find values by checking multiple possible header names
+                    const findVal = (...keys) => {
+                        for (const key of keys) {
+                            for (const [header, value] of Object.entries(row)) {
+                                if (header.toLowerCase().includes(key.toLowerCase())) {
+                                    return value ?? '';
+                                }
+                            }
+                        }
+                        return '';
                     };
-                }).filter(row => row['Timestamp'] && row['Timestamp'] !== 'Timestamp');
+                    
+                    return {
+                        'Timestamp': findVal('timestamp', 'marca de tiempo'),
+                        'Order Number': findVal('order number', 'numero de orden'),
+                        'Pallet Number': findVal('pallet number', 'numero de paleta'),
+                        'Pallet Picture 1': findVal('pallet pictures', 'fotos de paletas'),
+                        'Pallet Weight (lbs)': findVal('pallet weight', 'peso de la paleta'),
+                        'Pallet Dimensions': findVal('pallet dimensions', 'dimensiones de la paleta'),
+                        'Pallet Picture 2': findVal('pallet pictures 2', 'fotos de paletas 2'),
+                        'Pallet Picture 3': findVal('pallet pictures 3', 'fotos de paletas 3'),
+                        'Pallet Picture 4': findVal('pallet pictures 4', 'fotos de paletas 4'),
+                        'Pallet Picture 5': findVal('pallet pictures 5', 'fotos de paletas 5'),
+                        'Parts/Boxes per Pallet': findVal('parts/boxes per pallet', 'partes o cajas por paleta'),
+                        'Customer': findVal('customer', 'cliente'),
+                        'IF Number': findVal('if number', 'numero if'),
+                        'Category': findVal('category', 'categoria')
+                    };
+                }).filter(row => {
+                    // Keep rows that have at least a timestamp or IF number
+                    return row['Timestamp'] || row['IF Number'] || row['Order Number'];
+                });
                 
                 palletRecordsLoaded = true;
                 console.log('Loaded Pallet Records:', palletRecordsData.length, 'rows');
+                if (palletRecordsData.length > 0) {
+                    console.log('First row sample:', palletRecordsData[0]);
+                }
             } catch (e) {
                 console.error('Pallet Records load error:', e);
+                palletRecordsLoaded = true; // Mark as loaded to prevent infinite retries
             }
         }
         
@@ -6589,8 +6608,14 @@
         }
         
         function renderPalletRecordsTable() {
+            if (!palletRecordsLoaded) {
+                document.getElementById('palletRecordsTableBody').innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;">Loading data...</td></tr>';
+                document.getElementById('palletRecordsRowCount').textContent = '-';
+                return;
+            }
             if (palletRecordsData.length === 0) {
-                document.getElementById('palletRecordsTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                document.getElementById('palletRecordsTableBody').innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;color:var(--warning);">No data found. Check console for errors.</td></tr>';
+                document.getElementById('palletRecordsRowCount').textContent = '0';
                 return;
             }
             
@@ -6699,53 +6724,77 @@
         async function loadShippingRecordsData() {
             if (shippingRecordsLoaded) return;
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHIPPING_RECORDS_GID}`;
-                const res = await fetch(url);
-                const text = await res.text();
-                const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                // Use proven fetchSheetData function
+                const rawData = await fetchSheetData(SHIPPING_RECORDS_GID);
+                console.log('Shipping Records raw data sample:', rawData.length > 0 ? rawData[0] : 'no data');
+                console.log('Shipping Records raw data count:', rawData.length);
                 
-                // Map the raw data to our English headers with column merging
-                shippingRecordsData = json.table.rows.map(r => {
-                    const cells = r.c || [];
-                    const getVal = (idx) => cells[idx] ? (cells[idx].f ?? cells[idx].v ?? '') : '';
+                // Map the original bilingual headers to simplified English headers
+                shippingRecordsData = rawData.map(row => {
+                    // Find values by checking multiple possible header names
+                    const findVal = (...keys) => {
+                        for (const key of keys) {
+                            for (const [header, value] of Object.entries(row)) {
+                                if (header.toLowerCase().includes(key.toLowerCase())) {
+                                    return value ?? '';
+                                }
+                            }
+                        }
+                        return '';
+                    };
+                    
+                    // Find all picture columns and merge them
+                    const findPicture = (...keywords) => {
+                        for (const [header, value] of Object.entries(row)) {
+                            const h = header.toLowerCase();
+                            if (keywords.some(k => h.includes(k.toLowerCase())) && value && value.toString().includes('http')) {
+                                return value;
+                            }
+                        }
+                        return '';
+                    };
                     
                     // Determine system and normalize
-                    let system = getVal(6).toString().toLowerCase();
+                    let system = findVal('system', 'sistema').toString().toLowerCase();
                     if (system.includes('fusion')) system = 'Fusion';
                     else if (system.includes('veeqo') || system.includes('veeco')) system = 'Veeqo';
                     else if (system) system = 'Other';
                     else system = '';
                     
-                    // Merge order numbers from columns H (7) and N (13)
-                    const orderNumber = getVal(7) || getVal(13) || '';
+                    // Merge shipment pictures
+                    const shipmentPicture = findPicture('picture of shipment', 'fotografia del envio', 'shipment picture');
                     
-                    // Merge shipment pictures from columns E (4), I (8), L (11)
-                    const shipmentPicture = getVal(4) || getVal(8) || getVal(11) || '';
+                    // Merge paperwork pictures  
+                    const paperworkPicture = findPicture('picture of paperwork', 'fotografia del papeleo', 'paperwork');
                     
-                    // Merge paperwork pictures from columns F (5), J (9), M (12)
-                    const paperworkPicture = getVal(5) || getVal(9) || getVal(12) || '';
-                    
-                    // Merge close up pictures from columns O (14), P (15), Q (16)
-                    const closeUpPicture = getVal(14) || getVal(15) || getVal(16) || '';
+                    // Merge close up pictures
+                    const closeUpPicture = findPicture('close up', 'cercana', 'primer plano');
                     
                     return {
-                        'Timestamp': getVal(0),
-                        'Carrier': getVal(2),
-                        'IF Number': getVal(3),
+                        'Timestamp': findVal('timestamp', 'marca de tiempo'),
+                        'Carrier': findVal('carrier', 'transportista'),
+                        'IF Number': findVal('if number', 'numero if', 'numero de if'),
                         'System': system,
-                        'Order Number': orderNumber,
+                        'Order Number': findVal('order number', 'numero de orden'),
                         'Shipment Picture': shipmentPicture,
                         'Paperwork Picture': paperworkPicture,
                         'Close Up Picture': closeUpPicture,
-                        'Customer': getVal(17),
-                        'Category': getVal(18)
+                        'Customer': findVal('customer', 'cliente', 'costumer'),
+                        'Category': findVal('category', 'categoria')
                     };
-                }).filter(row => row['Timestamp'] && row['Timestamp'] !== 'Timestamp');
+                }).filter(row => {
+                    // Keep rows that have at least a timestamp or IF number
+                    return row['Timestamp'] || row['IF Number'] || row['Carrier'];
+                });
                 
                 shippingRecordsLoaded = true;
                 console.log('Loaded Shipping Records:', shippingRecordsData.length, 'rows');
+                if (shippingRecordsData.length > 0) {
+                    console.log('First row sample:', shippingRecordsData[0]);
+                }
             } catch (e) {
                 console.error('Shipping Records load error:', e);
+                shippingRecordsLoaded = true; // Mark as loaded to prevent infinite retries
             }
         }
         
@@ -6777,8 +6826,14 @@
         }
         
         function renderShippingRecordsTable() {
+            if (!shippingRecordsLoaded) {
+                document.getElementById('shippingRecordsTableBody').innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;">Loading data...</td></tr>';
+                document.getElementById('shippingRecordsRowCount').textContent = '-';
+                return;
+            }
             if (shippingRecordsData.length === 0) {
-                document.getElementById('shippingRecordsTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                document.getElementById('shippingRecordsTableBody').innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;color:var(--warning);">No data found. Check console for errors.</td></tr>';
+                document.getElementById('shippingRecordsRowCount').textContent = '0';
                 return;
             }
             
@@ -6887,39 +6942,55 @@
         async function loadStagedRecordsData() {
             if (stagedRecordsLoaded) return;
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${STAGED_RECORDS_GID}`;
-                const res = await fetch(url);
-                const text = await res.text();
-                const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                // Use proven fetchSheetData function
+                const rawData = await fetchSheetData(STAGED_RECORDS_GID);
+                console.log('Staged Records raw data sample:', rawData.length > 0 ? rawData[0] : 'no data');
+                console.log('Staged Records raw data count:', rawData.length);
                 
-                // Map the raw data to our English headers
-                stagedRecordsData = json.table.rows.map(r => {
-                    const cells = r.c || [];
-                    const getVal = (idx) => cells[idx] ? (cells[idx].f ?? cells[idx].v ?? '') : '';
+                // Map the original bilingual headers to simplified English headers
+                stagedRecordsData = rawData.map(row => {
+                    // Find values by checking multiple possible header names
+                    const findVal = (...keys) => {
+                        for (const key of keys) {
+                            for (const [header, value] of Object.entries(row)) {
+                                if (header.toLowerCase().includes(key.toLowerCase())) {
+                                    return value ?? '';
+                                }
+                            }
+                        }
+                        return '';
+                    };
                     
                     return {
-                        'Timestamp': getVal(0),
-                        'Line Number': getVal(1),
-                        'IF Number': getVal(2),
-                        'Order Quantity': getVal(3),
-                        'Number of Pallets': getVal(4),
-                        'Staged By': getVal(5),
-                        'Comments': getVal(6),
-                        'Order Status': getVal(7),
-                        'Staged in Fusion': getVal(8),
-                        'Pallet Dimensions': getVal(9),
-                        'Pallet Weight (lbs)': getVal(10),
-                        'Confirmed Staged': getVal(11),
-                        'Fusion Picture': getVal(12),
-                        'Customer': getVal(14),
-                        'Category': getVal(15)
+                        'Timestamp': findVal('timestamp', 'marca de tiempo'),
+                        'Line Number': findVal('line number', 'numero de linea'),
+                        'IF Number': findVal('if number', 'numero if', 'numero de if'),
+                        'Order Quantity': findVal('order quantity', 'cantidad de orden', 'cantidad'),
+                        'Number of Pallets': findVal('number of pallets', 'numero de paletas'),
+                        'Staged By': findVal('name', 'nombre', 'staged by'),
+                        'Comments': findVal('comments', 'comentarios'),
+                        'Order Status': findVal('order status', 'estado de orden', 'status'),
+                        'Staged in Fusion': findVal('staged in fusion', 'fusion', 'fulfillment staged'),
+                        'Pallet Dimensions': findVal('pallet dimensions', 'dimensiones de la paleta'),
+                        'Pallet Weight (lbs)': findVal('pallet weight', 'peso de la paleta'),
+                        'Confirmed Staged': findVal('confirmed', 'confirmacion', 'confirmation'),
+                        'Fusion Picture': findVal('fusion picture', 'foto de fusion', 'fusion'),
+                        'Customer': findVal('customer', 'cliente'),
+                        'Category': findVal('category', 'categoria')
                     };
-                }).filter(row => row['Timestamp'] && row['Timestamp'] !== 'Timestamp');
+                }).filter(row => {
+                    // Keep rows that have at least a timestamp or IF number
+                    return row['Timestamp'] || row['IF Number'] || row['Line Number'];
+                });
                 
                 stagedRecordsLoaded = true;
                 console.log('Loaded Staged Records:', stagedRecordsData.length, 'rows');
+                if (stagedRecordsData.length > 0) {
+                    console.log('First row sample:', stagedRecordsData[0]);
+                }
             } catch (e) {
                 console.error('Staged Records load error:', e);
+                stagedRecordsLoaded = true; // Mark as loaded to prevent infinite retries
             }
         }
         
@@ -6951,8 +7022,14 @@
         }
         
         function renderStagedRecordsTable() {
+            if (!stagedRecordsLoaded) {
+                document.getElementById('stagedRecordsTableBody').innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;">Loading data...</td></tr>';
+                document.getElementById('stagedRecordsRowCount').textContent = '-';
+                return;
+            }
             if (stagedRecordsData.length === 0) {
-                document.getElementById('stagedRecordsTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                document.getElementById('stagedRecordsTableBody').innerHTML = '<tr><td colspan="20" style="text-align:center;padding:40px;color:var(--warning);">No data found. Check console for errors.</td></tr>';
+                document.getElementById('stagedRecordsRowCount').textContent = '0';
                 return;
             }
             
