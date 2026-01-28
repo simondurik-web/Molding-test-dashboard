@@ -1902,6 +1902,9 @@
             else if (currentPage === 'fp-reference') renderFpRefTable();
             else if (currentPage === 'customer-reference') renderCustRefTable();
             else if (currentPage === 'quotes-registry') renderQuotesTable();
+            else if (currentPage === 'pallet-records') renderPalletRecordsTable();
+            else if (currentPage === 'shipping-records') renderShippingRecordsTable();
+            else if (currentPage === 'staged-records') renderStagedRecordsTable();
         }
         
         function t(key) { return translations[currentLang][key] || key; }
@@ -6597,7 +6600,7 @@
         }
         
         function renderPalletRecordsTableHeader() {
-            const headers = currentLanguage === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
+            const headers = currentLang === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
             initTableFilters('palletRecords');
             initHiddenColumns('palletRecords');
             document.getElementById('palletRecordsTableHeader').innerHTML = headers.map((h, i) => {
@@ -6705,7 +6708,7 @@
         }
         
         function exportPalletRecordsToCSV() {
-            const headers = currentLanguage === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
+            const headers = currentLang === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
             const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
             const rows = palletRecordsData.map(row => 
                 PALLET_RECORDS_HEADERS.map(h => {
@@ -6815,7 +6818,7 @@
         }
         
         function renderShippingRecordsTableHeader() {
-            const headers = currentLanguage === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
+            const headers = currentLang === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
             initTableFilters('shippingRecords');
             initHiddenColumns('shippingRecords');
             document.getElementById('shippingRecordsTableHeader').innerHTML = headers.map((h, i) => {
@@ -6923,7 +6926,7 @@
         }
         
         function exportShippingRecordsToCSV() {
-            const headers = currentLanguage === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
+            const headers = currentLang === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
             const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
             const rows = shippingRecordsData.map(row => 
                 SHIPPING_RECORDS_HEADERS.map(h => {
@@ -7011,7 +7014,7 @@
         }
         
         function renderStagedRecordsTableHeader() {
-            const headers = currentLanguage === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
+            const headers = currentLang === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
             initTableFilters('stagedRecords');
             initHiddenColumns('stagedRecords');
             document.getElementById('stagedRecordsTableHeader').innerHTML = headers.map((h, i) => {
@@ -7119,7 +7122,7 @@
         }
         
         function exportStagedRecordsToCSV() {
-            const headers = currentLanguage === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
+            const headers = currentLang === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
             const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
             const rows = stagedRecordsData.map(row => 
                 STAGED_RECORDS_HEADERS.map(h => {
