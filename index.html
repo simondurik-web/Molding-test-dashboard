@@ -525,6 +525,9 @@
             <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">🚚</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
             <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
             <div class="nav-item sub-item" data-page="inventory-history" onclick="navigateTo('inventory-history')"><span class="icon">📈</span> <span data-i18n="nav.inventoryHistory">Inventory History</span></div>
+            <div class="nav-item" data-page="pallet-records" onclick="navigateTo('pallet-records')"><span class="icon">📷</span> <span data-i18n="nav.palletRecords">Pallet Records</span></div>
+            <div class="nav-item" data-page="shipping-records" onclick="navigateTo('shipping-records')"><span class="icon">🚛</span> <span data-i18n="nav.shippingRecords">Shipping Records</span></div>
+            <div class="nav-item" data-page="staged-records" onclick="navigateTo('staged-records')"><span class="icon">📋</span> <span data-i18n="nav.stagedRecords">Staged Records</span></div>
         </div>
         <div class="nav-section" id="salesNavSection">
             <div class="nav-section-title sales-locked" id="salesNavTitle" onclick="promptSalesPassword()">
@@ -1306,6 +1309,108 @@
                 </div>
             </div>
         </div>
+
+        <!-- PALLET RECORDS PAGE -->
+        <div id="pallet-records" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="palletRecords.title">Pallet Records</h2><p data-i18n="palletRecords.subtitle">Pallet photos and dimension records</p></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <button class="toolbar-btn" onclick="exportPalletRecordsToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="category-filters">
+                    <button class="category-btn rolltech active" id="palletRecordsBtnRollTech" onclick="togglePalletRecordsCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="palletRecordsBtnMolding" onclick="togglePalletRecordsCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="palletRecordsBtnSnapPad" onclick="togglePalletRecordsCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="ui.rows">Rows:</label>
+                    <span id="palletRecordsRowCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="palletRecordsClearFiltersBtn" onclick="clearAllTableFilters('palletRecords')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="palletRecordsShowHiddenBtn" onclick="showAllColumns('palletRecords')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="palletRecordsGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Search IF#, Order#, Customer..." oninput="filterPalletRecordsTable()">
+            </div>
+            <div class="chart-container" style="padding:10px;">
+                <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
+                    <table class="data-table" id="palletRecordsTable">
+                        <thead><tr id="palletRecordsTableHeader"></tr></thead>
+                        <tbody id="palletRecordsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SHIPPING RECORDS PAGE -->
+        <div id="shipping-records" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="shippingRecords.title">Shipping Records</h2><p data-i18n="shippingRecords.subtitle">Shipment photos and carrier information</p></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <button class="toolbar-btn" onclick="exportShippingRecordsToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="category-filters">
+                    <button class="category-btn rolltech active" id="shippingRecordsBtnRollTech" onclick="toggleShippingRecordsCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="shippingRecordsBtnMolding" onclick="toggleShippingRecordsCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="shippingRecordsBtnSnapPad" onclick="toggleShippingRecordsCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="ui.rows">Rows:</label>
+                    <span id="shippingRecordsRowCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="shippingRecordsClearFiltersBtn" onclick="clearAllTableFilters('shippingRecords')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="shippingRecordsShowHiddenBtn" onclick="showAllColumns('shippingRecords')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="shippingRecordsGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Search IF#, Order#, Customer, Carrier..." oninput="filterShippingRecordsTable()">
+            </div>
+            <div class="chart-container" style="padding:10px;">
+                <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
+                    <table class="data-table" id="shippingRecordsTable">
+                        <thead><tr id="shippingRecordsTableHeader"></tr></thead>
+                        <tbody id="shippingRecordsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGED RECORDS PAGE -->
+        <div id="staged-records" class="page">
+            <div class="page-header">
+                <div><h2 data-i18n="stagedRecords.title">Staged Records</h2><p data-i18n="stagedRecords.subtitle">Staging confirmation and pallet information</p></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
+                    <button class="toolbar-btn" onclick="exportStagedRecordsToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="category-filters">
+                    <button class="category-btn rolltech active" id="stagedRecordsBtnRollTech" onclick="toggleStagedRecordsCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="stagedRecordsBtnMolding" onclick="toggleStagedRecordsCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="stagedRecordsBtnSnapPad" onclick="toggleStagedRecordsCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
+                </div>
+                <div class="toolbar-group">
+                    <label data-i18n="ui.rows">Rows:</label>
+                    <span id="stagedRecordsRowCount" style="color:var(--accent);font-weight:600;">-</span>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="stagedRecordsClearFiltersBtn" onclick="clearAllTableFilters('stagedRecords')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn show-hidden-btn" id="stagedRecordsShowHiddenBtn" onclick="showAllColumns('stagedRecords')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="stagedRecordsGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Search IF#, Line#, Customer..." oninput="filterStagedRecordsTable()">
+            </div>
+            <div class="chart-container" style="padding:10px;">
+                <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
+                    <table class="data-table" id="stagedRecordsTable">
+                        <thead><tr id="stagedRecordsTableHeader"></tr></thead>
+                        <tbody id="stagedRecordsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1334,6 +1439,16 @@
                 'nav.fpReference': 'FP Reference',
                 'nav.customerReference': 'Customer Reference',
                 'nav.quotesRegistry': 'Quotes Registry',
+                'nav.palletRecords': 'Pallet Records',
+                'nav.shippingRecords': 'Shipping Records',
+                'nav.stagedRecords': 'Staged Records',
+                'nav.inventoryHistory': 'Inventory History',
+                'palletRecords.title': 'Pallet Records',
+                'palletRecords.subtitle': 'Pallet photos and dimension records',
+                'shippingRecords.title': 'Shipping Records',
+                'shippingRecords.subtitle': 'Shipment photos and carrier information',
+                'stagedRecords.title': 'Staged Records',
+                'stagedRecords.subtitle': 'Staging confirmation and pallet information',
                 'fpRef.title': 'FP Reference Data',
                 'fpRef.subtitle': 'Finished Part specifications and attributes',
                 'custRef.title': 'Customer Reference Data',
@@ -1549,6 +1664,16 @@
                 'nav.fpReference': 'Referencia FP',
                 'nav.customerReference': 'Referencia de Clientes',
                 'nav.quotesRegistry': 'Registro de Cotizaciones',
+                'nav.palletRecords': 'Registros de Paletas',
+                'nav.shippingRecords': 'Registros de Envíos',
+                'nav.stagedRecords': 'Registros de Staging',
+                'nav.inventoryHistory': 'Historial de Inventario',
+                'palletRecords.title': 'Registros de Paletas',
+                'palletRecords.subtitle': 'Fotos y dimensiones de paletas',
+                'shippingRecords.title': 'Registros de Envíos',
+                'shippingRecords.subtitle': 'Fotos de envío e información de transportista',
+                'stagedRecords.title': 'Registros de Staging',
+                'stagedRecords.subtitle': 'Confirmación de staging e información de paletas',
                 'fpRef.title': 'Datos de Referencia FP',
                 'fpRef.subtitle': 'Especificaciones y atributos de partes terminadas',
                 'custRef.title': 'Datos de Referencia de Clientes',
@@ -1797,6 +1922,8 @@
         const FP_REFERENCE_GID = '944406361';  // FP Reference data
         const CUSTOMER_REFERENCE_GID = '336333220';  // Customer Reference data Dashboard
         const QUOTES_REGISTRY_GID = '1279128282';  // Quotes Registry
+        const STAGED_RECORDS_GID = '1519623398';  // Staged records dashboard
+        const SHIPPING_RECORDS_GID = '1752263458';  // Shipping records dashboard
         
         const COL = {
             CATEGORY: 'Category',
@@ -1884,6 +2011,34 @@
         let customerReferenceHeaders = [];
         let quotesRegistryData = [];
         let quotesRegistryHeaders = []; // Now loaded from spreadsheet (columns A-J only)
+        
+        // New Record Sections state (Pallet, Shipping, Staged)
+        let palletRecordsData = [];
+        let palletRecordsLoaded = false;
+        let shippingRecordsData = [];
+        let shippingRecordsLoaded = false;
+        let stagedRecordsData = [];
+        let stagedRecordsLoaded = false;
+        
+        // Category filters for new record sections
+        let palletRecordsFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let shippingRecordsFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let stagedRecordsFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        
+        // Sort state for new record sections
+        let palletRecordsSort = { field: null, asc: true };
+        let shippingRecordsSort = { field: null, asc: true };
+        let stagedRecordsSort = { field: null, asc: true };
+        
+        // English headers for the new sections (mapped from bilingual spreadsheet headers)
+        const PALLET_RECORDS_HEADERS = ['Timestamp', 'Order Number', 'Pallet Number', 'Pallet Picture 1', 'Pallet Weight (lbs)', 'Pallet Dimensions', 'Pallet Picture 2', 'Pallet Picture 3', 'Pallet Picture 4', 'Pallet Picture 5', 'Parts/Boxes per Pallet', 'Customer', 'IF Number', 'Category'];
+        const SHIPPING_RECORDS_HEADERS = ['Timestamp', 'Carrier', 'IF Number', 'System', 'Order Number', 'Shipment Picture', 'Paperwork Picture', 'Close Up Picture', 'Customer', 'Category'];
+        const STAGED_RECORDS_HEADERS = ['Timestamp', 'Line Number', 'IF Number', 'Order Quantity', 'Number of Pallets', 'Staged By', 'Comments', 'Order Status', 'Staged in Fusion', 'Pallet Dimensions', 'Pallet Weight (lbs)', 'Confirmed Staged', 'Fusion Picture', 'Customer', 'Category'];
+        
+        // Spanish headers for the new sections
+        const PALLET_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Orden', 'Número de Paleta', 'Foto de Paleta 1', 'Peso de Paleta (lbs)', 'Dimensiones de Paleta', 'Foto de Paleta 2', 'Foto de Paleta 3', 'Foto de Paleta 4', 'Foto de Paleta 5', 'Partes/Cajas por Paleta', 'Cliente', 'Número IF', 'Categoría'];
+        const SHIPPING_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Transportista', 'Número IF', 'Sistema', 'Número de Orden', 'Foto de Envío', 'Foto de Papeleo', 'Foto de Primer Plano', 'Cliente', 'Categoría'];
+        const STAGED_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Línea', 'Número IF', 'Cantidad de Orden', 'Número de Paletas', 'Staging por', 'Comentarios', 'Estado de Orden', 'Staging en Fusion', 'Dimensiones de Paleta', 'Peso de Paleta (lbs)', 'Staging Confirmado', 'Foto de Fusion', 'Cliente', 'Categoría'];
         
         // Inventory History state (for historical tracking charts)
         let inventoryHistoryData = [];      // Raw data: [{partNumber, dataByDate: {date: qty}}]
@@ -2120,6 +2275,9 @@
                 case 'fpRef': sortFpRefTable(columnKey); break;
                 case 'custRef': sortCustRefTable(columnKey); break;
                 case 'quotes': sortQuotesTable(columnKey); break;
+                case 'palletRecords': sortPalletRecordsTable(columnKey); break;
+                case 'shippingRecords': sortShippingRecordsTable(columnKey); break;
+                case 'stagedRecords': sortStagedRecordsTable(columnKey); break;
             }
         }
         
@@ -2256,6 +2414,9 @@
                 case 'fpRef': renderFpRefTable(); break;
                 case 'custRef': renderCustRefTable(); break;
                 case 'quotes': renderQuotesTable(); break;
+                case 'palletRecords': renderPalletRecordsTable(); break;
+                case 'shippingRecords': renderShippingRecordsTable(); break;
+                case 'stagedRecords': renderStagedRecordsTable(); break;
             }
         }
         
@@ -2342,6 +2503,12 @@
                     return getUniqueCustRefColumnValues(columnKey);
                 case 'quotes':
                     return getUniqueQuotesColumnValues(columnKey);
+                case 'palletRecords':
+                    return getUniquePalletRecordsColumnValues(columnKey);
+                case 'shippingRecords':
+                    return getUniqueShippingRecordsColumnValues(columnKey);
+                case 'stagedRecords':
+                    return getUniqueStagedRecordsColumnValues(columnKey);
             }
             return Array.from(values).sort();
         }
@@ -2509,16 +2676,6 @@
             const res = await fetch(url);
             const text = await res.text();
             const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-            // DEBUG: Log raw column info for PROD_DATA_TOTALS
-            if (gid === '148810546') {
-                console.log('=== fetchSheetData DEBUG for PROD_DATA_TOTALS ===');
-                console.log('Raw cols from API:', json.table.cols.map((c, i) => ({ index: i, label: c.label, type: c.type })));
-                console.log('Number of columns:', json.table.cols.length);
-                if (json.table.rows.length > 0) {
-                    console.log('First row raw r.c array length:', json.table.rows[0].c ? json.table.rows[0].c.length : 'no c array');
-                    console.log('First row r.c[4] (Manual target index):', json.table.rows[0].c ? json.table.rows[0].c[4] : 'N/A');
-                }
-            }
             const headers = json.table.cols.map(c => (c.label || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim());
             if (captureHeaders) allRawHeaders = headers.filter(h => h); // Store non-empty headers
             return json.table.rows.map(r => {
@@ -2559,24 +2716,6 @@
             try {
                 const fusionData = await fetchSheetData(FUSION_EXPORT_GID);
                 const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
-                console.log('=== MANUAL TARGET DEBUG v7.13 ===');
-                console.log('Prod Totals rows loaded:', prodTotalsData.length);
-                if (prodTotalsData.length > 0) {
-                    console.log('ALL column headers:', Object.keys(prodTotalsData[0]));
-                    console.log('Headers containing "manual" (case insensitive):', Object.keys(prodTotalsData[0]).filter(k => k.toLowerCase().includes('manual')));
-                    console.log('Headers containing "target" (case insensitive):', Object.keys(prodTotalsData[0]).filter(k => k.toLowerCase().includes('target')));
-                }
-                // Find TR-30PK-BLK specifically
-                const tr30Row = prodTotalsData.find(r => (r['Part Number'] || '').toString().includes('TR-30PK-BLK'));
-                if (tr30Row) {
-                    console.log('=== TR-30PK-BLK RAW DATA ===');
-                    console.log('Full row object:', tr30Row);
-                    console.log('Manual target value:', tr30Row['Manual target']);
-                    console.log('Manual Target value:', tr30Row['Manual Target']);
-                    console.log('All keys with values:', Object.entries(tr30Row).filter(([k,v]) => v !== '' && v !== null && v !== undefined));
-                } else {
-                    console.log('TR-30PK-BLK NOT FOUND in Prod Totals Data');
-                }
                 const prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
                     let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
@@ -2930,6 +3069,9 @@
                 case 'fp-reference': updateFpReferencePage(); break;
                 case 'customer-reference': updateCustReferencePage(); break;
                 case 'quotes-registry': updateQuotesRegistryPage(); break;
+                case 'pallet-records': updatePalletRecordsPage(); break;
+                case 'shipping-records': updateShippingRecordsPage(); break;
+                case 'staged-records': updateStagedRecordsPage(); break;
             }
             document.querySelector('.sidebar').classList.remove('open');
             document.querySelector('.sidebar-overlay').classList.remove('active');
@@ -5930,6 +6072,27 @@
             renderQuotesTable();
         }
         
+        async function updatePalletRecordsPage() {
+            if (!palletRecordsLoaded) {
+                await loadPalletRecordsData();
+            }
+            renderPalletRecordsTable();
+        }
+        
+        async function updateShippingRecordsPage() {
+            if (!shippingRecordsLoaded) {
+                await loadShippingRecordsData();
+            }
+            renderShippingRecordsTable();
+        }
+        
+        async function updateStagedRecordsPage() {
+            if (!stagedRecordsLoaded) {
+                await loadStagedRecordsData();
+            }
+            renderStagedRecordsTable();
+        }
+        
         async function loadReferenceData() {
             try {
                 // Load FP Reference Data
@@ -6356,6 +6519,539 @@
                 }).join(',')
             );
             downloadCSV([headers, ...rows].join('\n'), `quotes_registry_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        // ============================================================
+        // PALLET RECORDS FUNCTIONS
+        // ============================================================
+        
+        async function loadPalletRecordsData() {
+            if (palletRecordsLoaded) return;
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${PALLET_PICTURES_GID}`;
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                
+                // Map the raw data to our English headers
+                palletRecordsData = json.table.rows.map(r => {
+                    const cells = r.c || [];
+                    return {
+                        'Timestamp': cells[0] ? (cells[0].f ?? cells[0].v ?? '') : '',
+                        'Order Number': cells[1] ? (cells[1].f ?? cells[1].v ?? '') : '',
+                        'Pallet Number': cells[2] ? (cells[2].f ?? cells[2].v ?? '') : '',
+                        'Pallet Picture 1': cells[3] ? (cells[3].f ?? cells[3].v ?? '') : '',
+                        'Pallet Weight (lbs)': cells[4] ? (cells[4].f ?? cells[4].v ?? '') : '',
+                        'Pallet Dimensions': cells[5] ? (cells[5].f ?? cells[5].v ?? '') : '',
+                        'Pallet Picture 2': cells[6] ? (cells[6].f ?? cells[6].v ?? '') : '',
+                        'Pallet Picture 3': cells[7] ? (cells[7].f ?? cells[7].v ?? '') : '',
+                        'Pallet Picture 4': cells[8] ? (cells[8].f ?? cells[8].v ?? '') : '',
+                        'Pallet Picture 5': cells[9] ? (cells[9].f ?? cells[9].v ?? '') : '',
+                        'Parts/Boxes per Pallet': cells[10] ? (cells[10].f ?? cells[10].v ?? '') : '',
+                        'Customer': cells[11] ? (cells[11].f ?? cells[11].v ?? '') : '',
+                        'IF Number': cells[12] ? (cells[12].f ?? cells[12].v ?? '') : '',
+                        'Category': cells[13] ? (cells[13].f ?? cells[13].v ?? '') : ''
+                    };
+                }).filter(row => row['Timestamp'] && row['Timestamp'] !== 'Timestamp');
+                
+                palletRecordsLoaded = true;
+                console.log('Loaded Pallet Records:', palletRecordsData.length, 'rows');
+            } catch (e) {
+                console.error('Pallet Records load error:', e);
+            }
+        }
+        
+        function getPalletRecordsCategory(row) {
+            const cat = (row['Category'] || '').toLowerCase();
+            if (cat.includes('roll tech')) return 'rolltech';
+            if (cat.includes('molding')) return 'molding';
+            if (cat.includes('snap pad')) return 'snappad';
+            return 'other';
+        }
+        
+        function togglePalletRecordsCategory(cat) {
+            palletRecordsFilters.categories[cat] = !palletRecordsFilters.categories[cat];
+            document.getElementById(`palletRecordsBtnRollTech`).classList.toggle('active', palletRecordsFilters.categories.rolltech);
+            document.getElementById(`palletRecordsBtnMolding`).classList.toggle('active', palletRecordsFilters.categories.molding);
+            document.getElementById(`palletRecordsBtnSnapPad`).classList.toggle('active', palletRecordsFilters.categories.snappad);
+            renderPalletRecordsTable();
+        }
+        
+        function renderPalletRecordsTableHeader() {
+            const headers = currentLanguage === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
+            initTableFilters('palletRecords');
+            initHiddenColumns('palletRecords');
+            document.getElementById('palletRecordsTableHeader').innerHTML = headers.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('palletRecords', colKey)) return '';
+                return createFilterHeader('palletRecords', colKey, h, true);
+            }).join('');
+        }
+        
+        function renderPalletRecordsTable() {
+            if (palletRecordsData.length === 0) {
+                document.getElementById('palletRecordsTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                return;
+            }
+            
+            renderPalletRecordsTableHeader();
+            const headers = PALLET_RECORDS_HEADERS;
+            let data = [...palletRecordsData];
+            
+            // Category filter
+            data = data.filter(row => palletRecordsFilters.categories[getPalletRecordsCategory(row)] || getPalletRecordsCategory(row) === 'other');
+            
+            // Global search filter
+            const globalSearch = (document.getElementById('palletRecordsGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => {
+                    return headers.some(h => {
+                        const val = row[h];
+                        return val && String(val).toLowerCase().includes(globalSearch);
+                    });
+                });
+            }
+            
+            // Apply column filters
+            data = data.filter(row => {
+                return headers.every((h, i) => {
+                    const colKey = `col_${i}`;
+                    const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    return passesColumnFilter('palletRecords', colKey, val);
+                });
+            });
+            
+            // Apply sort
+            if (palletRecordsSort.field !== null) {
+                const colIndex = parseInt(palletRecordsSort.field.replace('col_', ''));
+                const header = headers[colIndex];
+                data.sort((a, b) => {
+                    let aVal = a[header] ?? '';
+                    let bVal = b[header] ?? '';
+                    const aNum = parseFloat(aVal), bNum = parseFloat(bVal);
+                    if (!isNaN(aNum) && !isNaN(bNum)) return palletRecordsSort.asc ? aNum - bNum : bNum - aNum;
+                    return palletRecordsSort.asc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+                });
+            }
+            
+            document.getElementById('palletRecordsRowCount').textContent = data.length;
+            
+            // Render rows
+            const tbody = document.getElementById('palletRecordsTableBody');
+            tbody.innerHTML = data.map(row => {
+                return '<tr>' + headers.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('palletRecords', colKey)) return '';
+                    let val = row[h] ?? '';
+                    // Render picture links
+                    if (h.includes('Picture') && val && val.toString().includes('http')) {
+                        val = `<a href="${val}" target="_blank" style="color:var(--accent);">📷 View</a>`;
+                    }
+                    return `<td>${val}</td>`;
+                }).join('') + '</tr>';
+            }).join('');
+            
+            updateFilterButtonState('palletRecords');
+        }
+        
+        function sortPalletRecordsTable(field) {
+            if (palletRecordsSort.field === field) {
+                palletRecordsSort.asc = !palletRecordsSort.asc;
+            } else {
+                palletRecordsSort.field = field;
+                palletRecordsSort.asc = true;
+            }
+            renderPalletRecordsTable();
+        }
+        
+        function filterPalletRecordsTable() { renderPalletRecordsTable(); }
+        
+        function getUniquePalletRecordsColumnValues(columnKey) {
+            const colIndex = parseInt(columnKey.replace('col_', ''));
+            const header = PALLET_RECORDS_HEADERS[colIndex];
+            const values = new Set();
+            palletRecordsData.forEach(row => {
+                const val = row[header];
+                if (val !== undefined && val !== null && val !== '') {
+                    values.add(String(val));
+                }
+            });
+            return Array.from(values).sort((a, b) => a.localeCompare(b));
+        }
+        
+        function exportPalletRecordsToCSV() {
+            const headers = currentLanguage === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
+            const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = palletRecordsData.map(row => 
+                PALLET_RECORDS_HEADERS.map(h => {
+                    const val = row[h];
+                    if (val === undefined || val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+            downloadCSV([headerRow, ...rows].join('\n'), `pallet_records_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        // ============================================================
+        // SHIPPING RECORDS FUNCTIONS
+        // ============================================================
+        
+        async function loadShippingRecordsData() {
+            if (shippingRecordsLoaded) return;
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHIPPING_RECORDS_GID}`;
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                
+                // Map the raw data to our English headers with column merging
+                shippingRecordsData = json.table.rows.map(r => {
+                    const cells = r.c || [];
+                    const getVal = (idx) => cells[idx] ? (cells[idx].f ?? cells[idx].v ?? '') : '';
+                    
+                    // Determine system and normalize
+                    let system = getVal(6).toString().toLowerCase();
+                    if (system.includes('fusion')) system = 'Fusion';
+                    else if (system.includes('veeqo') || system.includes('veeco')) system = 'Veeqo';
+                    else if (system) system = 'Other';
+                    else system = '';
+                    
+                    // Merge order numbers from columns H (7) and N (13)
+                    const orderNumber = getVal(7) || getVal(13) || '';
+                    
+                    // Merge shipment pictures from columns E (4), I (8), L (11)
+                    const shipmentPicture = getVal(4) || getVal(8) || getVal(11) || '';
+                    
+                    // Merge paperwork pictures from columns F (5), J (9), M (12)
+                    const paperworkPicture = getVal(5) || getVal(9) || getVal(12) || '';
+                    
+                    // Merge close up pictures from columns O (14), P (15), Q (16)
+                    const closeUpPicture = getVal(14) || getVal(15) || getVal(16) || '';
+                    
+                    return {
+                        'Timestamp': getVal(0),
+                        'Carrier': getVal(2),
+                        'IF Number': getVal(3),
+                        'System': system,
+                        'Order Number': orderNumber,
+                        'Shipment Picture': shipmentPicture,
+                        'Paperwork Picture': paperworkPicture,
+                        'Close Up Picture': closeUpPicture,
+                        'Customer': getVal(17),
+                        'Category': getVal(18)
+                    };
+                }).filter(row => row['Timestamp'] && row['Timestamp'] !== 'Timestamp');
+                
+                shippingRecordsLoaded = true;
+                console.log('Loaded Shipping Records:', shippingRecordsData.length, 'rows');
+            } catch (e) {
+                console.error('Shipping Records load error:', e);
+            }
+        }
+        
+        function getShippingRecordsCategory(row) {
+            const cat = (row['Category'] || '').toLowerCase();
+            if (cat.includes('roll tech')) return 'rolltech';
+            if (cat.includes('molding')) return 'molding';
+            if (cat.includes('snap pad')) return 'snappad';
+            return 'other';
+        }
+        
+        function toggleShippingRecordsCategory(cat) {
+            shippingRecordsFilters.categories[cat] = !shippingRecordsFilters.categories[cat];
+            document.getElementById(`shippingRecordsBtnRollTech`).classList.toggle('active', shippingRecordsFilters.categories.rolltech);
+            document.getElementById(`shippingRecordsBtnMolding`).classList.toggle('active', shippingRecordsFilters.categories.molding);
+            document.getElementById(`shippingRecordsBtnSnapPad`).classList.toggle('active', shippingRecordsFilters.categories.snappad);
+            renderShippingRecordsTable();
+        }
+        
+        function renderShippingRecordsTableHeader() {
+            const headers = currentLanguage === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
+            initTableFilters('shippingRecords');
+            initHiddenColumns('shippingRecords');
+            document.getElementById('shippingRecordsTableHeader').innerHTML = headers.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('shippingRecords', colKey)) return '';
+                return createFilterHeader('shippingRecords', colKey, h, true);
+            }).join('');
+        }
+        
+        function renderShippingRecordsTable() {
+            if (shippingRecordsData.length === 0) {
+                document.getElementById('shippingRecordsTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                return;
+            }
+            
+            renderShippingRecordsTableHeader();
+            const headers = SHIPPING_RECORDS_HEADERS;
+            let data = [...shippingRecordsData];
+            
+            // Category filter
+            data = data.filter(row => shippingRecordsFilters.categories[getShippingRecordsCategory(row)] || getShippingRecordsCategory(row) === 'other');
+            
+            // Global search filter
+            const globalSearch = (document.getElementById('shippingRecordsGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => {
+                    return headers.some(h => {
+                        const val = row[h];
+                        return val && String(val).toLowerCase().includes(globalSearch);
+                    });
+                });
+            }
+            
+            // Apply column filters
+            data = data.filter(row => {
+                return headers.every((h, i) => {
+                    const colKey = `col_${i}`;
+                    const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    return passesColumnFilter('shippingRecords', colKey, val);
+                });
+            });
+            
+            // Apply sort
+            if (shippingRecordsSort.field !== null) {
+                const colIndex = parseInt(shippingRecordsSort.field.replace('col_', ''));
+                const header = headers[colIndex];
+                data.sort((a, b) => {
+                    let aVal = a[header] ?? '';
+                    let bVal = b[header] ?? '';
+                    const aNum = parseFloat(aVal), bNum = parseFloat(bVal);
+                    if (!isNaN(aNum) && !isNaN(bNum)) return shippingRecordsSort.asc ? aNum - bNum : bNum - aNum;
+                    return shippingRecordsSort.asc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+                });
+            }
+            
+            document.getElementById('shippingRecordsRowCount').textContent = data.length;
+            
+            // Render rows
+            const tbody = document.getElementById('shippingRecordsTableBody');
+            tbody.innerHTML = data.map(row => {
+                return '<tr>' + headers.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('shippingRecords', colKey)) return '';
+                    let val = row[h] ?? '';
+                    // Render picture links
+                    if (h.includes('Picture') && val && val.toString().includes('http')) {
+                        val = `<a href="${val}" target="_blank" style="color:var(--accent);">📷 View</a>`;
+                    }
+                    return `<td>${val}</td>`;
+                }).join('') + '</tr>';
+            }).join('');
+            
+            updateFilterButtonState('shippingRecords');
+        }
+        
+        function sortShippingRecordsTable(field) {
+            if (shippingRecordsSort.field === field) {
+                shippingRecordsSort.asc = !shippingRecordsSort.asc;
+            } else {
+                shippingRecordsSort.field = field;
+                shippingRecordsSort.asc = true;
+            }
+            renderShippingRecordsTable();
+        }
+        
+        function filterShippingRecordsTable() { renderShippingRecordsTable(); }
+        
+        function getUniqueShippingRecordsColumnValues(columnKey) {
+            const colIndex = parseInt(columnKey.replace('col_', ''));
+            const header = SHIPPING_RECORDS_HEADERS[colIndex];
+            const values = new Set();
+            shippingRecordsData.forEach(row => {
+                const val = row[header];
+                if (val !== undefined && val !== null && val !== '') {
+                    values.add(String(val));
+                }
+            });
+            return Array.from(values).sort((a, b) => a.localeCompare(b));
+        }
+        
+        function exportShippingRecordsToCSV() {
+            const headers = currentLanguage === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
+            const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = shippingRecordsData.map(row => 
+                SHIPPING_RECORDS_HEADERS.map(h => {
+                    const val = row[h];
+                    if (val === undefined || val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+            downloadCSV([headerRow, ...rows].join('\n'), `shipping_records_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        // ============================================================
+        // STAGED RECORDS FUNCTIONS
+        // ============================================================
+        
+        async function loadStagedRecordsData() {
+            if (stagedRecordsLoaded) return;
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${STAGED_RECORDS_GID}`;
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                
+                // Map the raw data to our English headers
+                stagedRecordsData = json.table.rows.map(r => {
+                    const cells = r.c || [];
+                    const getVal = (idx) => cells[idx] ? (cells[idx].f ?? cells[idx].v ?? '') : '';
+                    
+                    return {
+                        'Timestamp': getVal(0),
+                        'Line Number': getVal(1),
+                        'IF Number': getVal(2),
+                        'Order Quantity': getVal(3),
+                        'Number of Pallets': getVal(4),
+                        'Staged By': getVal(5),
+                        'Comments': getVal(6),
+                        'Order Status': getVal(7),
+                        'Staged in Fusion': getVal(8),
+                        'Pallet Dimensions': getVal(9),
+                        'Pallet Weight (lbs)': getVal(10),
+                        'Confirmed Staged': getVal(11),
+                        'Fusion Picture': getVal(12),
+                        'Customer': getVal(14),
+                        'Category': getVal(15)
+                    };
+                }).filter(row => row['Timestamp'] && row['Timestamp'] !== 'Timestamp');
+                
+                stagedRecordsLoaded = true;
+                console.log('Loaded Staged Records:', stagedRecordsData.length, 'rows');
+            } catch (e) {
+                console.error('Staged Records load error:', e);
+            }
+        }
+        
+        function getStagedRecordsCategory(row) {
+            const cat = (row['Category'] || '').toLowerCase();
+            if (cat.includes('roll tech')) return 'rolltech';
+            if (cat.includes('molding')) return 'molding';
+            if (cat.includes('snap pad')) return 'snappad';
+            return 'other';
+        }
+        
+        function toggleStagedRecordsCategory(cat) {
+            stagedRecordsFilters.categories[cat] = !stagedRecordsFilters.categories[cat];
+            document.getElementById(`stagedRecordsBtnRollTech`).classList.toggle('active', stagedRecordsFilters.categories.rolltech);
+            document.getElementById(`stagedRecordsBtnMolding`).classList.toggle('active', stagedRecordsFilters.categories.molding);
+            document.getElementById(`stagedRecordsBtnSnapPad`).classList.toggle('active', stagedRecordsFilters.categories.snappad);
+            renderStagedRecordsTable();
+        }
+        
+        function renderStagedRecordsTableHeader() {
+            const headers = currentLanguage === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
+            initTableFilters('stagedRecords');
+            initHiddenColumns('stagedRecords');
+            document.getElementById('stagedRecordsTableHeader').innerHTML = headers.map((h, i) => {
+                const colKey = `col_${i}`;
+                if (isColumnHidden('stagedRecords', colKey)) return '';
+                return createFilterHeader('stagedRecords', colKey, h, true);
+            }).join('');
+        }
+        
+        function renderStagedRecordsTable() {
+            if (stagedRecordsData.length === 0) {
+                document.getElementById('stagedRecordsTableBody').innerHTML = '<tr><td colspan="20">Loading data...</td></tr>';
+                return;
+            }
+            
+            renderStagedRecordsTableHeader();
+            const headers = STAGED_RECORDS_HEADERS;
+            let data = [...stagedRecordsData];
+            
+            // Category filter
+            data = data.filter(row => stagedRecordsFilters.categories[getStagedRecordsCategory(row)] || getStagedRecordsCategory(row) === 'other');
+            
+            // Global search filter
+            const globalSearch = (document.getElementById('stagedRecordsGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => {
+                    return headers.some(h => {
+                        const val = row[h];
+                        return val && String(val).toLowerCase().includes(globalSearch);
+                    });
+                });
+            }
+            
+            // Apply column filters
+            data = data.filter(row => {
+                return headers.every((h, i) => {
+                    const colKey = `col_${i}`;
+                    const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                    return passesColumnFilter('stagedRecords', colKey, val);
+                });
+            });
+            
+            // Apply sort
+            if (stagedRecordsSort.field !== null) {
+                const colIndex = parseInt(stagedRecordsSort.field.replace('col_', ''));
+                const header = headers[colIndex];
+                data.sort((a, b) => {
+                    let aVal = a[header] ?? '';
+                    let bVal = b[header] ?? '';
+                    const aNum = parseFloat(aVal), bNum = parseFloat(bVal);
+                    if (!isNaN(aNum) && !isNaN(bNum)) return stagedRecordsSort.asc ? aNum - bNum : bNum - aNum;
+                    return stagedRecordsSort.asc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+                });
+            }
+            
+            document.getElementById('stagedRecordsRowCount').textContent = data.length;
+            
+            // Render rows
+            const tbody = document.getElementById('stagedRecordsTableBody');
+            tbody.innerHTML = data.map(row => {
+                return '<tr>' + headers.map((h, i) => {
+                    const colKey = `col_${i}`;
+                    if (isColumnHidden('stagedRecords', colKey)) return '';
+                    let val = row[h] ?? '';
+                    // Render picture links
+                    if (h.includes('Picture') && val && val.toString().includes('http')) {
+                        val = `<a href="${val}" target="_blank" style="color:var(--accent);">📷 View</a>`;
+                    }
+                    return `<td>${val}</td>`;
+                }).join('') + '</tr>';
+            }).join('');
+            
+            updateFilterButtonState('stagedRecords');
+        }
+        
+        function sortStagedRecordsTable(field) {
+            if (stagedRecordsSort.field === field) {
+                stagedRecordsSort.asc = !stagedRecordsSort.asc;
+            } else {
+                stagedRecordsSort.field = field;
+                stagedRecordsSort.asc = true;
+            }
+            renderStagedRecordsTable();
+        }
+        
+        function filterStagedRecordsTable() { renderStagedRecordsTable(); }
+        
+        function getUniqueStagedRecordsColumnValues(columnKey) {
+            const colIndex = parseInt(columnKey.replace('col_', ''));
+            const header = STAGED_RECORDS_HEADERS[colIndex];
+            const values = new Set();
+            stagedRecordsData.forEach(row => {
+                const val = row[header];
+                if (val !== undefined && val !== null && val !== '') {
+                    values.add(String(val));
+                }
+            });
+            return Array.from(values).sort((a, b) => a.localeCompare(b));
+        }
+        
+        function exportStagedRecordsToCSV() {
+            const headers = currentLanguage === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
+            const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = stagedRecordsData.map(row => 
+                STAGED_RECORDS_HEADERS.map(h => {
+                    const val = row[h];
+                    if (val === undefined || val === null) return '""';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+            downloadCSV([headerRow, ...rows].join('\n'), `staged_records_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
         // Initialize
