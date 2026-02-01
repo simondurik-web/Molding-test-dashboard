@@ -3780,12 +3780,18 @@
             
             // Get shipping records for shipping photos (for shipped orders)
             const shippingRecords = getShippingRecordsForOrder(ifNum);
-            console.log('Shipping records for IF#', ifNum, ':', shippingRecords);
+            console.log('==== SHIPPING PHOTOS DEBUG ====');
+            console.log('IF Number:', ifNum);
+            console.log('Shipping records found:', shippingRecords.length);
+            if (shippingRecords.length > 0) {
+                console.log('First shipping record:', JSON.stringify(shippingRecords[0], null, 2));
+            }
             // Aggregate all photos from all matching records
             const shipmentPictures = shippingRecords.flatMap(r => r['Shipment Pictures'] || []);
             const paperworkPictures = shippingRecords.flatMap(r => r['Paperwork Pictures'] || []);
             const closeUpPictures = shippingRecords.flatMap(r => r['Close Up Pictures'] || []);
             console.log('Photos found - Shipment:', shipmentPictures.length, 'Paperwork:', paperworkPictures.length, 'CloseUp:', closeUpPictures.length);
+            console.log('============================');
             
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
             
@@ -3810,21 +3816,22 @@
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
-            // Build gallery content
-            let galleryHtml = '';
+            // Build gallery content - use two-column layout
+            let galleryHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
             
-            // Pallet Pictures Table (if pallets exist)
+            // LEFT COLUMN: Pallet Details
+            let leftColumn = '';
             if (pallets.length > 0) {
-                galleryHtml += `
+                leftColumn += `
                     <div style="margin-bottom: 20px;">
                         <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📦 Pallet Details</h4>
-                        <table class="data-table" style="width:100%;">
+                        <table class="data-table" style="width:100%; font-size: 12px;">
                             <thead>
                                 <tr>
                                     <th>${t('col.palletNum')}</th>
                                     <th>${t('pallet.weight')}</th>
                                     <th>${t('pallet.dimensions')}</th>
-                                    <th>Picture Link</th>
+                                    <th>Photo</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -3833,41 +3840,47 @@
                                         <td><strong>${p.palletNumber || (idx + 1)}</strong></td>
                                         <td>${p.weight || '-'}</td>
                                         <td>${p.dimensions || '-'}</td>
-                                        <td>${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷 View Photo</a>` : '-'}</td>
+                                        <td>${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷</a>` : '-'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
                 `;
+            } else {
+                leftColumn += '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">No pallet data</div>';
             }
+            galleryHtml += `<div>${leftColumn}</div>`;
             
-            // Fusion Pictures (for staged orders - also show for shipped if available)
+            // RIGHT COLUMN: Photos (Fusion + Shipping)
+            let rightColumn = '';
+            
+            // Fusion Pictures
             if (fusionPictures.length > 0) {
-                galleryHtml += `
-                    <div style="margin-bottom: 20px; background: rgba(49, 130, 206, 0.1); padding: 16px; border-radius: 10px; border-left: 4px solid var(--accent);">
-                        <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📄 Fusion Pictures</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${fusionPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--accent); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">📄 Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`).join('')}
+                rightColumn += `
+                    <div style="margin-bottom: 16px; background: rgba(49, 130, 206, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
+                        <h4 style="color: var(--accent); margin-bottom: 10px; font-size: 13px;">📄 Fusion Pictures</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            ${fusionPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: var(--accent); color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-size: 11px; font-weight: 600;">Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`).join('')}
                         </div>
                     </div>
                 `;
             }
             
-            // Shipping Photos (for shipped orders)
+            // Shipping Photos
             if (shipmentPictures.length > 0 || paperworkPictures.length > 0 || closeUpPictures.length > 0) {
-                galleryHtml += `
-                    <div style="margin-bottom: 20px; background: rgba(56, 161, 105, 0.1); padding: 16px; border-radius: 10px; border-left: 4px solid var(--success);">
-                        <h4 style="color: var(--success); margin-bottom: 12px; font-size: 14px;">📸 Shipping Photos</h4>
+                rightColumn += `
+                    <div style="background: rgba(56, 161, 105, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--success);">
+                        <h4 style="color: var(--success); margin-bottom: 10px; font-size: 13px;">📸 Shipping Photos</h4>
                 `;
                 
                 // Shipment Pictures
                 if (shipmentPictures.length > 0) {
-                    galleryHtml += `
-                        <div style="margin-bottom: 12px;">
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🚚 Shipment Pictures</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                ${shipmentPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--success); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Shipment ${i + 1}</a>`).join('')}
+                    rightColumn += `
+                        <div style="margin-bottom: 10px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">🚚 Shipment</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                ${shipmentPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: var(--success); color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; font-weight: 600;">Shipment ${i + 1}</a>`).join('')}
                             </div>
                         </div>
                     `;
@@ -3875,11 +3888,11 @@
                 
                 // Paperwork Pictures
                 if (paperworkPictures.length > 0) {
-                    galleryHtml += `
-                        <div style="margin-bottom: 12px;">
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">📄 Paperwork Pictures</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                ${paperworkPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: #718096; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Document ${i + 1}</a>`).join('')}
+                    rightColumn += `
+                        <div style="margin-bottom: 10px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">📄 Paperwork</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                ${paperworkPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: #718096; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; font-weight: 600;">Doc ${i + 1}</a>`).join('')}
                             </div>
                         </div>
                     `;
@@ -3887,18 +3900,25 @@
                 
                 // Close-Up Pictures
                 if (closeUpPictures.length > 0) {
-                    galleryHtml += `
+                    rightColumn += `
                         <div>
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🔍 Close-Up Pictures</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                ${closeUpPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: #805ad5; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Close-up ${i + 1}</a>`).join('')}
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">🔍 Close-Up</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                ${closeUpPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: #805ad5; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; font-weight: 600;">Close-up ${i + 1}</a>`).join('')}
                             </div>
                         </div>
                     `;
                 }
                 
-                galleryHtml += `</div>`;
+                rightColumn += `</div>`;
             }
+            
+            if (!rightColumn) {
+                rightColumn = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">No shipping photos</div>';
+            }
+            galleryHtml += `<div>${rightColumn}</div>`;
+            
+            galleryHtml += '</div>'; // Close grid
             
             // Show message if no data at all
             if (pallets.length === 0 && fusionPictures.length === 0 && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
@@ -6962,9 +6982,27 @@
             try {
                 // Use proven fetchSheetData function
                 const rawData = await fetchSheetData(SHIPPING_RECORDS_GID);
-                console.log('Shipping Records raw data sample:', rawData.length > 0 ? rawData[0] : 'no data');
-                console.log('Shipping Records raw data count:', rawData.length);
-                console.log('Shipping Records headers:', rawData.length > 0 ? Object.keys(rawData[0]) : 'none');
+                console.log('==== SHIPPING RECORDS LOAD DEBUG ====');
+                console.log('Raw data count:', rawData.length);
+                if (rawData.length > 0) {
+                    const headers = Object.keys(rawData[0]);
+                    console.log('ALL Column headers (' + headers.length + '):', headers);
+                    // Show headers that might contain pictures
+                    const pictureHeaders = headers.filter(h => 
+                        h.toLowerCase().includes('picture') || 
+                        h.toLowerCase().includes('foto') ||
+                        h.toLowerCase().includes('image') ||
+                        h.toLowerCase().includes('ship') ||
+                        h.toLowerCase().includes('envio') ||
+                        h.toLowerCase().includes('paper') ||
+                        h.toLowerCase().includes('papeleo') ||
+                        h.toLowerCase().includes('close') ||
+                        h.toLowerCase().includes('cercana')
+                    );
+                    console.log('Picture-related headers:', pictureHeaders);
+                    console.log('First row sample:', rawData[0]);
+                }
+                console.log('=====================================');
                 
                 // Helper to extract URLs from a field that may contain multiple URLs
                 const extractUrls = (value) => {
@@ -7011,17 +7049,17 @@
                     else if (system) system = 'Other';
                     else system = '';
                     
-                    // Get all shipment pictures - match "shipment picture" in header
-                    // Column names: "Fusion - Shipment Pictures", "Veeqo - Shipment Pictures", "Other - Shipment Pictures"
-                    const shipmentPictures = findAllPictures('shipment picture', 'shipment pictures');
+                    // Get all shipment pictures - match various patterns for shipment photos
+                    // Column names may include: "Shipment", "Envío", "Envio", "ship"
+                    const shipmentPictures = findAllPictures('shipment', 'envío', 'envio', 'ship');
                     
                     // Get all paperwork pictures
-                    // Column names: "Fusion - Paperwork Pictures", "Veeqo - Paperwork Pictures", "Other - Paperwork Pictures"
-                    const paperworkPictures = findAllPictures('paperwork picture', 'paperwork pictures');
+                    // Column names may include: "Paperwork", "Papeleo", "BOL", "document"
+                    const paperworkPictures = findAllPictures('paperwork', 'papeleo', 'bol', 'document');
                     
                     // Get all close up pictures
-                    // Column names: "Fusion - Close-up Pictures", "Veeqo - Close-up Pictures", "Other - Close-up Pictures"
-                    const closeUpPictures = findAllPictures('close-up picture', 'close-up pictures', 'closeup');
+                    // Column names may include: "Close-up", "Close up", "Closeup", "Primer Plano", "Cercana"
+                    const closeUpPictures = findAllPictures('close-up', 'close up', 'closeup', 'primer plano', 'cercana');
                     
                     return {
                         'Timestamp': findVal('timestamp', 'marca de tiempo'),
