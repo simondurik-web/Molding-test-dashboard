@@ -321,6 +321,11 @@
         .pallet-summary-item .label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
         .pallet-summary-item .value { font-size: 14px; font-weight: 700; }
         .pallet-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+        .photo-drilldown-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; width: 100%; }
+        .photo-drilldown-box { padding: 20px; border-radius: 12px; min-height: 220px; display: flex; flex-direction: column; flex: 1; }
+        .photo-drilldown-box h4 { margin: 0 0 16px 0; font-size: 14px; font-weight: 600; }
+        .photo-drilldown-box .photo-btn { display: inline-block; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; margin: 4px; }
+        .photo-drilldown-box .photo-info { font-size: 11px; color: var(--text-secondary); line-height: 1.6; margin-top: auto; }
         .pallet-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.2s; }
         .pallet-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
         .pallet-card-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -3816,84 +3821,81 @@
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
-            // Build gallery content - horizontal layout with 4 consistent card boxes filling full width
-            let galleryHtml = '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%;">';
-            
-            // Card style helper - larger design for better visibility
-            const cardStyle = (borderColor, bgColor) => `background: ${bgColor}; padding: 16px 20px; border-radius: 10px; border: 1px solid ${borderColor}; border-top: 3px solid ${borderColor}; min-height: 180px; display: flex; flex-direction: column;`;
-            const headerStyle = (color) => `color: ${color}; margin: 0 0 12px 0; font-size: 13px; font-weight: 600;`;
-            const btnStyle = (bg) => `display: inline-block; background: ${bg}; color: white; padding: 6px 10px; border-radius: 5px; text-decoration: none; font-size: 11px; font-weight: 600; margin: 3px;`;
+            // Build gallery content - horizontal layout with 4 boxes filling full width
+            let galleryHtml = '<div class="photo-drilldown-grid">';
             
             // BOX 1: Pallet Details (Blue)
-            galleryHtml += `<div style="${cardStyle('var(--accent)', 'rgba(49, 130, 206, 0.1)')}">`;
-            galleryHtml += `<h4 style="${headerStyle('var(--accent)')}">📦 Pallet Details</h4>`;
+            galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(49, 130, 206, 0.15); border: 1px solid var(--accent); border-top: 4px solid var(--accent);">`;
+            galleryHtml += `<h4 style="color: var(--accent);">📦 Pallet Details</h4>`;
             if (pallets.length > 0) {
-                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">`;
+                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">`;
                 pallets.forEach((p, idx) => {
                     const num = p.palletNumber || (idx + 1);
                     if (p.pictureUrl) {
-                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" style="${btnStyle('var(--accent)')}">Pallet ${num}</a>`;
+                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" class="photo-btn" style="background: var(--accent);">Pallet ${num}</a>`;
                     } else {
-                        galleryHtml += `<span style="${btnStyle('#4a5568')}">Pallet ${num}</span>`;
+                        galleryHtml += `<span class="photo-btn" style="background: #4a5568;">Pallet ${num}</span>`;
                     }
                 });
                 galleryHtml += `</div>`;
-                galleryHtml += `<div style="font-size: 10px; color: var(--text-secondary); line-height: 1.5; margin-top: auto;">`;
-                galleryHtml += pallets.map((p, idx) => `#${p.palletNumber || (idx + 1)}: ${p.weight || '-'}lbs ${p.dimensions || '-'}`).join(' | ');
+                galleryHtml += `<div class="photo-info">`;
+                galleryHtml += pallets.map((p, idx) => `#${p.palletNumber || (idx + 1)}: ${p.weight || '-'}lbs<br>${p.dimensions || '-'}`).join('<br>');
                 galleryHtml += `</div>`;
             } else {
-                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px; margin-top: auto;">No pallet data</div>`;
+                galleryHtml += `<div class="photo-info">No pallet data</div>`;
             }
             galleryHtml += `</div>`;
             
             // BOX 2: Fusion Pictures (Teal/Cyan)
-            galleryHtml += `<div style="${cardStyle('#38b2ac', 'rgba(56, 178, 172, 0.1)')}">`;
-            galleryHtml += `<h4 style="${headerStyle('#38b2ac')}">📄 Fusion Pictures</h4>`;
+            galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(56, 178, 172, 0.15); border: 1px solid #38b2ac; border-top: 4px solid #38b2ac;">`;
+            galleryHtml += `<h4 style="color: #38b2ac;">📄 Fusion Pictures</h4>`;
             if (fusionPictures.length > 0) {
-                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                 fusionPictures.forEach((url, i) => {
-                    galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('#38b2ac')}">Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`;
+                    galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: #38b2ac;">Fusion${fusionPictures.length > 1 ? ' ' + (i + 1) : ''}</a>`;
                 });
                 galleryHtml += `</div>`;
             } else {
-                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px; margin-top: auto;">No fusion pictures</div>`;
+                galleryHtml += `<div class="photo-info">No fusion pictures</div>`;
             }
             galleryHtml += `</div>`;
             
             // BOX 3: Shipment & Paperwork Pictures (Green)
-            galleryHtml += `<div style="${cardStyle('var(--success)', 'rgba(56, 161, 105, 0.1)')}">`;
-            galleryHtml += `<h4 style="${headerStyle('var(--success)')}">🚚 Shipment Photos</h4>`;
+            galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(56, 161, 105, 0.15); border: 1px solid var(--success); border-top: 4px solid var(--success);">`;
+            galleryHtml += `<h4 style="color: var(--success);">🚚 Shipment Photos</h4>`;
             if (shipmentPictures.length > 0 || paperworkPictures.length > 0) {
                 if (shipmentPictures.length > 0) {
-                    galleryHtml += `<div style="margin-bottom: 8px;"><span style="font-size: 10px; color: var(--text-secondary);">Ship: </span>`;
+                    galleryHtml += `<div style="margin-bottom: 10px;"><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">Ship:</div>`;
+                    galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                     shipmentPictures.forEach((url, i) => {
-                        galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('var(--success)')}">Ship ${i + 1}</a>`;
+                        galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--success);">Ship ${i + 1}</a>`;
                     });
-                    galleryHtml += `</div>`;
+                    galleryHtml += `</div></div>`;
                 }
                 if (paperworkPictures.length > 0) {
-                    galleryHtml += `<div><span style="font-size: 10px; color: var(--text-secondary);">Docs: </span>`;
+                    galleryHtml += `<div><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">Docs:</div>`;
+                    galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                     paperworkPictures.forEach((url, i) => {
-                        galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('#718096')}">Doc ${i + 1}</a>`;
+                        galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: #718096;">Doc ${i + 1}</a>`;
                     });
-                    galleryHtml += `</div>`;
+                    galleryHtml += `</div></div>`;
                 }
             } else {
-                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px; margin-top: auto;">No shipment photos</div>`;
+                galleryHtml += `<div class="photo-info">No shipment photos</div>`;
             }
             galleryHtml += `</div>`;
             
             // BOX 4: Close-Up Pictures (Purple)
-            galleryHtml += `<div style="${cardStyle('#805ad5', 'rgba(128, 90, 213, 0.1)')}">`;
-            galleryHtml += `<h4 style="${headerStyle('#805ad5')}">🔍 Close-Up Pictures</h4>`;
+            galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(128, 90, 213, 0.15); border: 1px solid #805ad5; border-top: 4px solid #805ad5;">`;
+            galleryHtml += `<h4 style="color: #805ad5;">🔍 Close-Up Pictures</h4>`;
             if (closeUpPictures.length > 0) {
-                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                 closeUpPictures.forEach((url, i) => {
-                    galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('#805ad5')}">Close-up ${i + 1}</a>`;
+                    galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: #805ad5;">Close-up ${i + 1}</a>`;
                 });
                 galleryHtml += `</div>`;
             } else {
-                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px; margin-top: auto;">No close-up pictures</div>`;
+                galleryHtml += `<div class="photo-info">No close-up pictures</div>`;
             }
             galleryHtml += `</div>`;
             
@@ -3911,10 +3913,10 @@
                                 </div>
                                 <button class="close-btn" onclick="closePalletDrilldown()" style="background: var(--bg-dark); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; cursor: pointer; color: var(--text); font-size: 12px;">✕ Close</button>
                             </div>
-                            <div class="pallet-summary" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
+                            <div class="pallet-summary" style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
                                 ${summaryHtml}
                             </div>
-                            <div class="pallet-gallery" style="width: 100%;">
+                            <div style="width: 100%;">
                                 ${galleryHtml}
                             </div>
                         </div>
