@@ -1638,7 +1638,18 @@
                 'btn.backToDashboard': 'Back',
                 'prod.missingBanner': 'orders have missing components.',
                 'ui.parts': 'parts',
-                'ui.customers': 'customers'
+                'ui.customers': 'customers',
+                // Photo Drilldown translations
+                'photo.palletDetails': 'Pallet Details',
+                'photo.fusionPictures': 'Fusion Pictures',
+                'photo.shipmentPhotos': 'Shipment Photos',
+                'photo.closeUpPictures': 'Close-Up Pictures',
+                'photo.noPalletData': 'No pallet data',
+                'photo.noFusionPictures': 'No fusion pictures',
+                'photo.noShipmentPhotos': 'No shipment photos',
+                'photo.noCloseUpPictures': 'No close-up pictures',
+                'photo.ship': 'Ship',
+                'photo.docs': 'Docs'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones de Moldeo',
@@ -1863,7 +1874,18 @@
                 'btn.backToDashboard': 'Volver',
                 'prod.missingBanner': 'órdenes tienen componentes faltantes.',
                 'ui.parts': 'partes',
-                'ui.customers': 'clientes'
+                'ui.customers': 'clientes',
+                // Photo Drilldown translations
+                'photo.palletDetails': 'Detalles de Paleta',
+                'photo.fusionPictures': 'Fotos de Fusion',
+                'photo.shipmentPhotos': 'Fotos de Envío',
+                'photo.closeUpPictures': 'Fotos de Cerca',
+                'photo.noPalletData': 'Sin datos de paleta',
+                'photo.noFusionPictures': 'Sin fotos de fusion',
+                'photo.noShipmentPhotos': 'Sin fotos de envío',
+                'photo.noCloseUpPictures': 'Sin fotos de cerca',
+                'photo.ship': 'Envío',
+                'photo.docs': 'Docs'
             }
         };
         
@@ -3831,7 +3853,7 @@
             
             // BOX 1: Pallet Details (Blue)
             galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(49, 130, 206, 0.15); border: 1px solid var(--accent); border-top: 4px solid var(--accent);">`;
-            galleryHtml += `<h4 style="color: var(--accent);">📦 Pallet Details</h4>`;
+            galleryHtml += `<h4 style="color: var(--accent);">📦 ${t('photo.palletDetails')}</h4>`;
             if (pallets.length > 0) {
                 galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">`;
                 pallets.forEach((p, idx) => {
@@ -3847,13 +3869,13 @@
                 galleryHtml += pallets.map((p, idx) => `#${p.palletNumber || (idx + 1)}: ${p.weight || '-'}lbs<br>${p.dimensions || '-'}`).join('<br>');
                 galleryHtml += `</div>`;
             } else {
-                galleryHtml += `<div class="photo-info">No pallet data</div>`;
+                galleryHtml += `<div class="photo-info">${t('photo.noPalletData')}</div>`;
             }
             galleryHtml += `</div>`;
             
             // BOX 2: Fusion Pictures (Teal/Cyan)
             galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(56, 178, 172, 0.15); border: 1px solid #38b2ac; border-top: 4px solid #38b2ac;">`;
-            galleryHtml += `<h4 style="color: #38b2ac;">📄 Fusion Pictures</h4>`;
+            galleryHtml += `<h4 style="color: #38b2ac;">📄 ${t('photo.fusionPictures')}</h4>`;
             if (fusionPictures.length > 0) {
                 galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                 fusionPictures.forEach((url, i) => {
@@ -3861,24 +3883,24 @@
                 });
                 galleryHtml += `</div>`;
             } else {
-                galleryHtml += `<div class="photo-info">No fusion pictures</div>`;
+                galleryHtml += `<div class="photo-info">${t('photo.noFusionPictures')}</div>`;
             }
             galleryHtml += `</div>`;
             
             // BOX 3: Shipment & Paperwork Pictures (Green)
             galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(56, 161, 105, 0.15); border: 1px solid var(--success); border-top: 4px solid var(--success);">`;
-            galleryHtml += `<h4 style="color: var(--success);">🚚 Shipment Photos</h4>`;
+            galleryHtml += `<h4 style="color: var(--success);">🚚 ${t('photo.shipmentPhotos')}</h4>`;
             if (shipmentPictures.length > 0 || paperworkPictures.length > 0) {
                 if (shipmentPictures.length > 0) {
-                    galleryHtml += `<div style="margin-bottom: 10px;"><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">Ship:</div>`;
+                    galleryHtml += `<div style="margin-bottom: 10px;"><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">${t('photo.ship')}:</div>`;
                     galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                     shipmentPictures.forEach((url, i) => {
-                        galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--success);">Ship ${i + 1}</a>`;
+                        galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--success);">${t('photo.ship')} ${i + 1}</a>`;
                     });
                     galleryHtml += `</div></div>`;
                 }
                 if (paperworkPictures.length > 0) {
-                    galleryHtml += `<div><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">Docs:</div>`;
+                    galleryHtml += `<div><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">${t('photo.docs')}:</div>`;
                     galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                     paperworkPictures.forEach((url, i) => {
                         galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: #718096;">Doc ${i + 1}</a>`;
@@ -3886,13 +3908,13 @@
                     galleryHtml += `</div></div>`;
                 }
             } else {
-                galleryHtml += `<div class="photo-info">No shipment photos</div>`;
+                galleryHtml += `<div class="photo-info">${t('photo.noShipmentPhotos')}</div>`;
             }
             galleryHtml += `</div>`;
             
             // BOX 4: Close-Up Pictures (Purple)
             galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(128, 90, 213, 0.15); border: 1px solid #805ad5; border-top: 4px solid #805ad5;">`;
-            galleryHtml += `<h4 style="color: #805ad5;">🔍 Close-Up Pictures</h4>`;
+            galleryHtml += `<h4 style="color: #805ad5;">🔍 ${t('photo.closeUpPictures')}</h4>`;
             if (closeUpPictures.length > 0) {
                 galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                 closeUpPictures.forEach((url, i) => {
@@ -3900,7 +3922,7 @@
                 });
                 galleryHtml += `</div>`;
             } else {
-                galleryHtml += `<div class="photo-info">No close-up pictures</div>`;
+                galleryHtml += `<div class="photo-info">${t('photo.noCloseUpPictures')}</div>`;
             }
             galleryHtml += `</div>`;
             
