@@ -308,9 +308,12 @@
         .dashboard-wrapper { zoom: 1; }
         
         /* Pallet Pictures Gallery Styles */
-        .pallet-drilldown { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 2000; overflow-y: auto; padding: 40px; }
+        .pallet-drilldown { display: none; background: var(--bg-card); border-radius: 0 0 14px 14px; padding: 20px; border: 1px solid var(--border); border-top: 2px solid var(--accent); margin-top: -1px; }
         .pallet-drilldown.active { display: block; }
-        .pallet-drilldown-content { max-width: 900px; margin: 0 auto; background: var(--bg-card); border-radius: 14px; padding: 24px; border: 1px solid var(--border); }
+        .pallet-drilldown-content { max-width: 100%; }
+        tr.drilldown-active { background: rgba(49, 130, 206, 0.15) !important; }
+        tr.drilldown-active td { border-bottom: none !important; }
+        .order-drilldown-row td { border-top: none !important; }
         .pallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
         .pallet-header h3 { font-size: 18px; }
         .pallet-summary { display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -1399,21 +1402,6 @@
                     </table>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Global Order Details Drilldown Modal -->
-    <div class="pallet-drilldown" id="palletDrilldown" onclick="if(event.target === this) closePalletDrilldown()">
-        <div class="pallet-drilldown-content">
-            <div class="pallet-header">
-                <div>
-                    <div class="breadcrumb">Order Details › <span id="palletDrilldownOrder">-</span></div>
-                    <h3 data-i18n="pallet.title">Order Photos & Details</h3>
-                </div>
-                <button class="close-btn" onclick="closePalletDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
-            </div>
-            <div class="pallet-summary" id="palletSummary"></div>
-            <div class="pallet-gallery" id="palletGallery"></div>
         </div>
     </div>
 
@@ -3304,8 +3292,7 @@
                 const status = getStatus(r);
                 // Make all rows clickable to show order details
                 const rowClass = 'clickable-row';
-                const rowClick = `onclick="openOrderDrilldown('${lineNum}')"`;
-                
+                const rowClick = `onclick="showPalletPictures('${lineNum}', this)"`;                
                 // Helper for component cells - show N/A for non-Roll Tech
                 const formatComponentForCategory = (value) => {
                     if (!isRollTech) return '<span style="color:var(--text-secondary);">N/A</span>';
@@ -3672,7 +3659,7 @@
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const palletIndicator = hasPallets ? `<span class="pallet-indicator" title="${pallets.length} ${t('pallet.pallets').toLowerCase()}">📷 ${pallets.length}</span>` : '📋';
                 // Always allow clicking to view drilldown (may have fusion pictures even without pallets)
-                const clickHandler = `onclick="showPalletPictures('${line}')" style="cursor:pointer;"`;
+                const clickHandler = `onclick="showPalletPictures('${line}', this)" style="cursor:pointer;"`;
                 
                 let cells = '';
                 if (!isColumnHidden('ordersStaged', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
@@ -3738,10 +3725,19 @@
         }
         
         // Show pallet pictures modal for an order (using Line number)
-        async function showPalletPictures(lineNum) {
+        async function showPalletPictures(lineNum, clickedRow) {
             // Ensure staged and shipping records are loaded
             await loadStagedRecordsData();
             await loadShippingRecordsData();
+            
+            // If clicking the same order, close it
+            if (currentPalletOrder === lineNum) {
+                closePalletDrilldown();
+                return;
+            }
+            
+            // Close any existing drilldown first
+            closePalletDrilldown();
             
             const pallets = getPalletDataForOrder(lineNum);
             
@@ -3784,12 +3780,12 @@
             
             // Get shipping records for shipping photos (for shipped orders)
             const shippingRecords = getShippingRecordsForOrder(ifNum);
+            console.log('Shipping records for IF#', ifNum, ':', shippingRecords);
             // Aggregate all photos from all matching records
             const shipmentPictures = shippingRecords.flatMap(r => r['Shipment Pictures'] || []);
             const paperworkPictures = shippingRecords.flatMap(r => r['Paperwork Pictures'] || []);
             const closeUpPictures = shippingRecords.flatMap(r => r['Close Up Pictures'] || []);
-            
-            document.getElementById('palletDrilldownOrder').textContent = `#${lineNum}`;
+            console.log('Photos found - Shipment:', shipmentPictures.length, 'Paperwork:', paperworkPictures.length, 'CloseUp:', closeUpPictures.length);
             
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
             
@@ -3814,10 +3810,7 @@
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
-            document.getElementById('palletSummary').innerHTML = summaryHtml;
-            
             // Build gallery content
-            const gallery = document.getElementById('palletGallery');
             let galleryHtml = '';
             
             // Pallet Pictures Table (if pallets exist)
@@ -3849,8 +3842,8 @@
                 `;
             }
             
-            // Fusion Pictures (for staged orders)
-            if (status === 'staged' && fusionPictures.length > 0) {
+            // Fusion Pictures (for staged orders - also show for shipped if available)
+            if (fusionPictures.length > 0) {
                 galleryHtml += `
                     <div style="margin-bottom: 20px; background: rgba(49, 130, 206, 0.1); padding: 16px; border-radius: 10px; border-left: 4px solid var(--accent);">
                         <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📄 Fusion Pictures</h4>
@@ -3862,7 +3855,7 @@
             }
             
             // Shipping Photos (for shipped orders)
-            if (status === 'shipped' && (shipmentPictures.length > 0 || paperworkPictures.length > 0 || closeUpPictures.length > 0)) {
+            if (shipmentPictures.length > 0 || paperworkPictures.length > 0 || closeUpPictures.length > 0) {
                 galleryHtml += `
                     <div style="margin-bottom: 20px; background: rgba(56, 161, 105, 0.1); padding: 16px; border-radius: 10px; border-left: 4px solid var(--success);">
                         <h4 style="color: var(--success); margin-bottom: 12px; font-size: 14px;">📸 Shipping Photos</h4>
@@ -3914,15 +3907,61 @@
                 </div>`;
             }
             
-            gallery.innerHTML = galleryHtml;
+            // Build the full drilldown HTML
+            const drilldownHtml = `
+                <tr id="orderDrilldownRow" class="order-drilldown-row">
+                    <td colspan="20" style="padding: 0; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 0 0 10px 10px;">
+                        <div style="padding: 20px;">
+                            <div class="pallet-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <div class="breadcrumb" style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Order Details › Line #${lineNum}</div>
+                                    <h3 style="font-size: 18px; margin: 0;">Order Photos & Details</h3>
+                                </div>
+                                <button class="close-btn" onclick="closePalletDrilldown()" style="background: var(--bg-dark); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text); font-size: 12px;">✕ Close</button>
+                            </div>
+                            <div class="pallet-summary" style="display: flex; gap: 20px; margin-bottom: 16px; flex-wrap: wrap;">
+                                ${summaryHtml}
+                            </div>
+                            <div class="pallet-gallery">
+                                ${galleryHtml}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
             
-            document.getElementById('palletDrilldown').classList.add('active');
-            // Modal is now a fixed overlay, scroll content to top
-            document.getElementById('palletDrilldown').scrollTop = 0;
+            // Find the clicked row and insert drilldown after it
+            if (clickedRow) {
+                clickedRow.classList.add('drilldown-active');
+                clickedRow.insertAdjacentHTML('afterend', drilldownHtml);
+            } else {
+                // Fallback: find the row by line number
+                const allRows = document.querySelectorAll('tr.clickable-row');
+                for (const row of allRows) {
+                    const lineCell = row.querySelector('td:first-child strong');
+                    if (lineCell && lineCell.textContent === String(lineNum)) {
+                        row.classList.add('drilldown-active');
+                        row.insertAdjacentHTML('afterend', drilldownHtml);
+                        break;
+                    }
+                }
+            }
+            
+            // Scroll the drilldown into view
+            const drilldownRow = document.getElementById('orderDrilldownRow');
+            if (drilldownRow) {
+                drilldownRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
         
         function closePalletDrilldown() {
-            document.getElementById('palletDrilldown').classList.remove('active');
+            // Remove any existing drilldown row
+            const existingDrilldown = document.getElementById('orderDrilldownRow');
+            if (existingDrilldown) {
+                existingDrilldown.remove();
+            }
+            // Remove active state from all rows
+            document.querySelectorAll('tr.drilldown-active').forEach(row => row.classList.remove('drilldown-active'));
             currentPalletOrder = null;
         }
         
@@ -4089,7 +4128,7 @@
                 const pl = getPLValue(r);
                 const line = getVal(r, 'LINE');
                 // Add click handler for shipped orders photo drilldown
-                const clickHandler = `onclick="showPalletPictures('${line}')" style="cursor:pointer;"`;
+                const clickHandler = `onclick="showPalletPictures('${line}', this)" style="cursor:pointer;"`;
                 
                 let cells = '';
                 if (!isColumnHidden('ordersShipped', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
@@ -6925,6 +6964,7 @@
                 const rawData = await fetchSheetData(SHIPPING_RECORDS_GID);
                 console.log('Shipping Records raw data sample:', rawData.length > 0 ? rawData[0] : 'no data');
                 console.log('Shipping Records raw data count:', rawData.length);
+                console.log('Shipping Records headers:', rawData.length > 0 ? Object.keys(rawData[0]) : 'none');
                 
                 // Helper to extract URLs from a field that may contain multiple URLs
                 const extractUrls = (value) => {
@@ -6951,7 +6991,7 @@
                         return '';
                     };
                     
-                    // Find all picture URLs from columns matching keywords
+                    // Get all picture URLs from columns matching ANY of the keywords
                     const findAllPictures = (...keywords) => {
                         const allUrls = [];
                         for (const [header, value] of Object.entries(row)) {
@@ -6971,19 +7011,22 @@
                     else if (system) system = 'Other';
                     else system = '';
                     
-                    // Get all shipment pictures (from Fusion/Veeqo/Other columns)
-                    const shipmentPictures = findAllPictures('picture of shipment', 'fotografia del envio', 'shipment picture', 'foto del envio');
+                    // Get all shipment pictures - match "shipment picture" in header
+                    // Column names: "Fusion - Shipment Pictures", "Veeqo - Shipment Pictures", "Other - Shipment Pictures"
+                    const shipmentPictures = findAllPictures('shipment picture', 'shipment pictures');
                     
-                    // Get all paperwork pictures  
-                    const paperworkPictures = findAllPictures('picture of paperwork', 'fotografia del papeleo', 'paperwork', 'foto del papeleo', 'bol');
+                    // Get all paperwork pictures
+                    // Column names: "Fusion - Paperwork Pictures", "Veeqo - Paperwork Pictures", "Other - Paperwork Pictures"
+                    const paperworkPictures = findAllPictures('paperwork picture', 'paperwork pictures');
                     
                     // Get all close up pictures
-                    const closeUpPictures = findAllPictures('close up', 'cercana', 'primer plano', 'close-up', 'closeup');
+                    // Column names: "Fusion - Close-up Pictures", "Veeqo - Close-up Pictures", "Other - Close-up Pictures"
+                    const closeUpPictures = findAllPictures('close-up picture', 'close-up pictures', 'closeup');
                     
                     return {
                         'Timestamp': findVal('timestamp', 'marca de tiempo'),
                         'Carrier': findVal('carrier', 'transportista'),
-                        'IF Number': findVal('if number', 'numero if', 'numero de if', 'if #'),
+                        'IF Number': findVal('if #', 'if number', 'numero if', 'numero de if'),
                         'System': system,
                         'Order Number': findVal('order number', 'numero de orden'),
                         'Shipment Pictures': shipmentPictures,  // Array of URLs
@@ -7001,6 +7044,11 @@
                 console.log('Loaded Shipping Records:', shippingRecordsData.length, 'rows');
                 if (shippingRecordsData.length > 0) {
                     console.log('First row sample:', shippingRecordsData[0]);
+                    // Log first row with any photos
+                    const rowWithPhotos = shippingRecordsData.find(r => r['Shipment Pictures'].length > 0 || r['Paperwork Pictures'].length > 0 || r['Close Up Pictures'].length > 0);
+                    if (rowWithPhotos) {
+                        console.log('Row with photos sample:', rowWithPhotos);
+                    }
                 }
             } catch (e) {
                 console.error('Shipping Records load error:', e);
