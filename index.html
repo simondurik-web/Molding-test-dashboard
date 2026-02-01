@@ -563,7 +563,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.12</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.15</div>
     </div>
 
     <div class="main-content">
@@ -3331,7 +3331,17 @@
             // Find the order by line number and open appropriate drilldown
             const order = allData.find(r => getVal(r, 'LINE') === lineNum);
             if (order) {
-                openPalletDrilldown(order, lineNum);
+                // Load necessary data asynchronously then show drilldown
+                const status = getStatus(order);
+                (async () => {
+                    if (status === 'staged' && !stagedRecordsLoaded) {
+                        await loadStagedRecordsData();
+                    }
+                    if (status === 'shipped' && !shippingRecordsLoaded) {
+                        await loadShippingRecordsData();
+                    }
+                    showPalletPictures(lineNum);
+                })();
             }
         }
         
@@ -3339,7 +3349,7 @@
             // Find the order by line number and open pallet drilldown
             const order = allData.find(r => getVal(r, 'LINE') === lineNum);
             if (order) {
-                openPalletDrilldown(order, lineNum);
+                showPalletPictures(lineNum);
             }
         }
         
@@ -3528,7 +3538,12 @@
             updateOrdersStagedPage();
         }
         
-        function updateOrdersStagedPage() {
+        async function updateOrdersStagedPage() {
+            // Load staged records data for fusion pictures (async)
+            if (!stagedRecordsLoaded) {
+                await loadStagedRecordsData();
+            }
+            
             const data = allData.filter(r => {
                 const cat = getCategory(r);
                 const status = getStatus(r);
@@ -3651,8 +3666,9 @@
                 const firstDimensions = hasPallets && pallets[0].dimensions ? pallets[0].dimensions : '-';
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
-                const palletIndicator = hasPallets ? `<span class="pallet-indicator" title="${pallets.length} ${t('pallet.pallets').toLowerCase()}">📷 ${pallets.length}</span>` : '-';
-                const clickHandler = hasPallets ? `onclick="showPalletPictures('${line}')" style="cursor:pointer;"` : '';
+                const palletIndicator = hasPallets ? `<span class="pallet-indicator" title="${pallets.length} ${t('pallet.pallets').toLowerCase()}">📷 ${pallets.length}</span>` : '📋';
+                // Always allow clicking to view drilldown (may have fusion pictures even without pallets)
+                const clickHandler = `onclick="showPalletPictures('${line}')" style="cursor:pointer;"`;
                 
                 let cells = '';
                 if (!isColumnHidden('ordersStaged', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
@@ -3668,7 +3684,7 @@
                 if (!isColumnHidden('ordersStaged', 'assigned')) cells += `<td>${getVal(r, 'ASSIGNED') || '-'}</td>`;
                 if (!isColumnHidden('ordersStaged', 'pallets')) cells += `<td>${palletIndicator}</td>`;
                 
-                return `<tr class="${hasPallets ? 'clickable-row' : ''}" ${clickHandler}>${cells}</tr>`;
+                return `<tr class="clickable-row" ${clickHandler}>${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('ordersStaged');
@@ -3686,50 +3702,210 @@
             return matches;
         }
         
+        // Get staged records data for an order by IF number or Line number
+        function getStagedRecordsForOrder(ifNum, lineNum) {
+            if (!stagedRecordsData || stagedRecordsData.length === 0) return null;
+            const ifNumNorm = String(ifNum || '').trim().toUpperCase();
+            const lineNumNorm = String(lineNum || '').trim();
+            
+            return stagedRecordsData.find(row => {
+                const rowIf = String(row['IF Number'] || '').trim().toUpperCase();
+                const rowLine = String(row['Line Number'] || '').trim();
+                if (ifNumNorm && rowIf && rowIf.includes(ifNumNorm)) return true;
+                if (lineNumNorm && rowLine === lineNumNorm) return true;
+                return false;
+            });
+        }
+        
+        // Get shipping records data for an order by IF number
+        function getShippingRecordsForOrder(ifNum) {
+            if (!shippingRecordsData || shippingRecordsData.length === 0) return [];
+            const ifNumNorm = String(ifNum || '').trim().toUpperCase();
+            if (!ifNumNorm) return [];
+            
+            return shippingRecordsData.filter(row => {
+                const rowIf = String(row['IF Number'] || '').trim().toUpperCase();
+                // Check if IF number matches (can be comma-separated or dash-separated)
+                if (rowIf.includes(ifNumNorm)) return true;
+                // Parse multiple IFs
+                const ifNums = rowIf.split(/[,\-\s]+/).map(s => s.trim().toUpperCase());
+                return ifNums.includes(ifNumNorm);
+            });
+        }
+        
         // Show pallet pictures modal for an order (using Line number)
         function showPalletPictures(lineNum) {
             const pallets = getPalletDataForOrder(lineNum);
-            if (pallets.length === 0) return;
             
             currentPalletOrder = lineNum;
             const orderData = allData.find(r => String(getVal(r, 'LINE')).trim() === String(lineNum).trim());
             const customer = orderData ? getVal(orderData, 'CUSTOMER') : '';
             const part = orderData ? getVal(orderData, 'PART') : '';
+            const ifNum = orderData ? getVal(orderData, 'IF_NUM') : '';
+            const status = orderData ? getStatus(orderData) : '';
+            const daysUntil = orderData ? parseNumber(getVal(orderData, 'DAYS_UNTIL')) : 0;
+            
+            // Calculate days early/late for shipped orders
+            let daysEarlyLate = '';
+            let daysEarlyLateClass = '';
+            if (status === 'shipped' && orderData) {
+                const shippedDateStr = orderData[COL.SHIPPED_DATE];
+                const requestedDateStr = orderData[COL.REQUESTED_DATE];
+                if (shippedDateStr && requestedDateStr) {
+                    const shippedDate = parseDate(shippedDateStr);
+                    const requestedDate = parseDate(requestedDateStr);
+                    if (shippedDate && requestedDate) {
+                        const diffDays = Math.round((requestedDate - shippedDate) / (1000 * 60 * 60 * 24));
+                        if (diffDays > 0) {
+                            daysEarlyLate = `${diffDays} days early`;
+                            daysEarlyLateClass = 'positive';
+                        } else if (diffDays < 0) {
+                            daysEarlyLate = `${Math.abs(diffDays)} days late`;
+                            daysEarlyLateClass = 'negative';
+                        } else {
+                            daysEarlyLate = 'On time';
+                            daysEarlyLateClass = 'positive';
+                        }
+                    }
+                }
+            }
+            
+            // Get staged records for fusion picture (for staged orders)
+            const stagedRecord = getStagedRecordsForOrder(ifNum, lineNum);
+            const fusionPicture = stagedRecord ? stagedRecord['Fusion Picture'] : '';
+            
+            // Get shipping records for shipping photos (for shipped orders)
+            const shippingRecords = getShippingRecordsForOrder(ifNum);
+            const shipmentPictures = shippingRecords.map(r => r['Shipment Picture']).filter(p => p && p.includes('http'));
+            const paperworkPictures = shippingRecords.map(r => r['Paperwork Picture']).filter(p => p && p.includes('http'));
+            const closeUpPictures = shippingRecords.map(r => r['Close Up Picture']).filter(p => p && p.includes('http'));
             
             document.getElementById('palletDrilldownOrder').textContent = `#${lineNum}`;
             
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
-            document.getElementById('palletSummary').innerHTML = `
-                <div class="summary-item"><div class="label">${t('col.customer')}</div><div class="value">${customer}</div></div>
-                <div class="summary-item"><div class="label">${t('col.part')}</div><div class="value">${part}</div></div>
-                <div class="summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
-                <div class="summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
+            
+            // Build summary section with IF# and days info
+            let summaryHtml = `
+                <div class="pallet-summary-item"><div class="label">${t('col.customer')}</div><div class="value">${customer}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('col.part')}</div><div class="value">${part}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('col.ifNum')}</div><div class="value">${ifNum || '-'}</div></div>
             `;
             
-            // Simple table with pallet # and clickable link
-            const gallery = document.getElementById('palletGallery');
-            gallery.innerHTML = `
-                <table class="data-table" style="width:100%;">
-                    <thead>
-                        <tr>
-                            <th>${t('col.palletNum')}</th>
-                            <th>${t('pallet.weight')}</th>
-                            <th>${t('pallet.dimensions')}</th>
-                            <th>Picture Link</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${pallets.map((p, idx) => `
-                            <tr>
-                                <td><strong>${p.palletNumber || (idx + 1)}</strong></td>
-                                <td>${p.weight || '-'}</td>
-                                <td>${p.dimensions || '-'}</td>
-                                <td>${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷 View Photo</a>` : '-'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+            if (status === 'staged') {
+                // Show days remaining for staged orders
+                const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
+                summaryHtml += `<div class="pallet-summary-item"><div class="label">${t('col.daysUntil')}</div><div class="value ${daysClass}">${daysUntil} days</div></div>`;
+            } else if (status === 'shipped' && daysEarlyLate) {
+                // Show days early/late for shipped orders
+                summaryHtml += `<div class="pallet-summary-item"><div class="label">Delivery</div><div class="value ${daysEarlyLateClass}">${daysEarlyLate}</div></div>`;
+            }
+            
+            summaryHtml += `
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
+            
+            document.getElementById('palletSummary').innerHTML = summaryHtml;
+            
+            // Build gallery content
+            const gallery = document.getElementById('palletGallery');
+            let galleryHtml = '';
+            
+            // Pallet Pictures Table (if pallets exist)
+            if (pallets.length > 0) {
+                galleryHtml += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📦 Pallet Details</h4>
+                        <table class="data-table" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>${t('col.palletNum')}</th>
+                                    <th>${t('pallet.weight')}</th>
+                                    <th>${t('pallet.dimensions')}</th>
+                                    <th>Picture Link</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pallets.map((p, idx) => `
+                                    <tr>
+                                        <td><strong>${p.palletNumber || (idx + 1)}</strong></td>
+                                        <td>${p.weight || '-'}</td>
+                                        <td>${p.dimensions || '-'}</td>
+                                        <td>${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷 View Photo</a>` : '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            // Fusion Picture (for staged orders)
+            if (status === 'staged' && fusionPicture && fusionPicture.includes('http')) {
+                galleryHtml += `
+                    <div style="margin-bottom: 20px; background: rgba(49, 130, 206, 0.1); padding: 16px; border-radius: 10px; border-left: 4px solid var(--accent);">
+                        <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📄 Fusion Picture</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <a href="${fusionPicture}" target="_blank" class="photo-btn" style="background: var(--accent); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">📄 View Fusion</a>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Shipping Photos (for shipped orders)
+            if (status === 'shipped' && (shipmentPictures.length > 0 || paperworkPictures.length > 0 || closeUpPictures.length > 0)) {
+                galleryHtml += `
+                    <div style="margin-bottom: 20px; background: rgba(56, 161, 105, 0.1); padding: 16px; border-radius: 10px; border-left: 4px solid var(--success);">
+                        <h4 style="color: var(--success); margin-bottom: 12px; font-size: 14px;">📸 Shipping Photos</h4>
+                `;
+                
+                // Shipment Pictures
+                if (shipmentPictures.length > 0) {
+                    galleryHtml += `
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🚚 Shipment Pictures</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${shipmentPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--success); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Shipment ${i + 1}</a>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Paperwork Pictures
+                if (paperworkPictures.length > 0) {
+                    galleryHtml += `
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">📄 Paperwork Pictures</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${paperworkPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: #718096; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Document ${i + 1}</a>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Close-Up Pictures
+                if (closeUpPictures.length > 0) {
+                    galleryHtml += `
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🔍 Close-Up Pictures</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${closeUpPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: #805ad5; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Close-up ${i + 1}</a>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                galleryHtml += `</div>`;
+            }
+            
+            // Show message if no data at all
+            if (pallets.length === 0 && !fusionPicture && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
+                galleryHtml = `<div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <p style="font-size: 14px;">⚠️ No photos available for this order.</p>
+                </div>`;
+            }
+            
+            gallery.innerHTML = galleryHtml;
             
             document.getElementById('palletDrilldown').classList.add('active');
             document.getElementById('palletDrilldown').scrollIntoView({ behavior: 'smooth' });
@@ -3799,7 +3975,12 @@
             updateOrdersShippedPage();
         }
         
-        function updateOrdersShippedPage() {
+        async function updateOrdersShippedPage() {
+            // Load shipping records data for shipping photos (async)
+            if (!shippingRecordsLoaded) {
+                await loadShippingRecordsData();
+            }
+            
             const data = allData.filter(r => {
                 const cat = getCategory(r);
                 const status = getStatus(r);
@@ -3896,9 +4077,12 @@
             const tbody = document.getElementById('ordersShippedTableBody');
             tbody.innerHTML = sorted.map(r => {
                 const pl = getPLValue(r);
+                const line = getVal(r, 'LINE');
+                // Add click handler for shipped orders photo drilldown
+                const clickHandler = `onclick="showPalletPictures('${line}')" style="cursor:pointer;"`;
                 
                 let cells = '';
-                if (!isColumnHidden('ordersShipped', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersShipped', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
                 if (!isColumnHidden('ordersShipped', 'shippedDate')) cells += `<td>${r[COL.SHIPPED_DATE] || '-'}</td>`;
                 if (!isColumnHidden('ordersShipped', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
                 if (!isColumnHidden('ordersShipped', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
@@ -3906,7 +4090,7 @@
                 if (salesUnlocked && !isColumnHidden('ordersShipped', 'revenue')) cells += `<td class="positive">${formatCurrency(parseNumber(r[COL.REVENUE]))}</td>`;
                 if (salesUnlocked && !isColumnHidden('ordersShipped', 'pl')) cells += `<td class="${pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(pl)}</td>`;
                 
-                return `<tr>${cells}</tr>`;
+                return `<tr class="clickable-row" ${clickHandler}>${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('ordersShipped');
