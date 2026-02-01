@@ -2232,36 +2232,49 @@
                 if (saved === 'light' || saved === 'dark') {
                     setTheme(saved);
                 } else {
-                    // Default to dark theme
                     setTheme('dark');
                 }
             } catch(e) {
-                setTheme('dark');
+                // Fallback: just set class and buttons directly without calling setTheme
+                currentTheme = 'dark';
+                try {
+                    document.getElementById('themeDark').classList.add('active');
+                    document.getElementById('themeLight').classList.remove('active');
+                } catch(e2) { /* ignore */ }
             }
         }
         
         function updateChartsForTheme() {
-            // Update Chart.js defaults for current theme
             const textColor = currentTheme === 'light' ? '#1a202c' : '#e2e8f0';
             const gridColor = currentTheme === 'light' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
             
-            if (window.Chart) {
-                Chart.defaults.color = textColor;
-                Chart.defaults.borderColor = gridColor;
-                
-                // Re-render charts if they exist
-                if (window.mainStatusChart) {
-                    mainStatusChart.options.plugins.legend.labels.color = textColor;
+            try {
+                if (window.Chart) {
+                    Chart.defaults.color = textColor;
+                    Chart.defaults.borderColor = gridColor;
+                }
+            } catch(e) { /* Chart.js not ready yet */ }
+            
+            // Re-render charts only if they are fully initialized
+            try {
+                if (window.mainStatusChart && mainStatusChart.options && mainStatusChart.options.plugins) {
+                    if (mainStatusChart.options.plugins.legend && mainStatusChart.options.plugins.legend.labels) {
+                        mainStatusChart.options.plugins.legend.labels.color = textColor;
+                    }
                     mainStatusChart.update();
                 }
-                if (window.mainDeadlineChart) {
-                    mainDeadlineChart.options.scales.x.ticks.color = textColor;
-                    mainDeadlineChart.options.scales.y.ticks.color = textColor;
-                    mainDeadlineChart.options.scales.x.grid.color = gridColor;
-                    mainDeadlineChart.options.scales.y.grid.color = gridColor;
+            } catch(e) { /* chart not ready */ }
+            
+            try {
+                if (window.mainDeadlineChart && mainDeadlineChart.options && mainDeadlineChart.options.scales) {
+                    const scales = mainDeadlineChart.options.scales;
+                    if (scales.x && scales.x.ticks) scales.x.ticks.color = textColor;
+                    if (scales.y && scales.y.ticks) scales.y.ticks.color = textColor;
+                    if (scales.x && scales.x.grid) scales.x.grid.color = gridColor;
+                    if (scales.y && scales.y.grid) scales.y.grid.color = gridColor;
                     mainDeadlineChart.update();
                 }
-            }
+            } catch(e) { /* chart not ready */ }
         }
         
         function t(key) { return translations[currentLang][key] || key; }
