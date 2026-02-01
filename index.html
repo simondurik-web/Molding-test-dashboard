@@ -2039,13 +2039,13 @@
         
         // English headers for the new sections (mapped from bilingual spreadsheet headers)
         const PALLET_RECORDS_HEADERS = ['Timestamp', 'Order Number', 'Pallet Number', 'Pallet Picture 1', 'Pallet Weight (lbs)', 'Pallet Dimensions', 'Pallet Picture 2', 'Pallet Picture 3', 'Pallet Picture 4', 'Pallet Picture 5', 'Parts/Boxes per Pallet', 'Customer', 'IF Number', 'Category'];
-        const SHIPPING_RECORDS_HEADERS = ['Timestamp', 'Carrier', 'IF Number', 'System', 'Order Number', 'Shipment Picture', 'Paperwork Picture', 'Close Up Picture', 'Customer', 'Category'];
-        const STAGED_RECORDS_HEADERS = ['Timestamp', 'Line Number', 'IF Number', 'Order Quantity', 'Number of Pallets', 'Staged By', 'Comments', 'Order Status', 'Staged in Fusion', 'Pallet Dimensions', 'Pallet Weight (lbs)', 'Confirmed Staged', 'Fusion Picture', 'Customer', 'Category'];
+        const SHIPPING_RECORDS_HEADERS = ['Timestamp', 'Carrier', 'IF Number', 'System', 'Order Number', 'Shipment Pictures', 'Paperwork Pictures', 'Close Up Pictures', 'Customer', 'Category'];
+        const STAGED_RECORDS_HEADERS = ['Timestamp', 'Line Number', 'IF Number', 'Order Quantity', 'Number of Pallets', 'Staged By', 'Comments', 'Order Status', 'Staged in Fusion', 'Pallet Dimensions', 'Pallet Weight (lbs)', 'Confirmed Staged', 'Fusion Pictures', 'Customer', 'Category'];
         
         // Spanish headers for the new sections
         const PALLET_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Orden', 'Número de Paleta', 'Foto de Paleta 1', 'Peso de Paleta (lbs)', 'Dimensiones de Paleta', 'Foto de Paleta 2', 'Foto de Paleta 3', 'Foto de Paleta 4', 'Foto de Paleta 5', 'Partes/Cajas por Paleta', 'Cliente', 'Número IF', 'Categoría'];
-        const SHIPPING_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Transportista', 'Número IF', 'Sistema', 'Número de Orden', 'Foto de Envío', 'Foto de Papeleo', 'Foto de Primer Plano', 'Cliente', 'Categoría'];
-        const STAGED_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Línea', 'Número IF', 'Cantidad de Orden', 'Número de Paletas', 'Staging por', 'Comentarios', 'Estado de Orden', 'Staging en Fusion', 'Dimensiones de Paleta', 'Peso de Paleta (lbs)', 'Staging Confirmado', 'Foto de Fusion', 'Cliente', 'Categoría'];
+        const SHIPPING_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Transportista', 'Número IF', 'Sistema', 'Número de Orden', 'Fotos de Envío', 'Fotos de Papeleo', 'Fotos de Primer Plano', 'Cliente', 'Categoría'];
+        const STAGED_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Línea', 'Número IF', 'Cantidad de Orden', 'Número de Paletas', 'Staging por', 'Comentarios', 'Estado de Orden', 'Staging en Fusion', 'Dimensiones de Paleta', 'Peso de Paleta (lbs)', 'Staging Confirmado', 'Fotos de Fusion', 'Cliente', 'Categoría'];
         
         // Inventory History state (for historical tracking charts)
         let inventoryHistoryData = [];      // Raw data: [{partNumber, dataByDate: {date: qty}}]
@@ -3738,7 +3738,11 @@
         }
         
         // Show pallet pictures modal for an order (using Line number)
-        function showPalletPictures(lineNum) {
+        async function showPalletPictures(lineNum) {
+            // Ensure staged and shipping records are loaded
+            await loadStagedRecordsData();
+            await loadShippingRecordsData();
+            
             const pallets = getPalletDataForOrder(lineNum);
             
             currentPalletOrder = lineNum;
@@ -3776,13 +3780,14 @@
             
             // Get staged records for fusion picture (for staged orders)
             const stagedRecord = getStagedRecordsForOrder(ifNum, lineNum);
-            const fusionPicture = stagedRecord ? stagedRecord['Fusion Picture'] : '';
+            const fusionPictures = stagedRecord ? (stagedRecord['Fusion Pictures'] || []) : [];
             
             // Get shipping records for shipping photos (for shipped orders)
             const shippingRecords = getShippingRecordsForOrder(ifNum);
-            const shipmentPictures = shippingRecords.map(r => r['Shipment Picture']).filter(p => p && p.includes('http'));
-            const paperworkPictures = shippingRecords.map(r => r['Paperwork Picture']).filter(p => p && p.includes('http'));
-            const closeUpPictures = shippingRecords.map(r => r['Close Up Picture']).filter(p => p && p.includes('http'));
+            // Aggregate all photos from all matching records
+            const shipmentPictures = shippingRecords.flatMap(r => r['Shipment Pictures'] || []);
+            const paperworkPictures = shippingRecords.flatMap(r => r['Paperwork Pictures'] || []);
+            const closeUpPictures = shippingRecords.flatMap(r => r['Close Up Pictures'] || []);
             
             document.getElementById('palletDrilldownOrder').textContent = `#${lineNum}`;
             
@@ -3844,13 +3849,13 @@
                 `;
             }
             
-            // Fusion Picture (for staged orders)
-            if (status === 'staged' && fusionPicture && fusionPicture.includes('http')) {
+            // Fusion Pictures (for staged orders)
+            if (status === 'staged' && fusionPictures.length > 0) {
                 galleryHtml += `
                     <div style="margin-bottom: 20px; background: rgba(49, 130, 206, 0.1); padding: 16px; border-radius: 10px; border-left: 4px solid var(--accent);">
-                        <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📄 Fusion Picture</h4>
+                        <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📄 Fusion Pictures</h4>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            <a href="${fusionPicture}" target="_blank" class="photo-btn" style="background: var(--accent); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">📄 View Fusion</a>
+                            ${fusionPictures.map((url, i) => `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--accent); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">📄 Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`).join('')}
                         </div>
                     </div>
                 `;
@@ -3903,7 +3908,7 @@
             }
             
             // Show message if no data at all
-            if (pallets.length === 0 && !fusionPicture && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
+            if (pallets.length === 0 && fusionPictures.length === 0 && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
                 galleryHtml = `<div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                     <p style="font-size: 14px;">⚠️ No photos available for this order.</p>
                 </div>`;
@@ -6921,6 +6926,17 @@
                 console.log('Shipping Records raw data sample:', rawData.length > 0 ? rawData[0] : 'no data');
                 console.log('Shipping Records raw data count:', rawData.length);
                 
+                // Helper to extract URLs from a field that may contain multiple URLs
+                const extractUrls = (value) => {
+                    if (!value) return [];
+                    const str = value.toString();
+                    // Split by comma, newline, or space followed by http
+                    const urls = str.split(/[,\n]|\s+(?=https?:)/)
+                        .map(u => u.trim())
+                        .filter(u => u && u.includes('http'));
+                    return urls;
+                };
+                
                 // Map the original bilingual headers to simplified English headers
                 shippingRecordsData = rawData.map(row => {
                     // Find values by checking multiple possible header names
@@ -6935,15 +6951,17 @@
                         return '';
                     };
                     
-                    // Find all picture columns and merge them
-                    const findPicture = (...keywords) => {
+                    // Find all picture URLs from columns matching keywords
+                    const findAllPictures = (...keywords) => {
+                        const allUrls = [];
                         for (const [header, value] of Object.entries(row)) {
                             const h = header.toLowerCase();
-                            if (keywords.some(k => h.includes(k.toLowerCase())) && value && value.toString().includes('http')) {
-                                return value;
+                            if (keywords.some(k => h.includes(k.toLowerCase()))) {
+                                const urls = extractUrls(value);
+                                allUrls.push(...urls);
                             }
                         }
-                        return '';
+                        return allUrls;
                     };
                     
                     // Determine system and normalize
@@ -6953,24 +6971,24 @@
                     else if (system) system = 'Other';
                     else system = '';
                     
-                    // Merge shipment pictures
-                    const shipmentPicture = findPicture('picture of shipment', 'fotografia del envio', 'shipment picture');
+                    // Get all shipment pictures (from Fusion/Veeqo/Other columns)
+                    const shipmentPictures = findAllPictures('picture of shipment', 'fotografia del envio', 'shipment picture', 'foto del envio');
                     
-                    // Merge paperwork pictures  
-                    const paperworkPicture = findPicture('picture of paperwork', 'fotografia del papeleo', 'paperwork');
+                    // Get all paperwork pictures  
+                    const paperworkPictures = findAllPictures('picture of paperwork', 'fotografia del papeleo', 'paperwork', 'foto del papeleo', 'bol');
                     
-                    // Merge close up pictures
-                    const closeUpPicture = findPicture('close up', 'cercana', 'primer plano');
+                    // Get all close up pictures
+                    const closeUpPictures = findAllPictures('close up', 'cercana', 'primer plano', 'close-up', 'closeup');
                     
                     return {
                         'Timestamp': findVal('timestamp', 'marca de tiempo'),
                         'Carrier': findVal('carrier', 'transportista'),
-                        'IF Number': findVal('if number', 'numero if', 'numero de if'),
+                        'IF Number': findVal('if number', 'numero if', 'numero de if', 'if #'),
                         'System': system,
                         'Order Number': findVal('order number', 'numero de orden'),
-                        'Shipment Picture': shipmentPicture,
-                        'Paperwork Picture': paperworkPicture,
-                        'Close Up Picture': closeUpPicture,
+                        'Shipment Pictures': shipmentPictures,  // Array of URLs
+                        'Paperwork Pictures': paperworkPictures, // Array of URLs
+                        'Close Up Pictures': closeUpPictures,   // Array of URLs
                         'Customer': findVal('customer', 'cliente', 'costumer'),
                         'Category': findVal('category', 'categoria')
                     };
@@ -7078,9 +7096,15 @@
                     const colKey = `col_${i}`;
                     if (isColumnHidden('shippingRecords', colKey)) return '';
                     let val = row[h] ?? '';
-                    // Render picture links
-                    if (h.includes('Picture') && val && val.toString().includes('http')) {
-                        val = `<a href="${val}" target="_blank" style="color:var(--accent);">📷 View</a>`;
+                    // Render picture links - handle arrays of URLs
+                    if (h.includes('Pictures')) {
+                        if (Array.isArray(val) && val.length > 0) {
+                            val = val.map((url, idx) => `<a href="${url}" target="_blank" style="color:var(--accent);margin-right:4px;">📷${val.length > 1 ? (idx + 1) : ''}</a>`).join('');
+                        } else if (typeof val === 'string' && val.includes('http')) {
+                            val = `<a href="${val}" target="_blank" style="color:var(--accent);">📷 View</a>`;
+                        } else {
+                            val = '-';
+                        }
                     }
                     return `<td>${val}</td>`;
                 }).join('') + '</tr>';
@@ -7119,8 +7143,10 @@
             const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
             const rows = shippingRecordsData.map(row => 
                 SHIPPING_RECORDS_HEADERS.map(h => {
-                    const val = row[h];
+                    let val = row[h];
                     if (val === undefined || val === null) return '""';
+                    // Handle arrays by joining with semicolon
+                    if (Array.isArray(val)) val = val.join('; ');
                     return `"${String(val).replace(/"/g, '""')}"`;
                 }).join(',')
             );
@@ -7153,6 +7179,30 @@
                         return '';
                     };
                     
+                    // Helper to extract URLs from a field
+                    const extractUrls = (value) => {
+                        if (!value) return [];
+                        const str = value.toString();
+                        const urls = str.split(/[,\n]|\s+(?=https?:)/)
+                            .map(u => u.trim())
+                            .filter(u => u && u.includes('http'));
+                        return urls;
+                    };
+                    
+                    // Find Fusion Picture specifically (Column M) - be careful not to match "Staged in Fusion"
+                    const findFusionPicture = () => {
+                        for (const [header, value] of Object.entries(row)) {
+                            const h = header.toLowerCase();
+                            // Match "Fusion Picture" or "Foto de Fusion" but NOT "Staged in Fusion"
+                            if ((h.includes('fusion picture') || h.includes('foto de fusion') || h === 'fusion') && !h.includes('staged')) {
+                                if (value && value.toString().includes('http')) {
+                                    return extractUrls(value);
+                                }
+                            }
+                        }
+                        return [];
+                    };
+                    
                     return {
                         'Timestamp': findVal('timestamp', 'marca de tiempo'),
                         'Line Number': findVal('line number', 'numero de linea'),
@@ -7162,11 +7212,11 @@
                         'Staged By': findVal('name', 'nombre', 'staged by'),
                         'Comments': findVal('comments', 'comentarios'),
                         'Order Status': findVal('order status', 'estado de orden', 'status'),
-                        'Staged in Fusion': findVal('staged in fusion', 'fusion', 'fulfillment staged'),
+                        'Staged in Fusion': findVal('staged in fusion', 'fulfillment staged'),
                         'Pallet Dimensions': findVal('pallet dimensions', 'dimensiones de la paleta'),
                         'Pallet Weight (lbs)': findVal('pallet weight', 'peso de la paleta'),
                         'Confirmed Staged': findVal('confirmed', 'confirmacion', 'confirmation'),
-                        'Fusion Picture': findVal('fusion picture', 'foto de fusion', 'fusion'),
+                        'Fusion Pictures': findFusionPicture(),  // Now returns array of URLs
                         'Customer': findVal('customer', 'cliente'),
                         'Category': findVal('category', 'categoria')
                     };
@@ -7274,9 +7324,15 @@
                     const colKey = `col_${i}`;
                     if (isColumnHidden('stagedRecords', colKey)) return '';
                     let val = row[h] ?? '';
-                    // Render picture links
-                    if (h.includes('Picture') && val && val.toString().includes('http')) {
-                        val = `<a href="${val}" target="_blank" style="color:var(--accent);">📷 View</a>`;
+                    // Render picture links - handle arrays of URLs
+                    if (h.includes('Pictures')) {
+                        if (Array.isArray(val) && val.length > 0) {
+                            val = val.map((url, idx) => `<a href="${url}" target="_blank" style="color:var(--accent);margin-right:4px;">📷${val.length > 1 ? (idx + 1) : ''}</a>`).join('');
+                        } else if (typeof val === 'string' && val.includes('http')) {
+                            val = `<a href="${val}" target="_blank" style="color:var(--accent);">📷 View</a>`;
+                        } else {
+                            val = '-';
+                        }
                     }
                     return `<td>${val}</td>`;
                 }).join('') + '</tr>';
@@ -7315,8 +7371,10 @@
             const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
             const rows = stagedRecordsData.map(row => 
                 STAGED_RECORDS_HEADERS.map(h => {
-                    const val = row[h];
+                    let val = row[h];
                     if (val === undefined || val === null) return '""';
+                    // Handle arrays by joining with semicolon
+                    if (Array.isArray(val)) val = val.join('; ');
                     return `"${String(val).replace(/"/g, '""')}"`;
                 }).join(',')
             );
