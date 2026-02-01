@@ -3816,52 +3816,51 @@
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
-            // Build gallery content - use two-column layout
-            let galleryHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
+            // Build gallery content - use CSS grid for better space distribution
+            let galleryHtml = '<div style="display: grid; grid-template-columns: 350px 1fr; gap: 24px;">';
             
-            // LEFT COLUMN: Pallet Details
-            let leftColumn = '';
+            // LEFT COLUMN: Pallet Details (fixed width)
+            let leftColumn = '<div>';
             if (pallets.length > 0) {
                 leftColumn += `
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📦 Pallet Details</h4>
-                        <table class="data-table" style="width:100%; font-size: 12px;">
-                            <thead>
+                    <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📦 Pallet Details</h4>
+                    <table class="data-table" style="width:100%; font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 8px 6px;">#</th>
+                                <th style="padding: 8px 6px;">Weight</th>
+                                <th style="padding: 8px 6px;">Dimensions</th>
+                                <th style="padding: 8px 6px;">Photo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${pallets.map((p, idx) => `
                                 <tr>
-                                    <th>${t('col.palletNum')}</th>
-                                    <th>${t('pallet.weight')}</th>
-                                    <th>${t('pallet.dimensions')}</th>
-                                    <th>Photo</th>
+                                    <td style="padding: 6px;"><strong>${p.palletNumber || (idx + 1)}</strong></td>
+                                    <td style="padding: 6px;">${p.weight || '-'}</td>
+                                    <td style="padding: 6px;">${p.dimensions || '-'}</td>
+                                    <td style="padding: 6px;">${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷 View</a>` : '-'}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                ${pallets.map((p, idx) => `
-                                    <tr>
-                                        <td><strong>${p.palletNumber || (idx + 1)}</strong></td>
-                                        <td>${p.weight || '-'}</td>
-                                        <td>${p.dimensions || '-'}</td>
-                                        <td>${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷</a>` : '-'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 `;
             } else {
-                leftColumn += '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">No pallet data</div>';
+                leftColumn += '<div style="color: var(--text-secondary); padding: 20px; text-align: center; background: var(--bg-dark); border-radius: 8px;">No pallet data available</div>';
             }
-            galleryHtml += `<div>${leftColumn}</div>`;
+            leftColumn += '</div>';
+            galleryHtml += leftColumn;
             
-            // RIGHT COLUMN: Photos (Fusion + Shipping)
-            let rightColumn = '';
+            // RIGHT COLUMN: All Photos (takes remaining space)
+            let rightColumn = '<div>';
             
             // Fusion Pictures
             if (fusionPictures.length > 0) {
                 rightColumn += `
-                    <div style="margin-bottom: 16px; background: rgba(49, 130, 206, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent);">
+                    <div style="margin-bottom: 16px; background: rgba(49, 130, 206, 0.1); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--accent);">
                         <h4 style="color: var(--accent); margin-bottom: 10px; font-size: 13px;">📄 Fusion Pictures</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                            ${fusionPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: var(--accent); color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-size: 11px; font-weight: 600;">Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`).join('')}
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            ${fusionPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: var(--accent); color: white; padding: 8px 18px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`).join('')}
                         </div>
                     </div>
                 `;
@@ -3870,17 +3869,18 @@
             // Shipping Photos
             if (shipmentPictures.length > 0 || paperworkPictures.length > 0 || closeUpPictures.length > 0) {
                 rightColumn += `
-                    <div style="background: rgba(56, 161, 105, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid var(--success);">
-                        <h4 style="color: var(--success); margin-bottom: 10px; font-size: 13px;">📸 Shipping Photos</h4>
+                    <div style="background: rgba(56, 161, 105, 0.1); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--success);">
+                        <h4 style="color: var(--success); margin-bottom: 14px; font-size: 13px;">📸 Shipping Photos</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                 `;
                 
                 // Shipment Pictures
                 if (shipmentPictures.length > 0) {
                     rightColumn += `
-                        <div style="margin-bottom: 10px;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">🚚 Shipment</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                                ${shipmentPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: var(--success); color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; font-weight: 600;">Shipment ${i + 1}</a>`).join('')}
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🚚 Shipment Pictures</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${shipmentPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: var(--success); color: white; padding: 7px 14px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Shipment ${i + 1}</a>`).join('')}
                             </div>
                         </div>
                     `;
@@ -3889,10 +3889,10 @@
                 // Paperwork Pictures
                 if (paperworkPictures.length > 0) {
                     rightColumn += `
-                        <div style="margin-bottom: 10px;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">📄 Paperwork</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                                ${paperworkPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: #718096; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; font-weight: 600;">Doc ${i + 1}</a>`).join('')}
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">📄 Paperwork Pictures</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${paperworkPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: #718096; color: white; padding: 7px 14px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Document ${i + 1}</a>`).join('')}
                             </div>
                         </div>
                     `;
@@ -3902,23 +3902,24 @@
                 if (closeUpPictures.length > 0) {
                     rightColumn += `
                         <div>
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">🔍 Close-Up</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                                ${closeUpPictures.map((url, i) => `<a href="${url}" target="_blank" style="background: #805ad5; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 10px; font-weight: 600;">Close-up ${i + 1}</a>`).join('')}
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🔍 Close-Up Pictures</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${closeUpPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: #805ad5; color: white; padding: 7px 14px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Close-up ${i + 1}</a>`).join('')}
                             </div>
                         </div>
                     `;
                 }
                 
-                rightColumn += `</div>`;
+                rightColumn += `</div></div>`;
             }
             
-            if (!rightColumn) {
-                rightColumn = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">No shipping photos</div>';
+            if (fusionPictures.length === 0 && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
+                rightColumn += '<div style="color: var(--text-secondary); padding: 20px; text-align: center; background: var(--bg-dark); border-radius: 8px;">No shipping photos available</div>';
             }
-            galleryHtml += `<div>${rightColumn}</div>`;
+            rightColumn += '</div>';
+            galleryHtml += rightColumn;
             
-            galleryHtml += '</div>'; // Close grid
+            galleryHtml += '</div>'; // Close flex container
             
             // Show message if no data at all
             if (pallets.length === 0 && fusionPictures.length === 0 && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
