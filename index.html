@@ -3816,117 +3816,90 @@
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
-            // Build gallery content - use CSS grid for better space distribution
-            let galleryHtml = '<div style="display: grid; grid-template-columns: 350px 1fr; gap: 24px;">';
+            // Build gallery content - horizontal layout with 4 consistent card boxes
+            let galleryHtml = '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">';
             
-            // LEFT COLUMN: Pallet Details (fixed width)
-            let leftColumn = '<div>';
+            // Card style helper
+            const cardStyle = (borderColor, bgColor) => `background: ${bgColor}; padding: 14px; border-radius: 8px; border: 1px solid ${borderColor}; border-top: 3px solid ${borderColor}; min-height: 120px;`;
+            const headerStyle = (color) => `color: ${color}; margin: 0 0 12px 0; font-size: 13px; font-weight: 600;`;
+            const btnStyle = (bg) => `display: inline-block; background: ${bg}; color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-size: 11px; font-weight: 600; margin: 3px;`;
+            
+            // BOX 1: Pallet Details (Blue)
+            galleryHtml += `<div style="${cardStyle('var(--accent)', 'rgba(49, 130, 206, 0.1)')}">`;
+            galleryHtml += `<h4 style="${headerStyle('var(--accent)')}">📦 Pallet Details</h4>`;
             if (pallets.length > 0) {
-                leftColumn += `
-                    <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 14px;">📦 Pallet Details</h4>
-                    <table class="data-table" style="width:100%; font-size: 12px;">
-                        <thead>
-                            <tr>
-                                <th style="padding: 8px 6px;">#</th>
-                                <th style="padding: 8px 6px;">Weight</th>
-                                <th style="padding: 8px 6px;">Dimensions</th>
-                                <th style="padding: 8px 6px;">Photo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${pallets.map((p, idx) => `
-                                <tr>
-                                    <td style="padding: 6px;"><strong>${p.palletNumber || (idx + 1)}</strong></td>
-                                    <td style="padding: 6px;">${p.weight || '-'}</td>
-                                    <td style="padding: 6px;">${p.dimensions || '-'}</td>
-                                    <td style="padding: 6px;">${p.pictureUrl ? `<a href="${p.pictureUrl}" target="_blank" style="color:var(--accent);">📷 View</a>` : '-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                pallets.forEach((p, idx) => {
+                    const num = p.palletNumber || (idx + 1);
+                    if (p.pictureUrl) {
+                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" style="${btnStyle('var(--accent)')}">Pallet ${num}</a>`;
+                    } else {
+                        galleryHtml += `<span style="${btnStyle('#4a5568')}">Pallet ${num}</span>`;
+                    }
+                });
+                galleryHtml += `</div>`;
+                galleryHtml += `<div style="margin-top: 10px; font-size: 10px; color: var(--text-secondary);">`;
+                galleryHtml += pallets.map((p, idx) => `#${p.palletNumber || (idx + 1)}: ${p.weight || '-'} lbs, ${p.dimensions || '-'}`).join('<br>');
+                galleryHtml += `</div>`;
             } else {
-                leftColumn += '<div style="color: var(--text-secondary); padding: 20px; text-align: center; background: var(--bg-dark); border-radius: 8px;">No pallet data available</div>';
+                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px;">No pallet data</div>`;
             }
-            leftColumn += '</div>';
-            galleryHtml += leftColumn;
+            galleryHtml += `</div>`;
             
-            // RIGHT COLUMN: All Photos (takes remaining space)
-            let rightColumn = '<div>';
-            
-            // Fusion Pictures
+            // BOX 2: Fusion Pictures (Teal/Cyan)
+            galleryHtml += `<div style="${cardStyle('#38b2ac', 'rgba(56, 178, 172, 0.1)')}">`;
+            galleryHtml += `<h4 style="${headerStyle('#38b2ac')}">📄 Fusion Pictures</h4>`;
             if (fusionPictures.length > 0) {
-                rightColumn += `
-                    <div style="margin-bottom: 16px; background: rgba(49, 130, 206, 0.1); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--accent);">
-                        <h4 style="color: var(--accent); margin-bottom: 10px; font-size: 13px;">📄 Fusion Pictures</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                            ${fusionPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: var(--accent); color: white; padding: 8px 18px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`).join('')}
-                        </div>
-                    </div>
-                `;
+                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                fusionPictures.forEach((url, i) => {
+                    galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('#38b2ac')}">Fusion ${fusionPictures.length > 1 ? (i + 1) : ''}</a>`;
+                });
+                galleryHtml += `</div>`;
+            } else {
+                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px;">No fusion pictures</div>`;
             }
+            galleryHtml += `</div>`;
             
-            // Shipping Photos
-            if (shipmentPictures.length > 0 || paperworkPictures.length > 0 || closeUpPictures.length > 0) {
-                rightColumn += `
-                    <div style="background: rgba(56, 161, 105, 0.1); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--success);">
-                        <h4 style="color: var(--success); margin-bottom: 14px; font-size: 13px;">📸 Shipping Photos</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                `;
-                
-                // Shipment Pictures
+            // BOX 3: Shipment & Paperwork Pictures (Green)
+            galleryHtml += `<div style="${cardStyle('var(--success)', 'rgba(56, 161, 105, 0.1)')}">`;
+            galleryHtml += `<h4 style="${headerStyle('var(--success)')}">🚚 Shipment Photos</h4>`;
+            if (shipmentPictures.length > 0 || paperworkPictures.length > 0) {
                 if (shipmentPictures.length > 0) {
-                    rightColumn += `
-                        <div>
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🚚 Shipment Pictures</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                ${shipmentPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: var(--success); color: white; padding: 7px 14px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Shipment ${i + 1}</a>`).join('')}
-                            </div>
-                        </div>
-                    `;
+                    galleryHtml += `<div style="margin-bottom: 8px;"><div style="font-size: 10px; color: var(--text-secondary); margin-bottom: 4px;">Shipment</div>`;
+                    galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                    shipmentPictures.forEach((url, i) => {
+                        galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('var(--success)')}">Ship ${i + 1}</a>`;
+                    });
+                    galleryHtml += `</div></div>`;
                 }
-                
-                // Paperwork Pictures
                 if (paperworkPictures.length > 0) {
-                    rightColumn += `
-                        <div>
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">📄 Paperwork Pictures</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                ${paperworkPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: #718096; color: white; padding: 7px 14px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Document ${i + 1}</a>`).join('')}
-                            </div>
-                        </div>
-                    `;
+                    galleryHtml += `<div><div style="font-size: 10px; color: var(--text-secondary); margin-bottom: 4px;">Paperwork</div>`;
+                    galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                    paperworkPictures.forEach((url, i) => {
+                        galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('#718096')}">Doc ${i + 1}</a>`;
+                    });
+                    galleryHtml += `</div></div>`;
                 }
-                
-                // Close-Up Pictures
-                if (closeUpPictures.length > 0) {
-                    rightColumn += `
-                        <div>
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">🔍 Close-Up Pictures</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                ${closeUpPictures.map((url, i) => `<a href="${url}" target="_blank" style="display: inline-block; background: #805ad5; color: white; padding: 7px 14px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Close-up ${i + 1}</a>`).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                rightColumn += `</div></div>`;
+            } else {
+                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px;">No shipment photos</div>`;
             }
+            galleryHtml += `</div>`;
             
-            if (fusionPictures.length === 0 && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
-                rightColumn += '<div style="color: var(--text-secondary); padding: 20px; text-align: center; background: var(--bg-dark); border-radius: 8px;">No shipping photos available</div>';
+            // BOX 4: Close-Up Pictures (Purple)
+            galleryHtml += `<div style="${cardStyle('#805ad5', 'rgba(128, 90, 213, 0.1)')}">`;
+            galleryHtml += `<h4 style="${headerStyle('#805ad5')}">🔍 Close-Up Pictures</h4>`;
+            if (closeUpPictures.length > 0) {
+                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                closeUpPictures.forEach((url, i) => {
+                    galleryHtml += `<a href="${url}" target="_blank" style="${btnStyle('#805ad5')}">Close-up ${i + 1}</a>`;
+                });
+                galleryHtml += `</div>`;
+            } else {
+                galleryHtml += `<div style="color: var(--text-secondary); font-size: 12px;">No close-up pictures</div>`;
             }
-            rightColumn += '</div>';
-            galleryHtml += rightColumn;
+            galleryHtml += `</div>`;
             
-            galleryHtml += '</div>'; // Close flex container
-            
-            // Show message if no data at all
-            if (pallets.length === 0 && fusionPictures.length === 0 && shipmentPictures.length === 0 && paperworkPictures.length === 0 && closeUpPictures.length === 0) {
-                galleryHtml = `<div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                    <p style="font-size: 14px;">⚠️ No photos available for this order.</p>
-                </div>`;
-            }
+            galleryHtml += '</div>'; // Close grid
             
             // Build the full drilldown HTML
             const drilldownHtml = `
