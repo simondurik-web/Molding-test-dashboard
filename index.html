@@ -1779,10 +1779,15 @@
                 'col.requestDate': 'Request Date',
                 'col.dueDate': 'Due Date',
                 'col.customer': 'Customer',
+                'col.category': 'Category',
                 'col.ifNum': 'IF #',
                 'col.poNum': 'PO #',
+                'col.fusionStatus': 'IF Status in Fusion',
                 'col.part': 'Part #',
+                'col.numPackages': '# Packages',
+                'col.partsPerPackage': 'Parts/Package',
                 'col.qty': 'Qty',
+                'col.fusionInv': 'Fusion Inventory',
                 'col.packaging': 'Packaging',
                 'col.tire': 'Tire',
                 'col.hub': 'Hub',
@@ -2019,10 +2024,15 @@
                 'col.requestDate': 'Fecha de Solicitud',
                 'col.dueDate': 'Fecha de Entrega',
                 'col.customer': 'Cliente',
+                'col.category': 'Categoría',
                 'col.ifNum': 'IF #',
                 'col.poNum': 'PO #',
-                'col.part': 'Parte #',
-                'col.qty': 'Cant',
+                'col.fusionStatus': 'Estado de IF en Fusion',
+                'col.part': 'Número de Parte',
+                'col.numPackages': '# Paquetes',
+                'col.partsPerPackage': 'Partes/Paquete',
+                'col.qty': 'Cantidad',
+                'col.fusionInv': 'Inventario en Fusion',
                 'col.packaging': 'Empaque',
                 'col.tire': 'Llanta',
                 'col.hub': 'Hub',
@@ -2309,6 +2319,12 @@
             CUSTOMER: 'Customer',
             IF_NUM: 'IF #',
             PO_NUM: 'PO #',
+            ENOUGH_INV: 'Enough inventory for current order',
+            NUM_PACKAGES: 'Number of packages',
+            PARTS_PER_PACKAGE: 'Parts per package',
+            FUSION_INV: 'Fusion inventory',
+            HAVE_TIRE: 'Have Tire?',
+            HAVE_HUB: 'Have Hub?',
             PART: 'Part #',
             QTY: 'Order Qty',
             PACKAGING: 'Packaging (tipo de empaquetado)',
@@ -2348,6 +2364,12 @@
             DAYS_UNTIL: ['Days until promise date', 'Days until promise date.', 'Dias faltantes', 'Days until', 'Days remaining'],
             IF_NUM: ['IF #', 'IF#', 'IF Number'],
             PO_NUM: ['PO #', 'PO#', 'PO Number', 'Purchase Order'],
+            ENOUGH_INV: ['Enough inventory for current order', 'Enough Inventory', 'Enough inventory'],
+            NUM_PACKAGES: ['Number of packages', 'Numero de paquetes', 'Número de paquetes'],
+            PARTS_PER_PACKAGE: ['Parts per package', 'Partes por paquete'],
+            FUSION_INV: ['Fusion inventory', 'Fusion Inventory', 'Inventario en Fusion'],
+            HAVE_TIRE: ['Have Tire?', 'Have Tire', 'Tiene Llanta?'],
+            HAVE_HUB: ['Have Hub?', 'Have Hub', 'Tiene Hub?'],
             PL: ['P/L', 'P/L total', 'PL', 'Profit/Loss'],
             REVENUE: ['Revenue', 'Total Sell Price', 'Sales']
         };
@@ -2449,7 +2471,7 @@
         
         // Sort states
         let ordersDataSort = { field: 'daysUntil', asc: true };
-        let ordersQueueSort = { field: 'daysUntil', asc: true };
+        let ordersQueueSort = { field: 'default', asc: true };
         let ordersStagedSort = { field: 'customer', asc: true };
         let ordersShippedSort = { field: 'shippedDate', asc: false };
         let invFilter = 'all';
@@ -3799,19 +3821,45 @@
             initTableFilters('ordersQueue');
             initHiddenColumns('ordersQueue');
             const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'ifNum', label: t('col.ifNum') },
+                { key: 'category', label: t('col.category') },
+                { key: 'dueDate', label: t('col.dueDate') },
                 { key: 'priority', label: t('col.priority') },
-                { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'dueDate', label: t('col.dueDate') },
+                { key: 'line', label: t('col.line') },
                 { key: 'customer', label: t('col.customer') },
-                { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
-                { key: 'packaging', label: t('col.packaging') }, { key: 'tire', label: t('col.tire') },
-                { key: 'hub', label: t('col.hub') }, { key: 'hubMold', label: t('col.hubMold') },
-                { key: 'bearings', label: t('col.bearings') }, { key: 'assigned', label: t('col.assigned') }
+                { key: 'ifNum', label: t('col.ifNum') },
+                { key: 'fusionStatus', label: t('col.fusionStatus') },
+                { key: 'part', label: t('col.part') },
+                { key: 'numPackages', label: t('col.numPackages') },
+                { key: 'packaging', label: t('col.packaging') },
+                { key: 'partsPerPackage', label: t('col.partsPerPackage') },
+                { key: 'qty', label: t('col.qty') },
+                { key: 'fusionInv', label: t('col.fusionInv') },
+                { key: 'tire', label: t('col.tire') },
+                { key: 'hub', label: t('col.hub') },
+                { key: 'hubMold', label: t('col.hubMold') },
+                { key: 'bearings', label: t('col.bearings') },
+                { key: 'assigned', label: t('col.assigned') },
+                { key: 'status', label: t('col.status') },
+                { key: 'daysUntil', label: t('col.daysUntil') }
             ];
             document.getElementById('ordersQueueTableHeader').innerHTML = headers.map(h => {
                 if (isColumnHidden('ordersQueue', h.key)) return '';
                 return createFilterHeader('ordersQueue', h.key, h.label, true);
             }).join('');
+        }
+        
+        // Helper: check if inventory is enough
+        function hasEnoughInventory(r) {
+            const val = (getVal(r, 'ENOUGH_INV') || '').toString().toLowerCase().trim();
+            return val === 'yes' || val === 'true' || val === '1' || val === 'si' || val === 'sí';
+        }
+        function hasTire(r) {
+            const val = (getVal(r, 'HAVE_TIRE') || '').toString().toLowerCase().trim();
+            return val === 'yes' || val === 'true' || val === '1' || val === 'si' || val === 'sí';
+        }
+        function hasHub(r) {
+            const val = (getVal(r, 'HAVE_HUB') || '').toString().toLowerCase().trim();
+            return val === 'yes' || val === 'true' || val === '1' || val === 'si' || val === 'sí';
         }
         
         function renderOrdersQueueTable(data) {
@@ -3820,33 +3868,54 @@
             // Apply column filters
             let sorted = [...data].filter(r => {
                 const isRollTech = getCategory(r) === 'rolltech';
-                if (!passesColumnFilter('ordersQueue', 'line', getVal(r, 'LINE') || '-')) return false;
-                if (!passesColumnFilter('ordersQueue', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
-                if (!passesColumnFilter('ordersQueue', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'category', getCategory(r) || '-')) return false;
                 if (!passesColumnFilter('ordersQueue', 'dueDate', r[COL.REQUESTED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'line', getVal(r, 'LINE') || '-')) return false;
                 if (!passesColumnFilter('ordersQueue', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
                 if (!passesColumnFilter('ordersQueue', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'fusionStatus', getVal(r, 'FUSION_STATUS') || '-')) return false;
                 if (!passesColumnFilter('ordersQueue', 'part', getVal(r, 'PART') || '-')) return false;
-                if (!passesColumnFilter('ordersQueue', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'numPackages', getVal(r, 'NUM_PACKAGES') || '-')) return false;
                 if (!passesColumnFilter('ordersQueue', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'partsPerPackage', getVal(r, 'PARTS_PER_PACKAGE') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'fusionInv', getVal(r, 'FUSION_INV') || '-')) return false;
                 if (!passesColumnFilter('ordersQueue', 'tire', isRollTech ? (getVal(r, 'TIRE') || '-') : 'N/A')) return false;
                 if (!passesColumnFilter('ordersQueue', 'hub', isRollTech ? (getVal(r, 'HUB') || '-') : 'N/A')) return false;
                 if (!passesColumnFilter('ordersQueue', 'hubMold', getVal(r, 'HUB_MOLD') || '-')) return false;
                 if (!passesColumnFilter('ordersQueue', 'bearings', isRollTech ? (getVal(r, 'BEARINGS') || '-') : 'N/A')) return false;
                 if (!passesColumnFilter('ordersQueue', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'status', getStatusBadge(getStatus(r)))) return false;
+                if (!passesColumnFilter('ordersQueue', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
                 return true;
             });
             
+            // Default sort: group by category, then by requested completion date
+            const catOrder = { 'rolltech': 0, 'molding': 1, 'snappad': 2 };
             sorted.sort((a, b) => {
                 let va, vb;
+                if (ordersQueueSort.field === 'default') {
+                    // Group by category first, then by due date
+                    const catA = catOrder[getCategory(a)] ?? 3;
+                    const catB = catOrder[getCategory(b)] ?? 3;
+                    if (catA !== catB) return catA - catB;
+                    va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0);
+                    vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0);
+                    return va - vb;
+                }
                 switch(ordersQueueSort.field) {
-                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
-                    case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
-                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                    case 'category': va = catOrder[getCategory(a)] ?? 3; vb = catOrder[getCategory(b)] ?? 3; break;
                     case 'dueDate': va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0); vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0); break;
+                    case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
+                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
                     case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'fusionStatus': va = getVal(a, 'FUSION_STATUS') || ''; vb = getVal(b, 'FUSION_STATUS') || ''; break;
                     case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
                     case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
+                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                    case 'status': va = getStatus(a); vb = getStatus(b); break;
                     default: va = getVal(a, ordersQueueSort.field) || ''; vb = getVal(b, ordersQueueSort.field) || '';
                 }
                 if (typeof va === 'string') return ordersQueueSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
@@ -3855,38 +3924,88 @@
             
             const search = (document.getElementById('ordersQueueSearch').value || '').toLowerCase();
             if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'LINE') || '').toString().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search));
+                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'LINE') || '').toString().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
             }
             
             document.getElementById('ordersQueueTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
             const tbody = document.getElementById('ordersQueueTableBody');
+            
+            let lastCat = null;
+            const colCount = document.getElementById('ordersQueueTableHeader').querySelectorAll('th').length;
+            
             tbody.innerHTML = sorted.map(r => {
+                const cat = getCategory(r);
+                const isRollTech = cat === 'rolltech';
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
-                const isRollTech = getCategory(r) === 'rolltech';
                 const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
+                
+                // Part # coloring: Molding/Snap Pad use inventory check; Roll Tech stays normal
+                const partVal = getVal(r, 'PART') || '-';
+                let partCell;
+                if (cat === 'molding' || cat === 'snappad') {
+                    const enough = hasEnoughInventory(r);
+                    partCell = enough ? `<strong style="color:#48bb78;">${partVal}</strong>` : `<strong style="color:#fc8181;font-weight:900;">${partVal}</strong>`;
+                } else {
+                    partCell = `<strong>${partVal}</strong>`;
+                }
+                
+                // Tire coloring: Roll Tech only
+                const tireVal = getVal(r, 'TIRE') || '-';
+                let tireCell;
+                if (isRollTech) {
+                    if (tireVal === '-' || !tireVal) { tireCell = '<span style="color:var(--text-secondary);">-</span>'; }
+                    else { tireCell = hasTire(r) ? `<span style="color:#48bb78;">${tireVal}</span>` : `<strong style="color:#fc8181;">${tireVal}</strong>`; }
+                } else {
+                    tireCell = '<span style="color:var(--text-secondary);">N/A</span>';
+                }
+                
+                // Hub coloring: Roll Tech only
+                const hubVal = getVal(r, 'HUB') || '-';
+                let hubCell;
+                if (isRollTech) {
+                    if (hubVal === '-' || !hubVal) { hubCell = '<span style="color:var(--text-secondary);">-</span>'; }
+                    else { hubCell = hasHub(r) ? `<span style="color:#48bb78;">${hubVal}</span>` : `<strong style="color:#fc8181;">${hubVal}</strong>`; }
+                } else {
+                    hubCell = '<span style="color:var(--text-secondary);">N/A</span>';
+                }
+                
                 const formatComponentCell = (value) => {
                     if (!isRollTech) return '<span style="color:var(--text-secondary);">N/A</span>';
                     return formatComponent(value);
                 };
                 
+                // Category group separator
+                let catRow = '';
+                if (cat !== lastCat) {
+                    lastCat = cat;
+                    const catLabel = cat === 'rolltech' ? 'Roll Tech' : cat === 'molding' ? 'Molding' : cat === 'snappad' ? 'Snap Pad' : cat;
+                    catRow = `<tr class="category-group-header"><td colspan="${colCount || 20}" style="background:var(--card-bg);padding:10px 16px;font-weight:bold;font-size:14px;border-top:2px solid var(--border-color);color:var(--text-primary);">📁 ${catLabel}</td></tr>`;
+                }
+                
                 let cells = '';
-                if (!isColumnHidden('ordersQueue', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
-                if (!isColumnHidden('ordersQueue', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
-                if (!isColumnHidden('ordersQueue', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
-                if (!isColumnHidden('ordersQueue', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'category')) cells += `<td>${cat === 'rolltech' ? 'Roll Tech' : cat === 'molding' ? 'Molding' : cat === 'snappad' ? 'Snap Pad' : cat}</td>`;
                 if (!isColumnHidden('ordersQueue', 'dueDate')) cells += `<td>${r[COL.REQUESTED_DATE] || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
                 if (!isColumnHidden('ordersQueue', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
-                if (!isColumnHidden('ordersQueue', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
-                if (!isColumnHidden('ordersQueue', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'fusionStatus')) cells += `<td>${getVal(r, 'FUSION_STATUS') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'part')) cells += `<td>${partCell}</td>`;
+                if (!isColumnHidden('ordersQueue', 'numPackages')) cells += `<td>${getVal(r, 'NUM_PACKAGES') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'packaging')) cells += `<td>${getVal(r, 'PACKAGING') || '-'}</td>`;
-                if (!isColumnHidden('ordersQueue', 'tire')) cells += `<td>${formatComponentCell(getVal(r, 'TIRE'))}</td>`;
-                if (!isColumnHidden('ordersQueue', 'hub')) cells += `<td>${formatComponentCell(getVal(r, 'HUB'))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'partsPerPackage')) cells += `<td>${getVal(r, 'PARTS_PER_PACKAGE') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'fusionInv')) cells += `<td>${getVal(r, 'FUSION_INV') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'tire')) cells += `<td>${tireCell}</td>`;
+                if (!isColumnHidden('ordersQueue', 'hub')) cells += `<td>${hubCell}</td>`;
                 if (!isColumnHidden('ordersQueue', 'hubMold')) cells += `<td>${getVal(r, 'HUB_MOLD') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'bearings')) cells += `<td>${formatComponentCell(getVal(r, 'BEARINGS'))}</td>`;
                 if (!isColumnHidden('ordersQueue', 'assigned')) cells += `<td>${getVal(r, 'ASSIGNED') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'status')) cells += `<td>${getStatusBadge(getStatus(r))}</td>`;
+                if (!isColumnHidden('ordersQueue', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
                 
-                return `<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
+                return `${catRow}<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('ordersQueue');
@@ -3903,8 +4022,8 @@
         
         function exportOrdersQueueToCSV() {
             const data = allData.filter(r => ordersQueueFilters.categories[getCategory(r)] && getStatus(r) === 'pending');
-            const headers = ['Line','Priority','Days Until','Request Date','Customer','IF#','Part','Qty','Packaging','Tire','Hub','Hub Mold','Bearings','Assigned'];
-            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'PRIORITY'),getVal(r,'DAYS_UNTIL'),getVal(r,'REQUEST_DATE'),getVal(r,'CUSTOMER'),getVal(r,'IF_NUM'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'HUB_MOLD'),getVal(r,'BEARINGS'),getVal(r,'ASSIGNED')].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+            const headers = ['Category','Due Date','Priority','Line','Customer','IF #','IF Status','Part #','# Packages','Packaging','Parts/Package','Qty','Fusion Inventory','Tire','Hub','Hub Mold','Bearings','Assigned','Status','Days Until'];
+            const rows = data.map(r => [getCategory(r),r[COL.REQUESTED_DATE],getVal(r,'PRIORITY'),getVal(r,'LINE'),getVal(r,'CUSTOMER'),getVal(r,'IF_NUM'),getVal(r,'FUSION_STATUS'),getVal(r,'PART'),getVal(r,'NUM_PACKAGES'),getVal(r,'PACKAGING'),getVal(r,'PARTS_PER_PACKAGE'),getVal(r,'QTY'),getVal(r,'FUSION_INV'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'HUB_MOLD'),getVal(r,'BEARINGS'),getVal(r,'ASSIGNED'),getStatus(r),getVal(r,'DAYS_UNTIL')].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
             downloadCSV([headers.join(','),...rows].join('\n'), 'orders_queue.csv');
         }
 
