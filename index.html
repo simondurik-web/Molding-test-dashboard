@@ -3798,9 +3798,10 @@
             initTableFilters('ordersQueue');
             initHiddenColumns('ordersQueue');
             const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
+                { key: 'line', label: t('col.line') }, { key: 'ifNum', label: t('col.ifNum') },
+                { key: 'priority', label: t('col.priority') },
                 { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'dueDate', label: t('col.dueDate') },
-                { key: 'customer', label: t('col.customer') }, { key: 'ifNum', label: t('col.ifNum') },
+                { key: 'customer', label: t('col.customer') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
                 { key: 'packaging', label: t('col.packaging') }, { key: 'tire', label: t('col.tire') },
                 { key: 'hub', label: t('col.hub') }, { key: 'hubMold', label: t('col.hubMold') },
@@ -3853,7 +3854,7 @@
             
             const search = (document.getElementById('ordersQueueSearch').value || '').toLowerCase();
             if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'LINE') || '').toString().includes(search));
+                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'LINE') || '').toString().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search));
             }
             
             document.getElementById('ordersQueueTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
@@ -3870,11 +3871,11 @@
                 
                 let cells = '';
                 if (!isColumnHidden('ordersQueue', 'line')) cells += `<td><strong>${getVal(r, 'LINE') || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersQueue', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
                 if (!isColumnHidden('ordersQueue', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'dueDate')) cells += `<td>${r[COL.REQUESTED_DATE] || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
-                if (!isColumnHidden('ordersQueue', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
                 if (!isColumnHidden('ordersQueue', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
                 if (!isColumnHidden('ordersQueue', 'packaging')) cells += `<td>${getVal(r, 'PACKAGING') || '-'}</td>`;
