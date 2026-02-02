@@ -3609,7 +3609,8 @@
             initTableFilters('ordersData');
             initHiddenColumns('ordersData');
             const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'priority', label: t('col.priority') },
+                { key: 'line', label: t('col.line') }, { key: 'ifNum', label: t('col.ifNum') }, { key: 'poNum', label: t('col.poNum') },
+                { key: 'priority', label: t('col.priority') },
                 { key: 'daysUntil', label: t('col.daysUntil') }, { key: 'customer', label: t('col.customer') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
                 { key: 'tire', label: t('col.tire') }, { key: 'hub', label: t('col.hub') },
@@ -3629,6 +3630,8 @@
                 const status = getStatus(r);
                 const isRollTech = getCategory(r) === 'rolltech';
                 if (!passesColumnFilter('ordersData', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'poNum', getVal(r, 'PO_NUM') || '-')) return false;
                 if (!passesColumnFilter('ordersData', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
                 if (!passesColumnFilter('ordersData', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
                 if (!passesColumnFilter('ordersData', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
@@ -3645,6 +3648,8 @@
                 let va, vb;
                 switch(ordersDataSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'poNum': va = getVal(a, 'PO_NUM') || ''; vb = getVal(b, 'PO_NUM') || ''; break;
                     case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
                     case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
                     case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
@@ -3659,7 +3664,7 @@
             
             const search = (document.getElementById('ordersDataSearch').value || '').toLowerCase();
             if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
+                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
             }
             
             document.getElementById('ordersDataTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
@@ -3683,6 +3688,8 @@
                 
                 let cells = '';
                 if (!isColumnHidden('ordersData', 'line')) cells += `<td><strong>${lineNum}</strong></td>`;
+                if (!isColumnHidden('ordersData', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
+                if (!isColumnHidden('ordersData', 'poNum')) cells += `<td>${getVal(r, 'PO_NUM') || '-'}</td>`;
                 if (!isColumnHidden('ordersData', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
                 if (!isColumnHidden('ordersData', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
                 if (!isColumnHidden('ordersData', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
@@ -3736,8 +3743,8 @@
         
         function exportOrdersDataToCSV() {
             const data = allData.filter(r => ordersDataFilters.categories[getCategory(r)] && ordersDataFilters.statuses[getStatus(r)]);
-            const headers = ['Line','Priority','Days Until','Customer','Part','Qty','Tire','Hub','Bearings','Status'];
-            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'PRIORITY'),getVal(r,'DAYS_UNTIL'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'BEARINGS'),getStatus(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+            const headers = ['Line','IF #','PO #','Priority','Days Until','Customer','Part','Qty','Tire','Hub','Bearings','Status'];
+            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'IF_NUM'),getVal(r,'PO_NUM'),getVal(r,'PRIORITY'),getVal(r,'DAYS_UNTIL'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'BEARINGS'),getStatus(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
             downloadCSV([headers.join(','),...rows].join('\n'), 'orders_data.csv');
         }
 
