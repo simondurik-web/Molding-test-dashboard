@@ -2599,7 +2599,8 @@
         // UPDATED: Uses translated "URGENT" label
         const getPriorityBadge = (priority, urgent) => {
             const p = parseNumber(priority);
-            const isUrgent = (urgent || '').toLowerCase() === 'urgent';
+            const uVal = (urgent || '').toString().toLowerCase().trim();
+            const isUrgent = uVal === 'urgent' || uVal === 'true' || uVal === '1' || uVal === 'yes' || uVal === 'x';
             if (isUrgent) return `<span class="badge urgent">${t('status.urgent')}</span>`;
             if (p === 1) return '<span class="badge priority-1">P1</span>';
             if (p === 2) return '<span class="badge priority-2">P2</span>';
