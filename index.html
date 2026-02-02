@@ -4026,7 +4026,7 @@
             
             const search = (document.getElementById('ordersStagedSearch').value || '').toLowerCase();
             if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
+                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
             }
             
             document.getElementById('ordersStagedTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
@@ -4507,7 +4507,7 @@
             
             const search = (document.getElementById('ordersShippedSearch').value || '').toLowerCase();
             if (search) {
-                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search));
+                sorted = sorted.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
             }
             
             document.getElementById('ordersShippedTableCount').textContent = `${sorted.length} ${t('ui.orders')}`;
