@@ -946,44 +946,42 @@
 
         <!-- ORDERS QUEUE PAGE -->
         <div id="orders-queue" class="page">
-            <div class="page-header">
-                <div><h2 data-i18n="ordersQueue.title">Orders Queue - Need to Make</h2><p data-i18n="ordersQueue.subtitle">Orders pending production (Pending + Approved status)</p></div>
-                <div style="display:flex;gap:10px;align-items:center;">
-                    <button class="toolbar-btn" onclick="navigateTo('main')">←  Back</button>
-                    <div class="last-updated"><span class="dot"></span><span id="ordersQueueLastUpdated">-</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:8px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')" style="padding:4px 10px;font-size:11px;"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')" style="padding:4px 10px;font-size:11px;"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersQueueBtnSnapPad" onclick="toggleOrdersQueueCategory('snappad')" style="padding:4px 10px;font-size:11px;"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
+                    <span style="margin:0 4px;color:var(--text-secondary);">|</span>
+                    <span style="font-size:12px;color:var(--text-secondary);" data-i18n="stats.totalOrders">Total</span> <strong id="ordersQueueTotalOrders" style="font-size:14px;">-</strong>
+                    <span style="font-size:11px;color:var(--text-secondary);" id="ordersQueueTotalUnits">-</span>
+                    <span style="margin:0 4px;color:var(--text-secondary);">|</span>
+                    <span style="font-size:12px;color:#fc8181;">🔴</span> <strong id="ordersQueueUrgentCount" style="font-size:14px;color:#fc8181;">-</strong> <span style="font-size:11px;color:#fc8181;" data-i18n="stats.urgent">Urgent</span>
+                    <span style="margin:0 4px;color:var(--text-secondary);">|</span>
+                    <span style="font-size:12px;color:var(--text-secondary);" data-i18n="stats.dueThisWeek">Due This Week</span> <strong id="ordersQueueDueWeek" style="font-size:14px;color:#ecc94b;">-</strong>
+                    <span style="font-size:11px;color:var(--text-secondary);" id="ordersQueueDueWeekUnits">-</span>
+                    <span style="margin:0 4px;color:var(--text-secondary);">|</span>
+                    <span style="font-size:12px;color:var(--text-secondary);" data-i18n="stats.componentsReady">Ready</span> <strong id="ordersQueueComponentsReady" style="font-size:14px;color:#48bb78;">-</strong>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <button class="toolbar-btn clear-all-filters-btn" id="ordersQueueClearFiltersBtn" onclick="clearAllTableFilters('ordersQueue')" style="padding:4px 8px;font-size:11px;">🗑 <span data-i18n="filter.clearFilters">Clear</span></button>
+                    <button class="toolbar-btn show-hidden-btn" id="ordersQueueShowHiddenBtn" onclick="showAllColumns('ordersQueue')" style="padding:4px 8px;font-size:11px;">👁</button>
+                    <input type="text" class="search-box" id="ordersQueueSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersQueueTable()" style="width:140px;padding:4px 8px;font-size:12px;">
+                    <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()" style="padding:4px 8px;font-size:11px;">📥</button>
+                    <button class="toolbar-btn" onclick="navigateTo('main')" style="padding:4px 8px;font-size:11px;">← Back</button>
                 </div>
             </div>
-            <div class="toolbar">
-                <div class="toolbar-group category-filters">
-                    <label data-i18n="ui.category">Category:</label>
-                    <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
-                    <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
-                    <button class="category-btn snappad active" id="ordersQueueBtnSnapPad" onclick="toggleOrdersQueueCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
-                </div>
-                <button class="toolbar-btn clear-all-filters-btn" id="ordersQueueClearFiltersBtn" onclick="clearAllTableFilters('ordersQueue')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="ordersQueueShowHiddenBtn" onclick="showAllColumns('ordersQueue')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
-                <div class="toolbar-spacer"></div>
-                <input type="text" class="search-box" id="ordersQueueSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersQueueTable()">
-                <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
-            </div>
-            <div class="info-banner warning" id="ordersQueueMissingBanner">
-                <span class="icon">⚠ </span>
+            <div class="info-banner warning" id="ordersQueueMissingBanner" style="margin:0 16px 4px;">
+                <span class="icon">⚠ </span>
                 <p><strong id="ordersQueueMissingCount">0</strong> <span data-i18n="prod.missingMsg">orders have missing components.</span></p>
             </div>
-            <div class="stats-grid">
-                <div class="stat-card"><div class="label" data-i18n="stats.totalOrders">Total Orders</div><div class="value" id="ordersQueueTotalOrders">-</div><div class="sub" id="ordersQueueTotalUnits">-</div></div>
-                <div class="stat-card"><div class="label" data-i18n="stats.urgent">Urgent</div><div class="value negative" id="ordersQueueUrgentCount">-</div></div>
-                <div class="stat-card"><div class="label" data-i18n="stats.dueThisWeek">Due This Week</div><div class="value warning" id="ordersQueueDueWeek">-</div><div class="sub" id="ordersQueueDueWeekUnits">-</div></div>
-                <div class="stat-card"><div class="label" data-i18n="stats.componentsReady">Components Ready</div><div class="value positive" id="ordersQueueComponentsReady">-</div></div>
-            </div>
-            <div class="chart-container">
-                <div class="chart-header"><h3 data-i18n="table.ordersToMake">Orders to Make</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersQueueTableCount">-</span></div>
-                <div class="scrollable-table" style="max-height:calc(100vh - 340px);">
-                    <table class="data-table"><thead><tr id="ordersQueueTableHeader"></tr></thead><tbody id="ordersQueueTableBody"></tbody></table>
+            <div style="display:none;"><span id="ordersQueueLastUpdated">-</span></div>
+            <div class="chart-container" style="margin:0 8px;">
+                <div class="chart-header" style="padding:4px 12px;"><h3 data-i18n="table.ordersToMake" style="font-size:13px;">Orders to Make</h3><span style="color:var(--text-secondary);font-size:11px;" id="ordersQueueTableCount">-</span></div>
+                <div class="scrollable-table" style="max-height:calc(100vh - 100px);">
+                    <table class="data-table" style="font-size:12px;"><thead><tr id="ordersQueueTableHeader"></tr></thead><tbody id="ordersQueueTableBody"></tbody></table>
                 </div>
             </div>
         </div>
-
         <!-- ORDERS STAGED PAGE -->
         <div id="orders-staged" class="page">
             <div class="page-header">
@@ -3792,7 +3790,8 @@
             });
             
             const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
-            const urgentCount = data.filter(r => (getVal(r, 'URGENT') || '').toLowerCase() === 'urgent').length;
+            const isUrgentRow = r => { const u = (getVal(r, 'URGENT') || '').toString().toLowerCase().trim(); return u === 'urgent' || u === 'true' || u === '1' || u === 'yes' || u === 'x'; };
+            const urgentCount = data.filter(isUrgentRow).length;
             const dueWeek = data.filter(r => { const d = parseNumber(getVal(r, 'DAYS_UNTIL')); return d >= 0 && d <= 7; });
             const dueWeekQty = dueWeek.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
             const componentsReady = data.filter(r => getCategory(r) !== 'rolltech' || (!isMissingComponent(getVal(r,'TIRE')) && !isMissingComponent(getVal(r,'HUB')) && !isMissingComponent(getVal(r,'BEARINGS')))).length;
@@ -3891,12 +3890,17 @@
                 return true;
             });
             
-            // Default sort: group by category, then by requested completion date
+            // Default sort: urgent first, then group by category, then by requested completion date
             const catOrder = { 'rolltech': 0, 'molding': 1, 'snappad': 2 };
+            const isUrgentItem = r => { const u = (getVal(r, 'URGENT') || '').toString().toLowerCase().trim(); return u === 'urgent' || u === 'true' || u === '1' || u === 'yes' || u === 'x'; };
             sorted.sort((a, b) => {
                 let va, vb;
+                // Always put urgent items first in default sort
                 if (ordersQueueSort.field === 'default') {
-                    // Group by category first, then by due date
+                    const urgA = isUrgentItem(a) ? 0 : 1;
+                    const urgB = isUrgentItem(b) ? 0 : 1;
+                    if (urgA !== urgB) return urgA - urgB;
+                    // Then group by category
                     const catA = catOrder[getCategory(a)] ?? 3;
                     const catB = catOrder[getCategory(b)] ?? 3;
                     if (catA !== catB) return catA - catB;
@@ -3936,6 +3940,7 @@
             tbody.innerHTML = sorted.map(r => {
                 const cat = getCategory(r);
                 const isRollTech = cat === 'rolltech';
+                const isUrgent = isUrgentItem(r);
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
@@ -4005,7 +4010,8 @@
                 if (!isColumnHidden('ordersQueue', 'status')) cells += `<td>${getStatusBadge(getStatus(r))}</td>`;
                 if (!isColumnHidden('ordersQueue', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
                 
-                return `${catRow}<tr style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
+                const rowStyle = isUrgent ? 'background:rgba(229,62,62,0.25);' : isMissing ? 'background:rgba(229,62,62,0.1);' : '';
+                return `${catRow}<tr style="${rowStyle}">${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('ordersQueue');
