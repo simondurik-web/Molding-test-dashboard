@@ -1780,6 +1780,7 @@
                 'col.dueDate': 'Due Date',
                 'col.customer': 'Customer',
                 'col.ifNum': 'IF #',
+                'col.poNum': 'PO #',
                 'col.part': 'Part #',
                 'col.qty': 'Qty',
                 'col.packaging': 'Packaging',
@@ -2019,6 +2020,7 @@
                 'col.dueDate': 'Fecha de Entrega',
                 'col.customer': 'Cliente',
                 'col.ifNum': 'IF #',
+                'col.poNum': 'PO #',
                 'col.part': 'Parte #',
                 'col.qty': 'Cant',
                 'col.packaging': 'Empaque',
@@ -2306,6 +2308,7 @@
             LINE: 'Line',
             CUSTOMER: 'Customer',
             IF_NUM: 'IF #',
+            PO_NUM: 'PO #',
             PART: 'Part #',
             QTY: 'Order Qty',
             PACKAGING: 'Packaging (tipo de empaquetado)',
@@ -2344,6 +2347,7 @@
             FUSION_STATUS: ['IF Status in Fusion', 'IF Status', 'Fusion Status'],
             DAYS_UNTIL: ['Days until promise date', 'Days until promise date.', 'Dias faltantes', 'Days until', 'Days remaining'],
             IF_NUM: ['IF #', 'IF#', 'IF Number'],
+            PO_NUM: ['PO #', 'PO#', 'PO Number', 'Purchase Order'],
             PL: ['P/L', 'P/L total', 'PL', 'Profit/Loss'],
             REVENUE: ['Revenue', 'Total Sell Price', 'Sales']
         };
@@ -3938,7 +3942,8 @@
             initTableFilters('ordersStaged');
             initHiddenColumns('ordersStaged');
             const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'customer', label: t('col.customer') },
+                { key: 'line', label: t('col.line') }, { key: 'ifNum', label: t('col.ifNum') }, { key: 'poNum', label: t('col.poNum') },
+                { key: 'customer', label: t('col.customer') },
                 { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
                 { key: 'packaging', label: t('col.packaging') }
             ];
@@ -3970,6 +3975,8 @@
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 
                 if (!passesColumnFilter('ordersStaged', 'line', line || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'poNum', getVal(r, 'PO_NUM') || '-')) return false;
                 if (!passesColumnFilter('ordersStaged', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
                 if (!passesColumnFilter('ordersStaged', 'part', getVal(r, 'PART') || '-')) return false;
                 if (!passesColumnFilter('ordersStaged', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
@@ -3992,6 +3999,8 @@
                 const palletB = getPalletDataForOrder(lineB);
                 switch(ordersStagedSort.field) {
                     case 'line': va = parseNumber(lineA); vb = parseNumber(lineB); break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'poNum': va = getVal(a, 'PO_NUM') || ''; vb = getVal(b, 'PO_NUM') || ''; break;
                     case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
                     case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
                     case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
@@ -4041,6 +4050,8 @@
                 
                 let cells = '';
                 if (!isColumnHidden('ordersStaged', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersStaged', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
+                if (!isColumnHidden('ordersStaged', 'poNum')) cells += `<td>${getVal(r, 'PO_NUM') || '-'}</td>`;
                 if (!isColumnHidden('ordersStaged', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
                 if (!isColumnHidden('ordersStaged', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
                 if (!isColumnHidden('ordersStaged', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
@@ -4357,13 +4368,13 @@
         
         function exportOrdersStagedToCSV() {
             const data = allData.filter(r => ordersStagedFilters.categories[getCategory(r)] && getStatus(r) === 'staged');
-            const headers = ['Line','Customer','Part','Qty','Packaging','Revenue','Due Date','Days Until','Weight (lbs)','Dimensions','Assigned','Pallets'];
+            const headers = ['Line','IF #','PO #','Customer','Part','Qty','Packaging','Revenue','Due Date','Days Until','Weight (lbs)','Dimensions','Assigned','Pallets'];
             const rows = data.map(r => {
                 const line = getVal(r,'LINE');
                 const pallets = getPalletDataForOrder(line);
                 const totalWeight = pallets.length > 0 ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : '';
                 const dimensions = pallets.length > 0 && pallets[0].dimensions ? pallets[0].dimensions : '';
-                return [line,getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),r[COL.REVENUE],r[COL.REQUESTED_DATE],getVal(r,'DAYS_UNTIL'),totalWeight,dimensions,getVal(r,'ASSIGNED'),pallets.length].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',');
+                return [line,getVal(r,'IF_NUM'),getVal(r,'PO_NUM'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),r[COL.REVENUE],r[COL.REQUESTED_DATE],getVal(r,'DAYS_UNTIL'),totalWeight,dimensions,getVal(r,'ASSIGNED'),pallets.length].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',');
             });
             downloadCSV([headers.join(','),...rows].join('\n'), 'orders_staged.csv');
         }
@@ -4440,7 +4451,8 @@
             initTableFilters('ordersShipped');
             initHiddenColumns('ordersShipped');
             const headers = [
-                { key: 'line', label: t('col.line') }, { key: 'shippedDate', label: t('col.shippedDate') },
+                { key: 'line', label: t('col.line') }, { key: 'ifNum', label: t('col.ifNum') }, { key: 'poNum', label: t('col.poNum') },
+                { key: 'shippedDate', label: t('col.shippedDate') },
                 { key: 'customer', label: t('col.customer') }, { key: 'part', label: t('col.part') },
                 { key: 'qty', label: t('col.qty') }
             ];
@@ -4462,6 +4474,8 @@
             let sorted = [...data].filter(r => {
                 const pl = getPLValue(r);
                 if (!passesColumnFilter('ordersShipped', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'poNum', getVal(r, 'PO_NUM') || '-')) return false;
                 if (!passesColumnFilter('ordersShipped', 'shippedDate', r[COL.SHIPPED_DATE] || '-')) return false;
                 if (!passesColumnFilter('ordersShipped', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
                 if (!passesColumnFilter('ordersShipped', 'part', getVal(r, 'PART') || '-')) return false;
@@ -4477,6 +4491,8 @@
                 let va, vb;
                 switch(ordersShippedSort.field) {
                     case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'poNum': va = getVal(a, 'PO_NUM') || ''; vb = getVal(b, 'PO_NUM') || ''; break;
                     case 'shippedDate': va = parseDate(a[COL.SHIPPED_DATE]) || new Date(0); vb = parseDate(b[COL.SHIPPED_DATE]) || new Date(0); break;
                     case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
                     case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
@@ -4504,6 +4520,8 @@
                 
                 let cells = '';
                 if (!isColumnHidden('ordersShipped', 'line')) cells += `<td><strong>${line || '-'}</strong></td>`;
+                if (!isColumnHidden('ordersShipped', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
+                if (!isColumnHidden('ordersShipped', 'poNum')) cells += `<td>${getVal(r, 'PO_NUM') || '-'}</td>`;
                 if (!isColumnHidden('ordersShipped', 'shippedDate')) cells += `<td>${r[COL.SHIPPED_DATE] || '-'}</td>`;
                 if (!isColumnHidden('ordersShipped', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
                 if (!isColumnHidden('ordersShipped', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
@@ -4528,8 +4546,8 @@
         
         function exportOrdersShippedToCSV() {
             const data = allData.filter(r => ordersShippedFilters.categories[getCategory(r)] && getStatus(r) === 'shipped');
-            const headers = ['Line','Shipped Date','Customer','Part','Qty','Revenue','P/L'];
-            const rows = data.map(r => [getVal(r,'LINE'),r[COL.SHIPPED_DATE],getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),r[COL.REVENUE],getPLValue(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+            const headers = ['Line','IF #','PO #','Shipped Date','Customer','Part','Qty','Revenue','P/L'];
+            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'IF_NUM'),getVal(r,'PO_NUM'),r[COL.SHIPPED_DATE],getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),r[COL.REVENUE],getPLValue(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
             downloadCSV([headers.join(','),...rows].join('\n'), 'orders_shipped.csv');
         }
 
