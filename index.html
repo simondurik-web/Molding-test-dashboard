@@ -4045,7 +4045,10 @@
                 if (!isColumnHidden('ordersQueue', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
                 
                 const rowStyle = isUrgent ? 'background:rgba(229,62,62,0.25);' : isMissing ? 'background:rgba(229,62,62,0.1);' : '';
-                return `${catRow}<tr style="${rowStyle}">${cells}</tr>`;
+                const lineNum = getVal(r, 'LINE') || '';
+                const statusVal = getStatus(r);
+                const clickable = statusVal === 'wip' ? ` class="clickable-row" style="${rowStyle}cursor:pointer;" onclick="showNtmPalletDetails('${lineNum}', this)"` : ` style="${rowStyle}"`;
+                return `${catRow}<tr${clickable}>${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('ordersQueue');
@@ -4514,6 +4517,93 @@
             // Remove active state from all rows
             document.querySelectorAll('tr.drilldown-active').forEach(row => row.classList.remove('drilldown-active'));
             currentPalletOrder = null;
+        }
+        
+        // Need to Make - Pallet drilldown for MAKING status rows (pallet details only)
+        async function showNtmPalletDetails(lineNum, clickedRow) {
+            // Toggle: if clicking same order, close it
+            if (currentPalletOrder === lineNum) {
+                closePalletDrilldown();
+                return;
+            }
+            closePalletDrilldown();
+            
+            const pallets = getPalletDataForOrder(lineNum);
+            currentPalletOrder = lineNum;
+            
+            const orderData = allData.find(r => String(getVal(r, 'LINE')).trim() === String(lineNum).trim());
+            const customer = orderData ? getVal(orderData, 'CUSTOMER') : '';
+            const part = orderData ? getVal(orderData, 'PART') : '';
+            const ifNum = orderData ? getVal(orderData, 'IF_NUM') : '';
+            const qty = orderData ? parseNumber(getVal(orderData, 'QTY')) : 0;
+            const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
+            const totalParts = pallets.reduce((s, p) => s + parseNumber(p.partsPerPallet || p.boxesPerPallet), 0);
+            
+            // Summary info
+            let summaryHtml = `
+                <div class="pallet-summary-item"><div class="label">${t('col.customer')}</div><div class="value">${customer}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('col.part')}</div><div class="value">${part}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('col.ifNum')}</div><div class="value">${ifNum || '-'}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('col.qty')}</div><div class="value">${formatNumber(qty)}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
+            `;
+            
+            // Build pallet details - ONLY pallet box (no fusion, shipping, or close-up)
+            let palletHtml = '';
+            if (pallets.length > 0) {
+                palletHtml += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; width: 100%;">`;
+                pallets.forEach((p, idx) => {
+                    const num = p.palletNumber || (idx + 1);
+                    palletHtml += `<div style="background: rgba(49, 130, 206, 0.1); border: 1px solid var(--accent); border-radius: 10px; overflow: hidden;">`;
+                    palletHtml += `<div style="padding: 12px 16px; background: rgba(49, 130, 206, 0.15); border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center;">`;
+                    palletHtml += `<strong style="color: var(--accent);">📦 Pallet ${num}</strong>`;
+                    if (p.pictureUrl) {
+                        palletHtml += `<a href="${p.pictureUrl}" target="_blank" style="background: var(--accent); color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: 600;">📷 Photo</a>`;
+                    }
+                    palletHtml += `</div>`;
+                    palletHtml += `<div class="pallet-card-details">`;
+                    palletHtml += `<div class="pallet-detail"><span class="label">Weight:</span> <span class="value">${p.weight || '-'} lbs</span></div>`;
+                    palletHtml += `<div class="pallet-detail"><span class="label">Dimensions:</span> <span class="value">${p.dimensions || '-'}</span></div>`;
+                    palletHtml += `<div class="pallet-detail"><span class="label">Parts/Boxes:</span> <span class="value">${p.partsPerPallet || p.boxesPerPallet || '-'}</span></div>`;
+                    palletHtml += `<div class="pallet-detail"><span class="label">Order #:</span> <span class="value">${p.orderNumber || '-'}</span></div>`;
+                    palletHtml += `</div></div>`;
+                });
+                palletHtml += `</div>`;
+            } else {
+                palletHtml = `<div style="text-align:center; padding: 30px; color: var(--text-secondary);"><p style="font-size: 14px;">📦 ${t('photo.noPalletData')}</p><p style="font-size: 12px; margin-top: 8px;">No pallet records found for Line #${lineNum}</p></div>`;
+            }
+            
+            const colCount = document.getElementById('ordersQueueTableHeader').querySelectorAll('th').length;
+            const drilldownHtml = `
+                <tr id="orderDrilldownRow" class="order-drilldown-row">
+                    <td colspan="${colCount}" style="padding: 0; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 0 0 10px 10px; margin-top: -1px;">
+                        <div style="padding: 20px 24px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Making › Line #${lineNum}</div>
+                                    <h3 style="font-size: 16px; margin: 0;">📦 Pallet Details</h3>
+                                </div>
+                                <button onclick="closePalletDrilldown()" style="background: var(--bg-dark); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; cursor: pointer; color: var(--text); font-size: 12px;">✕ Close</button>
+                            </div>
+                            <div class="pallet-summary" style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+                                ${summaryHtml}
+                            </div>
+                            ${palletHtml}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            if (clickedRow) {
+                clickedRow.classList.add('drilldown-active');
+                clickedRow.insertAdjacentHTML('afterend', drilldownHtml);
+            }
+            
+            const drilldownRow = document.getElementById('orderDrilldownRow');
+            if (drilldownRow) {
+                drilldownRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
         
         function openImageModal(imgUrl) {
