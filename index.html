@@ -8326,6 +8326,9 @@ Records of pallets packed for orders, with photos and measurements.
 - Overdue orders have **negative** "Days Until" values
 - Priority 1 = most urgent; "Urgent Override" flag can mark any order as urgent regardless of priority number
 
+## Financial Data Access
+${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer questions about revenue, profit/loss, costs, and margins.' : '🔒 The user has NOT unlocked Sales & Finance. Financial data (revenue, P/L, profit, loss, costs, margins, pricing) is RESTRICTED. If asked about financial data, tell them: "Financial data is locked. Please unlock the Sales & Finance section in the sidebar first." Do NOT guess, estimate, or reveal any financial figures.'}
+
 ## Response Guidelines
 - Be concise and direct — this is a production floor tool, not a chatbot
 - Use tables (markdown) when showing multiple items
@@ -8342,6 +8345,7 @@ Records of pallets packed for orders, with photos and measurements.
         // Build compact data context string from live dashboard data
         function buildAiDataContext() {
             let ctx = '';
+            const hasSalesAccess = salesUnlocked === true;
             // Orders summary
             if (allData.length > 0) {
                 ctx += '\\n## Current Orders Data\\n';
@@ -8365,7 +8369,17 @@ Records of pallets packed for orders, with photos and measurements.
                     const enoughInv = getVal(row, 'ENOUGH_INV') || '';
                     const haveTire = getVal(row, 'HAVE_TIRE') || '';
                     const haveHub = getVal(row, 'HAVE_HUB') || '';
-                    ctx += `Order ${i+1}: Line=${line} | IF#=${ifNum} | PO#=${poNum} | Customer=${cust} | Part=${part} | Qty=${qty} | Status=${status} | Category=${cat} | Priority=${priority} | Urgent=${urgent} | DaysUntil=${days} | DueDate=${dueDate} | Assigned=${assigned} | Tire=${tire} | Hub=${hub} | Bearings=${bearings} | EnoughInv=${enoughInv} | HaveTire=${haveTire} | HaveHub=${haveHub}\\n`;
+                    let orderLine = `Order ${i+1}: Line=${line} | IF#=${ifNum} | PO#=${poNum} | Customer=${cust} | Part=${part} | Qty=${qty} | Status=${status} | Category=${cat} | Priority=${priority} | Urgent=${urgent} | DaysUntil=${days} | DueDate=${dueDate} | Assigned=${assigned} | Tire=${tire} | Hub=${hub} | Bearings=${bearings} | EnoughInv=${enoughInv} | HaveTire=${haveTire} | HaveHub=${haveHub}`;
+                    // Only include financial data if sales section is unlocked
+                    if (hasSalesAccess) {
+                        const revenue = getVal(row, 'REVENUE') || '';
+                        const pl = getVal(row, 'PL') || '';
+                        const plTotal = row[COL.PL_TOTAL] || '';
+                        const varCost = row[COL.VARIABLE_COST] || '';
+                        const totalCost = row[COL.TOTAL_COST] || '';
+                        orderLine += ` | Revenue=${revenue} | P/L=${pl} | P/L_Total=${plTotal} | VariableCost=${varCost} | TotalCost=${totalCost}`;
+                    }
+                    ctx += orderLine + '\\n';
                 });
             }
             // Inventory summary
