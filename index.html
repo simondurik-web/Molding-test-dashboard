@@ -86,8 +86,8 @@
             box-shadow: 4px 0 20px var(--shadow-color); transition: transform 0.3s ease, width 0.3s ease;
         }
         .sidebar.collapsed { transform: translateX(-100%); }
-        .sidebar-toggle-btn { position: fixed; top: 8px; left: 8px; z-index: 1001; background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: left 0.3s ease; }
-        .sidebar-toggle-btn.shifted { left: calc(var(--sidebar-width) + 8px); }
+        .sidebar-tab { position: fixed; top: 12px; left: 0; z-index: 1001; background: var(--primary); color: white; border: none; border-radius: 0 6px 6px 0; padding: 8px 10px; cursor: pointer; font-size: 16px; box-shadow: 2px 2px 8px rgba(0,0,0,0.3); transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; pointer-events: none; transform: translateX(-100%); }
+        .sidebar-tab.visible { opacity: 1; pointer-events: auto; transform: translateX(0); }
         .main-content.expanded { margin-left: 0 !important; max-width: 100vw !important; }
         .logo { text-align: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.15); margin-bottom: 12px; }
         .logo h1 { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #a0aec0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
@@ -796,9 +796,14 @@
     </div>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-    <button class="sidebar-toggle-btn shifted" id="sidebarToggleBtn" onclick="toggleSidebar()">☰ Menu</button>
+    <button class="sidebar-tab" id="sidebarTabBtn" onclick="toggleSidebar()" title="Show Menu">☰</button>
     <div class="sidebar" id="mainSidebar">
-        <div class="logo"><h1>Molding</h1><span id="logoSubtitle">Operations Dashboard</span></div>
+        <div class="logo">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div><h1>Molding</h1><span id="logoSubtitle">Operations Dashboard</span></div>
+                <button id="sidebarToggleBtn" onclick="toggleSidebar()" style="background:none;border:1px solid rgba(255,255,255,0.2);color:var(--text-secondary);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='none'">✕ Hide</button>
+            </div>
+        </div>
         <div class="toggle-controls">
             <div class="lang-toggle">
                 <button class="lang-btn active" id="langEN" onclick="setLanguage('en')">English</button>
@@ -3450,26 +3455,23 @@
         // ============================================================
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
-            const btn = document.getElementById('sidebarToggleBtn');
+            const hideBtn = document.getElementById('sidebarToggleBtn');
+            const tabBtn = document.getElementById('sidebarTabBtn');
             const main = document.querySelector('.main-content');
             const overlay = document.querySelector('.sidebar-overlay');
             const isCollapsed = sidebar.classList.toggle('collapsed');
-            // Also handle mobile open class
             sidebar.classList.remove('open');
             if (overlay) overlay.classList.remove('active');
-            btn.classList.toggle('shifted', !isCollapsed);
             main.classList.toggle('expanded', isCollapsed);
-            btn.textContent = isCollapsed ? '☰ Menu' : '✕ Hide';
+            tabBtn.classList.toggle('visible', isCollapsed);
+            hideBtn.textContent = '✕ Hide';
             localStorage.setItem('sidebarCollapsed', isCollapsed);
         }
         // Restore sidebar state
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
             document.getElementById('mainSidebar').classList.add('collapsed');
-            document.getElementById('sidebarToggleBtn').classList.remove('shifted');
-            document.getElementById('sidebarToggleBtn').textContent = '☰ Menu';
+            document.getElementById('sidebarTabBtn').classList.add('visible');
             document.querySelector('.main-content').classList.add('expanded');
-        } else {
-            document.getElementById('sidebarToggleBtn').textContent = '✕ Hide';
         }
         
         function navigateTo(page) {
