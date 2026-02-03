@@ -4521,6 +4521,7 @@
             console.log('============================');
             
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
+            const totalPackages = orderData ? parseNumber(getVal(orderData, 'NUM_PACKAGES')) : 0;
             
             // Build summary section with IF# and days info
             let summaryHtml = `
@@ -4539,7 +4540,7 @@
             }
             
             summaryHtml += `
-                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}${totalPackages ? ' of ' + totalPackages : ''}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
@@ -4553,10 +4554,11 @@
                 galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">`;
                 pallets.forEach((p, idx) => {
                     const num = p.palletNumber || (idx + 1);
+                    const ofTotal = totalPackages ? ` of ${totalPackages}` : '';
                     if (p.pictureUrl) {
-                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" class="photo-btn" style="background: var(--accent);">Pallet ${num}</a>`;
+                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" class="photo-btn" style="background: var(--accent);">Pallet ${num}${ofTotal}</a>`;
                     } else {
-                        galleryHtml += `<span class="photo-btn" style="background: #4a5568;">Pallet ${num}</span>`;
+                        galleryHtml += `<span class="photo-btn" style="background: #4a5568;">Pallet ${num}${ofTotal}</span>`;
                     }
                 });
                 galleryHtml += `</div>`;
@@ -4700,6 +4702,7 @@
             const qty = orderData ? parseNumber(getVal(orderData, 'QTY')) : 0;
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
             const totalParts = pallets.reduce((s, p) => s + parseNumber(p.partsPerPallet || p.boxesPerPallet), 0);
+            const totalPackages = orderData ? parseNumber(getVal(orderData, 'NUM_PACKAGES')) : 0;
             
             // Summary info
             let summaryHtml = `
@@ -4707,7 +4710,7 @@
                 <div class="pallet-summary-item"><div class="label">${t('col.part')}</div><div class="value">${part}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('col.ifNum')}</div><div class="value">${ifNum || '-'}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('col.qty')}</div><div class="value">${formatNumber(qty)}</div></div>
-                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}${totalPackages ? ' of ' + totalPackages : ''}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
@@ -4719,7 +4722,7 @@
                     const num = p.palletNumber || (idx + 1);
                     palletHtml += `<div style="background: rgba(49, 130, 206, 0.1); border: 1px solid var(--accent); border-radius: 10px; overflow: hidden;">`;
                     palletHtml += `<div style="padding: 12px 16px; background: rgba(49, 130, 206, 0.15); border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center;">`;
-                    palletHtml += `<strong style="color: var(--accent);">📦 Pallet ${num}</strong>`;
+                    palletHtml += `<strong style="color: var(--accent);">📦 Pallet ${num}</strong>${totalPackages ? `<span style="color: var(--text-secondary); font-size: 12px; font-weight: 400;"> of ${totalPackages}</span>` : ''}`;
                     if (p.pictureUrl) {
                         palletHtml += `<a href="${p.pictureUrl}" target="_blank" style="background: var(--accent); color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: 600;">📷 Photo</a>`;
                     }
