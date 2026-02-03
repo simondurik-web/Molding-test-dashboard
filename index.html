@@ -705,6 +705,105 @@
         html.light-theme .data-info {
             color: rgba(255,255,255,0.7);
         }
+        /* ============================================================
+           AI CHAT PANEL
+           ============================================================ */
+        .ai-chat-fab {
+            position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            border: none; color: white; font-size: 26px; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(66,133,244,0.4);
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .ai-chat-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(66,133,244,0.6); }
+        .ai-chat-fab.hidden { display: none; }
+
+        .ai-chat-panel {
+            position: fixed; bottom: 24px; right: 24px; z-index: 2001;
+            width: 420px; max-width: calc(100vw - 48px); height: 540px; max-height: calc(100vh - 48px);
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; overflow: hidden;
+            transform: scale(0.9) translateY(20px); opacity: 0; pointer-events: none;
+            transition: all 0.25s ease;
+        }
+        .ai-chat-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
+
+        .ai-chat-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(66,133,244,0.15) 0%, rgba(52,168,83,0.1) 100%);
+        }
+        .ai-chat-header-left { display: flex; align-items: center; gap: 10px; }
+        .ai-chat-header-left .ai-icon { font-size: 22px; }
+        .ai-chat-header-left .ai-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .ai-chat-header-left .ai-subtitle { font-size: 10px; color: var(--text-secondary); }
+        .ai-chat-header-actions { display: flex; gap: 6px; }
+        .ai-chat-header-actions button {
+            background: none; border: none; color: var(--text-secondary); cursor: pointer;
+            font-size: 16px; padding: 4px 6px; border-radius: 6px; transition: all 0.2s;
+        }
+        .ai-chat-header-actions button:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+
+        .ai-chat-messages {
+            flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+            scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        }
+        .ai-chat-messages::-webkit-scrollbar { width: 6px; }
+        .ai-chat-messages::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+        .ai-msg { max-width: 88%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.55; word-wrap: break-word; }
+        .ai-msg.user { align-self: flex-end; background: linear-gradient(135deg, #4285f4 0%, #5a9cf5 100%); color: white; border-bottom-right-radius: 4px; }
+        .ai-msg.bot { align-self: flex-start; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .ai-msg.bot table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+        .ai-msg.bot table th, .ai-msg.bot table td { padding: 4px 8px; border: 1px solid var(--border); text-align: left; }
+        .ai-msg.bot table th { background: rgba(66,133,244,0.15); font-weight: 600; }
+        .ai-msg.bot code { background: rgba(0,0,0,0.2); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+        .ai-msg.bot strong { color: #63b3ed; }
+        .ai-msg.bot ul, .ai-msg.bot ol { padding-left: 18px; margin: 4px 0; }
+        .ai-msg.system { align-self: center; color: var(--text-secondary); font-size: 11px; font-style: italic; padding: 4px 12px; }
+        .ai-msg.error { align-self: flex-start; background: rgba(229,62,62,0.15); color: var(--danger-light); border: 1px solid rgba(229,62,62,0.3); border-bottom-left-radius: 4px; }
+
+        .ai-typing { display: flex; align-items: center; gap: 4px; padding: 10px 14px; align-self: flex-start; }
+        .ai-typing-dot { width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; animation: aiTypingBounce 1.4s infinite ease-in-out; }
+        .ai-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .ai-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes aiTypingBounce { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+        .ai-chat-input-area {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 14px; border-top: 1px solid var(--border); background: var(--input-bg);
+        }
+        .ai-chat-input-area input {
+            flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px;
+            padding: 10px 14px; color: var(--text-primary); font-size: 13px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .ai-chat-input-area input::placeholder { color: var(--text-secondary); }
+        .ai-chat-input-area input:focus { border-color: #4285f4; }
+        .ai-chat-input-area button.ai-send-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white; font-size: 18px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .ai-chat-input-area button.ai-send-btn:hover { transform: scale(1.08); }
+        .ai-chat-input-area button.ai-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px; border-top: 1px solid var(--border); }
+        .ai-suggestion-chip {
+            background: rgba(66,133,244,0.12); border: 1px solid rgba(66,133,244,0.25);
+            color: #63b3ed; padding: 5px 12px; border-radius: 16px; font-size: 11px;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .ai-suggestion-chip:hover { background: rgba(66,133,244,0.25); border-color: #4285f4; }
+
+        @media (max-width: 600px) {
+            .ai-chat-panel { width: calc(100vw - 16px); height: calc(100vh - 80px); bottom: 8px; right: 8px; border-radius: 12px; }
+            .ai-chat-fab { bottom: 16px; right: 16px; width: 50px; height: 50px; font-size: 22px; }
+            .ai-suggestions { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -853,6 +952,10 @@
             <div class="nav-item locked-item" id="quotesNavItem" data-page="quotes-registry" onclick="handleRefDataClick('quotes-registry')"><span class="icon">📝</span> <span data-i18n="nav.quotesRegistry">Quotes Registry</span></div>
         </div>
         <div class="nav-divider"></div>
+        <div class="nav-section">
+            <div class="nav-item" onclick="toggleAiChat()" style="background:linear-gradient(135deg,rgba(66,133,244,0.15),rgba(52,168,83,0.1));"><span class="icon">🤖</span> <span data-i18n="nav.aiAssistant">AI Assistant</span></div>
+        </div>
+        <div class="nav-divider"></div>
         <div class="zoom-controls">
             <label style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;" data-i18n="ui.zoom">Zoom</label>
             <div style="display:flex;align-items:center;gap:6px;">
@@ -864,7 +967,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.17</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.20</div>
     </div>
 
     <div class="main-content">
@@ -1700,6 +1803,32 @@
         </div>
     </div>
 
+    <!-- AI Chat Panel -->
+    <button class="ai-chat-fab" id="aiChatFab" onclick="toggleAiChat()" title="AI Assistant">🤖</button>
+    <div class="ai-chat-panel" id="aiChatPanel">
+        <div class="ai-chat-header">
+            <div class="ai-chat-header-left">
+                <span class="ai-icon">🤖</span>
+                <div>
+                    <div class="ai-title" data-i18n="ai.title">AI Assistant</div>
+                    <div class="ai-subtitle" data-i18n="ai.subtitle">Ask about orders, inventory & production</div>
+                </div>
+            </div>
+            <div class="ai-chat-header-actions">
+                <button onclick="clearAiChat()" title="Clear chat">🗑️</button>
+                <button onclick="toggleAiChat()" title="Close">✕</button>
+            </div>
+        </div>
+        <div class="ai-chat-messages" id="aiChatMessages">
+            <div class="ai-msg system" id="aiWelcomeMsg"></div>
+        </div>
+        <div class="ai-suggestions" id="aiSuggestions"></div>
+        <div class="ai-chat-input-area">
+            <input type="text" id="aiChatInput" data-i18n-placeholder="ai.placeholder" placeholder="Ask about your data..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}">
+            <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiMessage()" title="Send">➤</button>
+        </div>
+    </div>
+
     <script>
         // ============================================================
         // INTERNATIONALIZATION
@@ -1948,7 +2077,22 @@
                 'photo.docs': 'Docs',
                 // Theme translations
                 'ui.darkTheme': 'Dark',
-                'ui.lightTheme': 'Light'
+                'ui.lightTheme': 'Light',
+                // AI Assistant
+                'nav.aiAssistant': 'AI Assistant',
+                'ai.title': 'AI Assistant',
+                'ai.subtitle': 'Ask about orders, inventory & production',
+                'ai.placeholder': 'Ask about your data...',
+                'ai.welcome': 'Hi! I can answer questions about your production orders, inventory, and shipping data. Try asking something!',
+                'ai.thinking': 'Thinking...',
+                'ai.error': 'Sorry, something went wrong. Please try again.',
+                'ai.rateLimit': 'Rate limited — please wait a moment and try again.',
+                'ai.noData': 'Dashboard data is still loading. Please wait a moment.',
+                'ai.cleared': 'Chat cleared.',
+                'ai.suggestion1': 'Which orders are late?',
+                'ai.suggestion2': 'Low inventory items',
+                'ai.suggestion3': 'Orders by customer',
+                'ai.suggestion4': 'Status summary'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones de Moldeo',
@@ -2193,7 +2337,22 @@
                 'photo.docs': 'Docs',
                 // Theme translations
                 'ui.darkTheme': 'Oscuro',
-                'ui.lightTheme': 'Claro'
+                'ui.lightTheme': 'Claro',
+                // AI Assistant
+                'nav.aiAssistant': 'Asistente IA',
+                'ai.title': 'Asistente IA',
+                'ai.subtitle': 'Pregunta sobre órdenes, inventario y producción',
+                'ai.placeholder': 'Pregunta sobre tus datos...',
+                'ai.welcome': '¡Hola! Puedo responder preguntas sobre tus órdenes de producción, inventario y datos de envío. ¡Intenta preguntar algo!',
+                'ai.thinking': 'Pensando...',
+                'ai.error': 'Lo siento, algo salió mal. Por favor intenta de nuevo.',
+                'ai.rateLimit': 'Límite de solicitudes — espera un momento e intenta de nuevo.',
+                'ai.noData': 'Los datos del dashboard se están cargando. Por favor espera un momento.',
+                'ai.cleared': 'Chat limpiado.',
+                'ai.suggestion1': '¿Qué órdenes están atrasadas?',
+                'ai.suggestion2': 'Artículos con bajo inventario',
+                'ai.suggestion3': 'Órdenes por cliente',
+                'ai.suggestion4': 'Resumen de estados'
             }
         };
         
@@ -2233,6 +2392,8 @@
             else if (currentPage === 'pallet-records') renderPalletRecordsTable();
             else if (currentPage === 'shipping-records') renderShippingRecordsTable();
             else if (currentPage === 'staged-records') renderStagedRecordsTable();
+            // Update AI chat language
+            if (typeof updateAiLanguage === 'function') updateAiLanguage();
         }
         
         function setTheme(theme) {
@@ -8093,6 +8254,397 @@
                 }).join(',')
             );
             downloadCSV([headerRow, ...rows].join('\n'), `staged_records_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        // ============================================================
+        // AI ASSISTANT — Gemini Integration
+        // ============================================================
+        const GEMINI_API_KEY = 'AIzaSyDfcgbCMcpSs9RSdgBMUozbkGTpxGMgRjA';
+        const GEMINI_MODELS = [
+            'gemini-2.5-flash-preview-05-20',
+            'gemini-2.0-flash'
+        ];
+        let aiChatOpen = false;
+        let aiChatHistory = []; // {role:'user'|'model', parts:[{text}]}
+        let aiCurrentModel = 0;
+        let aiIsBusy = false;
+
+        // Build the system instruction that teaches Gemini our domain
+        function buildAiSystemInstruction() {
+            return `You are an AI assistant embedded in a Molding Operations Dashboard for a manufacturing company (Entech / Roll Tech). You answer questions about production orders, inventory, and shipping data.
+
+RESPOND IN THE SAME LANGUAGE THE USER WRITES IN. If they write in Spanish, respond in Spanish. If English, respond in English.
+
+## Data You Have Access To
+
+### 1. Production Orders (allData) — ~${allData.length} active orders
+Each order has these fields:
+- **Category**: "Roll Tech", "Molding", or "Snap Pad" (product lines)
+- **Line**: Work order line number
+- **IF #**: Internal Fusion order number (IF = "Internal Fusion")
+- **PO #**: Customer purchase order number
+- **Customer**: Customer name (e.g., Schaefer, TBC, Stellar)
+- **Part #**: Part number (e.g., 668.254.353, FS-TPO)
+- **Order Qty**: Quantity ordered
+- **Status**: One of: pending (Need to Make), wip (Making/Work in Progress), staged (Ready to Ship/Packed), shipped (Shipped/Invoiced)
+- **Priority**: Priority level (1-5, where 1 is highest)
+- **Urgent**: Whether order is marked urgent
+- **Requested Completion Date**: When the order is due
+- **Days Until Promise Date**: Days remaining (negative = overdue/late)
+- **Assigned to**: Worker assigned to the order
+- **Tire**: Tire part number (Roll Tech only)
+- **Hub**: Hub/center piece part (Roll Tech only)
+- **Hub Mold**: Mold used for the hub (Roll Tech only)
+- **Bearings**: Bearings needed (Roll Tech only)
+- **Packaging**: How the order is packaged
+- **Enough Inventory**: Whether there's enough inventory for this order
+- **Have Tire?**: Whether tire is in stock (Roll Tech only)
+- **Have Hub?**: Whether hub is in stock (Roll Tech only)
+
+### 2. Inventory Data (inventoryData) — ~${inventoryData.length} items
+- **Part Number**: The part number
+- **Product**: Product type/name
+- **Fusion Qty**: Current quantity in Fusion (ERP system)
+- **Minimum**: Minimum stock level
+- **Manual Target**: Target inventory level
+- **Qty Needed**: Quantity needed for current orders
+- **Parts to Make**: How many need to be manufactured
+- **Mold Type**: Type of mold used
+
+### 3. Pallet Records (palletRecordsData) — ${palletRecordsData.length} records
+Records of pallets packed for orders, with photos and measurements.
+
+## Domain Knowledge
+- **Entech** recycles tires: melts tire wire into ingots, makes molded products from crumb rubber
+- **Roll Tech** wheels have components: Tire (outer ring) + Hub (center) + Bearings
+- **Molding** products: rubber mats, bumpers, etc. from crumb rubber
+- **Snap Pad** products: rail crossing pads
+- **Fusion**: Their ERP system (iFusion) — tracks orders, inventory, invoicing
+- **Staged**: Product is packed on pallets, weighed, photographed — ready to ship
+- **WIP (Work in Progress)**: Currently being manufactured on the press
+- Status flow: **Pending → WIP (Making) → Staged (Ready to Ship) → Shipped**
+- Overdue orders have **negative** "Days Until" values
+- Priority 1 = most urgent; "Urgent Override" flag can mark any order as urgent regardless of priority number
+
+## Response Guidelines
+- Be concise and direct — this is a production floor tool, not a chatbot
+- Use tables (markdown) when showing multiple items
+- When listing orders, include: Line, Customer, Part#, Qty, Status, Days Until
+- For inventory, include: Part#, Fusion Qty, Minimum, Status
+- If asked about something not in the data, say so honestly
+- Numbers: use commas for thousands (1,234)
+- Dates: use MM/DD/YYYY format
+- For "late" or "overdue" orders: Days Until < 0
+- For "low inventory": Fusion Qty < Minimum
+- Always give counts when listing items (e.g., "Found 5 orders:")`;
+        }
+
+        // Build compact data context string from live dashboard data
+        function buildAiDataContext() {
+            let ctx = '';
+            // Orders summary
+            if (allData.length > 0) {
+                ctx += '\\n## Current Orders Data\\n';
+                allData.forEach((row, i) => {
+                    const line = getVal(row, 'LINE') || '-';
+                    const cust = getVal(row, 'CUSTOMER') || '-';
+                    const part = getVal(row, 'PART') || '-';
+                    const qty = getVal(row, 'QTY') || '-';
+                    const status = getStatus(row);
+                    const cat = getCategory(row);
+                    const days = getVal(row, 'DAYS_UNTIL');
+                    const ifNum = getVal(row, 'IF_NUM') || '-';
+                    const poNum = getVal(row, 'PO_NUM') || '-';
+                    const priority = getVal(row, 'PRIORITY') || '-';
+                    const urgent = getVal(row, 'URGENT') || '';
+                    const assigned = getVal(row, 'ASSIGNED') || '-';
+                    const tire = getVal(row, 'TIRE') || '';
+                    const hub = getVal(row, 'HUB') || '';
+                    const bearings = getVal(row, 'BEARINGS') || '';
+                    const dueDate = getVal(row, 'REQUESTED_DATE') || '-';
+                    const enoughInv = getVal(row, 'ENOUGH_INV') || '';
+                    const haveTire = getVal(row, 'HAVE_TIRE') || '';
+                    const haveHub = getVal(row, 'HAVE_HUB') || '';
+                    ctx += `Order ${i+1}: Line=${line} | IF#=${ifNum} | PO#=${poNum} | Customer=${cust} | Part=${part} | Qty=${qty} | Status=${status} | Category=${cat} | Priority=${priority} | Urgent=${urgent} | DaysUntil=${days} | DueDate=${dueDate} | Assigned=${assigned} | Tire=${tire} | Hub=${hub} | Bearings=${bearings} | EnoughInv=${enoughInv} | HaveTire=${haveTire} | HaveHub=${haveHub}\\n`;
+                });
+            }
+            // Inventory summary
+            if (inventoryData.length > 0) {
+                ctx += '\\n## Current Inventory Data\\n';
+                inventoryData.forEach((item, i) => {
+                    const status = item.fusionQty < item.minimum ? 'LOW' : (item.fusionQty >= (item.manualTarget || item.minimum) ? 'OK' : 'WATCH');
+                    ctx += `Inv ${i+1}: Part=${item.partNumber} | Product=${item.product} | FusionQty=${item.fusionQty} | Min=${item.minimum} | Target=${item.manualTarget || '-'} | QtyNeeded=${item.qtyNeeded} | ToMake=${item.partsToBeMade} | MoldType=${item.moldType || '-'} | Status=${status}\\n`;
+                });
+            }
+            // Pallet summary (compact)
+            if (palletRecordsData && palletRecordsData.length > 0) {
+                ctx += `\\n## Pallet Records: ${palletRecordsData.length} total records available\\n`;
+            }
+            return ctx;
+        }
+
+        // Call Gemini API
+        async function callGemini(userMessage) {
+            const systemInstruction = buildAiSystemInstruction();
+            const dataContext = buildAiDataContext();
+
+            // Add data context as first user message if not already there
+            const contents = [];
+            if (aiChatHistory.length === 0) {
+                // First message — prepend data context
+                contents.push({
+                    role: 'user',
+                    parts: [{ text: `Here is the current live data from the dashboard:\\n${dataContext}\\n\\nMy question: ${userMessage}` }]
+                });
+            } else {
+                // Subsequent messages — include history
+                // Re-inject fresh data context with each turn for accuracy
+                const firstMsg = {
+                    role: 'user',
+                    parts: [{ text: `[UPDATED LIVE DATA]\\n${dataContext}` }]
+                };
+                const firstResp = {
+                    role: 'model',
+                    parts: [{ text: 'Got it, I have the latest data. What would you like to know?' }]
+                };
+                contents.push(firstMsg, firstResp);
+                // Add prior conversation (skip the first data-injection pair)
+                for (let i = 0; i < aiChatHistory.length; i++) {
+                    contents.push(aiChatHistory[i]);
+                }
+                contents.push({ role: 'user', parts: [{ text: userMessage }] });
+            }
+
+            let lastError = null;
+            for (let m = aiCurrentModel; m < GEMINI_MODELS.length; m++) {
+                const model = GEMINI_MODELS[m];
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+                try {
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            system_instruction: { parts: [{ text: systemInstruction }] },
+                            contents: contents,
+                            generationConfig: {
+                                temperature: 0.3,
+                                maxOutputTokens: 2048
+                            }
+                        })
+                    });
+                    if (resp.status === 429) {
+                        lastError = 'rate_limit';
+                        aiCurrentModel = m + 1; // Try next model
+                        continue;
+                    }
+                    if (!resp.ok) {
+                        const errData = await resp.json().catch(() => ({}));
+                        throw new Error(errData.error?.message || `HTTP ${resp.status}`);
+                    }
+                    const data = await resp.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) throw new Error('Empty response from Gemini');
+                    aiCurrentModel = m; // Stick with working model
+                    return { text, model };
+                } catch (e) {
+                    lastError = e;
+                    if (m < GEMINI_MODELS.length - 1) continue;
+                }
+            }
+            // All models failed
+            if (lastError === 'rate_limit') {
+                throw new Error('RATE_LIMIT');
+            }
+            throw lastError || new Error('All models failed');
+        }
+
+        // Render markdown-ish text to HTML (simple parser)
+        function renderAiMarkdown(text) {
+            let html = text
+                // Code blocks
+                .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // Inline code
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                // Headers
+                .replace(/^### (.*$)/gm, '<strong style="font-size:14px;display:block;margin:8px 0 4px;">$1</strong>')
+                .replace(/^## (.*$)/gm, '<strong style="font-size:15px;display:block;margin:10px 0 4px;">$1</strong>')
+                // Tables
+                .replace(/^\|(.+)\|$/gm, (match) => {
+                    const cells = match.split('|').filter(c => c.trim() !== '');
+                    return '<tr>' + cells.map(c => {
+                        const trimmed = c.trim();
+                        if (/^[\s-:]+$/.test(trimmed)) return null; // separator row
+                        return `<td>${trimmed}</td>`;
+                    }).filter(Boolean).join('') + '</tr>';
+                })
+                // Unordered lists
+                .replace(/^[-•]\s+(.*$)/gm, '<li>$1</li>')
+                // Ordered lists
+                .replace(/^\d+\.\s+(.*$)/gm, '<li>$1</li>')
+                // Line breaks
+                .replace(/\n/g, '<br>');
+
+            // Wrap consecutive <tr> in table
+            html = html.replace(/((?:<tr>.*?<\/tr><br>?)+)/g, (match) => {
+                const rows = match.replace(/<br>/g, '');
+                // Check if first row is header
+                const rowsArr = rows.split('</tr>').filter(r => r.trim());
+                if (rowsArr.length > 1) {
+                    const header = rowsArr[0].replace(/<td>/g, '<th>').replace(/<\/td>/g, '</th>') + '</tr>';
+                    // Skip separator rows
+                    const bodyRows = rowsArr.slice(1).filter(r => !r.includes('---')).join('</tr>') + '</tr>';
+                    return `<table>${header}${bodyRows}</table>`;
+                }
+                return `<table>${rows}</table>`;
+            });
+
+            // Wrap consecutive <li> in <ul>
+            html = html.replace(/((?:<li>.*?<\/li><br>?)+)/g, (match) => {
+                return '<ul>' + match.replace(/<br>/g, '') + '</ul>';
+            });
+
+            // Clean up extra <br> after block elements
+            html = html.replace(/<\/(table|ul|ol|pre)><br>/g, '</$1>');
+
+            return html;
+        }
+
+        // Toggle chat panel
+        function toggleAiChat() {
+            aiChatOpen = !aiChatOpen;
+            document.getElementById('aiChatPanel').classList.toggle('open', aiChatOpen);
+            document.getElementById('aiChatFab').classList.toggle('hidden', aiChatOpen);
+            if (aiChatOpen) {
+                initAiChat();
+                setTimeout(() => document.getElementById('aiChatInput').focus(), 300);
+            }
+        }
+
+        // Initialize chat UI
+        function initAiChat() {
+            const welcomeMsg = document.getElementById('aiWelcomeMsg');
+            if (welcomeMsg && !welcomeMsg.dataset.init) {
+                welcomeMsg.textContent = t('ai.welcome');
+                welcomeMsg.dataset.init = '1';
+                // Render suggestion chips
+                renderAiSuggestions();
+            }
+        }
+
+        function renderAiSuggestions() {
+            const container = document.getElementById('aiSuggestions');
+            container.innerHTML = '';
+            ['ai.suggestion1', 'ai.suggestion2', 'ai.suggestion3', 'ai.suggestion4'].forEach(key => {
+                const chip = document.createElement('div');
+                chip.className = 'ai-suggestion-chip';
+                chip.textContent = t(key);
+                chip.onclick = () => {
+                    document.getElementById('aiChatInput').value = t(key);
+                    sendAiMessage();
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        // Send a message
+        async function sendAiMessage() {
+            if (aiIsBusy) return;
+            const input = document.getElementById('aiChatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            // Check data loaded
+            if (allData.length === 0 && inventoryData.length === 0) {
+                appendAiMessage(t('ai.noData'), 'system');
+                return;
+            }
+
+            input.value = '';
+            aiIsBusy = true;
+            document.getElementById('aiSendBtn').disabled = true;
+            document.getElementById('aiSuggestions').style.display = 'none';
+
+            // Show user message
+            appendAiMessage(msg, 'user');
+
+            // Show typing indicator
+            const typingEl = showAiTyping();
+
+            try {
+                const result = await callGemini(msg);
+                // Save to history
+                aiChatHistory.push({ role: 'user', parts: [{ text: msg }] });
+                aiChatHistory.push({ role: 'model', parts: [{ text: result.text }] });
+                // Remove typing, show response
+                typingEl.remove();
+                appendAiMessage(result.text, 'bot');
+            } catch (e) {
+                typingEl.remove();
+                if (e.message === 'RATE_LIMIT') {
+                    appendAiMessage(t('ai.rateLimit'), 'error');
+                    aiCurrentModel = 0; // Reset for next try
+                } else {
+                    appendAiMessage(`${t('ai.error')}\\n${e.message}`, 'error');
+                }
+            } finally {
+                aiIsBusy = false;
+                document.getElementById('aiSendBtn').disabled = false;
+                input.focus();
+            }
+        }
+
+        function appendAiMessage(text, type) {
+            const container = document.getElementById('aiChatMessages');
+            const div = document.createElement('div');
+            div.className = `ai-msg ${type}`;
+            if (type === 'bot') {
+                div.innerHTML = renderAiMarkdown(text);
+            } else {
+                div.textContent = text;
+            }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showAiTyping() {
+            const container = document.getElementById('aiChatMessages');
+            const div = document.createElement('div');
+            div.className = 'ai-typing';
+            div.innerHTML = '<div class="ai-typing-dot"></div><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div>';
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            return div;
+        }
+
+        function clearAiChat() {
+            aiChatHistory = [];
+            aiCurrentModel = 0;
+            const container = document.getElementById('aiChatMessages');
+            container.innerHTML = '<div class="ai-msg system" id="aiWelcomeMsg"></div>';
+            document.getElementById('aiWelcomeMsg').textContent = t('ai.welcome');
+            document.getElementById('aiWelcomeMsg').dataset.init = '1';
+            document.getElementById('aiSuggestions').style.display = 'flex';
+            renderAiSuggestions();
+            appendAiMessage(t('ai.cleared'), 'system');
+        }
+
+        // Update AI chat text when language changes
+        function updateAiLanguage() {
+            const welcomeMsg = document.getElementById('aiWelcomeMsg');
+            if (welcomeMsg && welcomeMsg.dataset.init) {
+                welcomeMsg.textContent = t('ai.welcome');
+            }
+            const input = document.getElementById('aiChatInput');
+            if (input) input.placeholder = t('ai.placeholder');
+            const title = document.querySelector('.ai-chat-header .ai-title');
+            if (title) title.textContent = t('ai.title');
+            const subtitle = document.querySelector('.ai-chat-header .ai-subtitle');
+            if (subtitle) subtitle.textContent = t('ai.subtitle');
+            renderAiSuggestions();
         }
 
         // Initialize
