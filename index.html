@@ -756,9 +756,10 @@
         .ai-msg { max-width: 88%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.55; word-wrap: break-word; }
         .ai-msg.user { align-self: flex-end; background: linear-gradient(135deg, #4285f4 0%, #5a9cf5 100%); color: white; border-bottom-right-radius: 4px; }
         .ai-msg.bot { align-self: flex-start; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-        .ai-msg.bot table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
-        .ai-msg.bot table th, .ai-msg.bot table td { padding: 4px 8px; border: 1px solid var(--border); text-align: left; }
-        .ai-msg.bot table th { background: rgba(66,133,244,0.15); font-weight: 600; }
+        .ai-msg.bot .ai-table-wrap { overflow-x: auto; margin: 8px 0; -webkit-overflow-scrolling: touch; border-radius: 6px; border: 1px solid var(--border); }
+        .ai-msg.bot table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .ai-msg.bot table th, .ai-msg.bot table td { padding: 5px 10px; border: 1px solid var(--border); text-align: left; white-space: nowrap; }
+        .ai-msg.bot table th { background: rgba(66,133,244,0.2); font-weight: 600; font-size: 11px; }
         .ai-msg.bot code { background: rgba(0,0,0,0.2); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
         .ai-msg.bot strong { color: #63b3ed; }
         .ai-msg.bot ul, .ai-msg.bot ol { padding-left: 18px; margin: 4px 0; }
@@ -8263,8 +8264,8 @@
         const _gk = ['AIza','SyCQ','iYrn','1yOk','B7RF','A683','NyW6','pl_7','TtXL','rEU'];
         const GEMINI_API_KEY = _gk.join('');
         const GEMINI_MODELS = [
-            'gemini-2.0-flash',
             'gemini-2.5-flash',
+            'gemini-2.0-flash',
             'gemini-2.0-flash-lite'
         ];
         let aiChatOpen = false;
@@ -8685,55 +8686,58 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
 
         // Render markdown-ish text to HTML (simple parser)
         function renderAiMarkdown(text) {
+            // --- Phase 1: Parse markdown tables as blocks BEFORE line-level processing ---
+            text = text.replace(/((?:^\|.+\n?)+)/gm, (tableBlock) => {
+                const lines = tableBlock.trim().split('\n').filter(l => l.trim());
+                if (lines.length < 2) return tableBlock;
+                // Find separator row (line of |---|---|)
+                const sepIdx = lines.findIndex((l, i) => i > 0 && /^\|[\s:|-]+\|?\s*$/.test(l.trim()));
+                if (sepIdx < 1) return tableBlock; // No separator = not a real table
+                const parseCells = (line) => {
+                    let l = line.trim();
+                    if (l.startsWith('|')) l = l.slice(1);
+                    if (l.endsWith('|')) l = l.slice(0, -1);
+                    return l.split('|').map(c => c.trim());
+                };
+                const headerRows = lines.slice(0, sepIdx);
+                const bodyRows = lines.slice(sepIdx + 1).filter(l => l.trim() && /\|/.test(l));
+                let t = '<div class="ai-table-wrap"><table>';
+                t += '<thead>';
+                headerRows.forEach(r => {
+                    t += '<tr>' + parseCells(r).map(c => `<th>${c}</th>`).join('') + '</tr>';
+                });
+                t += '</thead>';
+                if (bodyRows.length) {
+                    t += '<tbody>';
+                    bodyRows.forEach(r => {
+                        t += '<tr>' + parseCells(r).map(c => `<td>${c}</td>`).join('') + '</tr>';
+                    });
+                    t += '</tbody>';
+                }
+                t += '</table></div>';
+                return '\n' + t + '\n';
+            });
+
+            // --- Phase 2: Inline markdown ---
             let html = text
-                // Code blocks
                 .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-                // Bold
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                // Italic
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                // Inline code
                 .replace(/`([^`]+)`/g, '<code>$1</code>')
-                // Headers
                 .replace(/^### (.*$)/gm, '<strong style="font-size:14px;display:block;margin:8px 0 4px;">$1</strong>')
                 .replace(/^## (.*$)/gm, '<strong style="font-size:15px;display:block;margin:10px 0 4px;">$1</strong>')
-                // Tables
-                .replace(/^\|(.+)\|$/gm, (match) => {
-                    const cells = match.split('|').filter(c => c.trim() !== '');
-                    return '<tr>' + cells.map(c => {
-                        const trimmed = c.trim();
-                        if (/^[\s-:]+$/.test(trimmed)) return null; // separator row
-                        return `<td>${trimmed}</td>`;
-                    }).filter(Boolean).join('') + '</tr>';
-                })
-                // Unordered lists
                 .replace(/^[-•]\s+(.*$)/gm, '<li>$1</li>')
-                // Ordered lists
                 .replace(/^\d+\.\s+(.*$)/gm, '<li>$1</li>')
-                // Line breaks
                 .replace(/\n/g, '<br>');
-
-            // Wrap consecutive <tr> in table
-            html = html.replace(/((?:<tr>.*?<\/tr><br>?)+)/g, (match) => {
-                const rows = match.replace(/<br>/g, '');
-                // Check if first row is header
-                const rowsArr = rows.split('</tr>').filter(r => r.trim());
-                if (rowsArr.length > 1) {
-                    const header = rowsArr[0].replace(/<td>/g, '<th>').replace(/<\/td>/g, '</th>') + '</tr>';
-                    // Skip separator rows
-                    const bodyRows = rowsArr.slice(1).filter(r => !r.includes('---')).join('</tr>') + '</tr>';
-                    return `<table>${header}${bodyRows}</table>`;
-                }
-                return `<table>${rows}</table>`;
-            });
 
             // Wrap consecutive <li> in <ul>
             html = html.replace(/((?:<li>.*?<\/li><br>?)+)/g, (match) => {
                 return '<ul>' + match.replace(/<br>/g, '') + '</ul>';
             });
 
-            // Clean up extra <br> after block elements
-            html = html.replace(/<\/(table|ul|ol|pre)><br>/g, '</$1>');
+            // Clean up extra <br> around block elements
+            html = html.replace(/<\/(table|ul|ol|pre|div)><br>/g, '</$1>');
+            html = html.replace(/<br><(div class="ai-table-wrap")/g, '<$1');
 
             return html;
         }
