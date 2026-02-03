@@ -8261,8 +8261,9 @@
         // ============================================================
         const GEMINI_API_KEY = 'AIzaSyDfcgbCMcpSs9RSdgBMUozbkGTpxGMgRjA';
         const GEMINI_MODELS = [
-            'gemini-2.5-flash-preview-05-20',
-            'gemini-2.0-flash'
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-lite'
         ];
         let aiChatOpen = false;
         let aiChatHistory = []; // {role:'user'|'model', parts:[{text}]}
@@ -8430,10 +8431,12 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
             }
 
             let lastError = null;
+            let errors = [];
             for (let m = aiCurrentModel; m < GEMINI_MODELS.length; m++) {
                 const model = GEMINI_MODELS[m];
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
                 try {
+                    console.log(`[AI] Trying model: ${model}`);
                     const resp = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -8447,29 +8450,41 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
                         })
                     });
                     if (resp.status === 429) {
+                        console.warn(`[AI] ${model}: rate limited (429)`);
+                        errors.push(`${model}: rate limited`);
                         lastError = 'rate_limit';
-                        aiCurrentModel = m + 1; // Try next model
                         continue;
                     }
                     if (!resp.ok) {
                         const errData = await resp.json().catch(() => ({}));
-                        throw new Error(errData.error?.message || `HTTP ${resp.status}`);
+                        const errMsg = errData.error?.message || `HTTP ${resp.status}`;
+                        console.warn(`[AI] ${model}: error — ${errMsg}`);
+                        errors.push(`${model}: ${errMsg}`);
+                        lastError = new Error(errMsg);
+                        continue;
                     }
                     const data = await resp.json();
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!text) throw new Error('Empty response from Gemini');
+                    if (!text) {
+                        const blockReason = data.candidates?.[0]?.finishReason || data.promptFeedback?.blockReason || 'empty';
+                        throw new Error(`No response (${blockReason})`);
+                    }
+                    console.log(`[AI] Success with ${model}`);
                     aiCurrentModel = m; // Stick with working model
                     return { text, model };
                 } catch (e) {
+                    console.warn(`[AI] ${model}: ${e.message}`);
+                    errors.push(`${model}: ${e.message}`);
                     lastError = e;
-                    if (m < GEMINI_MODELS.length - 1) continue;
                 }
             }
             // All models failed
-            if (lastError === 'rate_limit') {
+            aiCurrentModel = 0; // Reset for next attempt
+            const allRateLimited = errors.every(e => e.includes('rate limited'));
+            if (allRateLimited) {
                 throw new Error('RATE_LIMIT');
             }
-            throw lastError || new Error('All models failed');
+            throw new Error(errors.join(' → '));
         }
 
         // Render markdown-ish text to HTML (simple parser)
@@ -8600,9 +8615,8 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
                 typingEl.remove();
                 if (e.message === 'RATE_LIMIT') {
                     appendAiMessage(t('ai.rateLimit'), 'error');
-                    aiCurrentModel = 0; // Reset for next try
                 } else {
-                    appendAiMessage(`${t('ai.error')}\\n${e.message}`, 'error');
+                    appendAiMessage(`${t('ai.error')}\n${e.message}`, 'error');
                 }
             } finally {
                 aiIsBusy = false;
