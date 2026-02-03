@@ -8330,6 +8330,14 @@ Records of pallets packed for orders, with photos and measurements.
 ## Financial Data Access
 ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer questions about revenue, profit/loss, costs, and margins.' : '🔒 The user has NOT unlocked Sales & Finance. Financial data (revenue, P/L, profit, loss, costs, margins, pricing) is RESTRICTED. If asked about financial data, tell them: "Financial data is locked. Please unlock the Sales & Finance section in the sidebar first." Do NOT guess, estimate, or reveal any financial figures.'}
 
+## CRITICAL: Accuracy Rules
+- **NEVER guess or estimate counts.** Use ONLY the pre-computed statistics provided in the "STATISTICS" section of the data.
+- When asked "how many orders for part X?" — find that part in the STATISTICS section and use the exact count shown there.
+- When asked about a specific part, customer, or status — find matching rows in the data and count them ONE BY ONE. Do not round or approximate.
+- If the statistics section shows "Part 620.308.2211: 4 orders (pending=3, staged=1)" then the answer is exactly 4, not 10, not "about".
+- **Double-check your count** before answering. If you say "Found 5 orders" then list exactly 5 in the table.
+- If you're unsure about a count, list the matching items in a table and count the rows you listed.
+
 ## Response Guidelines
 - Be concise and direct — this is a production floor tool, not a chatbot
 - Use tables (markdown) when showing multiple items
@@ -8340,16 +8348,115 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
 - Dates: use MM/DD/YYYY format
 - For "late" or "overdue" orders: Days Until < 0
 - For "low inventory": Fusion Qty < Minimum
-- Always give counts when listing items (e.g., "Found 5 orders:")`;
+- Always give counts when listing items (e.g., "Found 5 orders:")
+- **Match the count in your text with the actual rows you list.** Never say "Found 5" then list 3.`;
+        }
+
+        // Pre-compute statistics for AI accuracy
+        function buildAiStatistics() {
+            let stats = '\\n## PRE-COMPUTED STATISTICS (use these for counts — do NOT count rows manually)\\n';
+
+            if (allData.length === 0) return stats + 'No order data loaded.\\n';
+
+            // Overall counts
+            const statusCounts = { pending: 0, wip: 0, staged: 0, shipped: 0 };
+            const catCounts = { rolltech: 0, molding: 0, snappad: 0, other: 0 };
+            const byPart = {};
+            const byCustomer = {};
+            const overdueOrders = [];
+            const urgentOrders = [];
+
+            allData.forEach(row => {
+                const status = getStatus(row);
+                const cat = getCategory(row);
+                const part = (getVal(row, 'PART') || '-').toString().trim();
+                const cust = (getVal(row, 'CUSTOMER') || '-').toString().trim();
+                const days = parseNumber(getVal(row, 'DAYS_UNTIL'));
+                const line = getVal(row, 'LINE') || '-';
+                const urgent = (getVal(row, 'URGENT') || '').toString().toLowerCase().trim();
+                const isUrgent = urgent === 'urgent' || urgent === 'true' || urgent === '1' || urgent === 'yes' || urgent === 'x';
+
+                if (statusCounts[status] !== undefined) statusCounts[status]++;
+                if (catCounts[cat] !== undefined) catCounts[cat]++;
+                else catCounts.other++;
+
+                // By Part
+                if (!byPart[part]) byPart[part] = { total: 0, pending: 0, wip: 0, staged: 0, shipped: 0, totalQty: 0, customers: new Set() };
+                byPart[part].total++;
+                if (byPart[part][status] !== undefined) byPart[part][status]++;
+                byPart[part].totalQty += parseNumber(getVal(row, 'QTY')) || 0;
+                byPart[part].customers.add(cust);
+
+                // By Customer
+                if (!byCustomer[cust]) byCustomer[cust] = { total: 0, pending: 0, wip: 0, staged: 0, shipped: 0, totalQty: 0, parts: new Set() };
+                byCustomer[cust].total++;
+                if (byCustomer[cust][status] !== undefined) byCustomer[cust][status]++;
+                byCustomer[cust].totalQty += parseNumber(getVal(row, 'QTY')) || 0;
+                byCustomer[cust].parts.add(part);
+
+                // Overdue
+                if (days < 0 && status !== 'shipped') overdueOrders.push({ line, part, cust, days, status });
+                // Urgent
+                if (isUrgent) urgentOrders.push({ line, part, cust, status });
+            });
+
+            // Overall summary
+            const activeTotal = statusCounts.pending + statusCounts.wip + statusCounts.staged;
+            stats += `\\n### Overall: ${allData.length} total orders (${activeTotal} active, ${statusCounts.shipped} shipped)\\n`;
+            stats += `Status breakdown: pending=${statusCounts.pending}, wip=${statusCounts.wip}, staged=${statusCounts.staged}, shipped=${statusCounts.shipped}\\n`;
+            stats += `Category breakdown: RollTech=${catCounts.rolltech}, Molding=${catCounts.molding}, SnapPad=${catCounts.snappad}\\n`;
+            stats += `Overdue orders (active, DaysUntil < 0): ${overdueOrders.length}\\n`;
+            stats += `Urgent orders: ${urgentOrders.length}\\n`;
+
+            // Per-part summary
+            stats += `\\n### Orders by Part Number (${Object.keys(byPart).length} unique parts):\\n`;
+            Object.entries(byPart).sort((a, b) => b[1].total - a[1].total).forEach(([part, d]) => {
+                const custList = Array.from(d.customers).join(', ');
+                stats += `Part ${part}: ${d.total} orders (pending=${d.pending}, wip=${d.wip}, staged=${d.staged}, shipped=${d.shipped}) | TotalQty=${d.totalQty.toLocaleString()} | Customers: ${custList}\\n`;
+            });
+
+            // Per-customer summary
+            stats += `\\n### Orders by Customer (${Object.keys(byCustomer).length} unique customers):\\n`;
+            Object.entries(byCustomer).sort((a, b) => b[1].total - a[1].total).forEach(([cust, d]) => {
+                const partList = Array.from(d.parts).join(', ');
+                stats += `Customer ${cust}: ${d.total} orders (pending=${d.pending}, wip=${d.wip}, staged=${d.staged}, shipped=${d.shipped}) | TotalQty=${d.totalQty.toLocaleString()} | Parts: ${partList}\\n`;
+            });
+
+            // Overdue details
+            if (overdueOrders.length > 0) {
+                stats += `\\n### Overdue Orders (${overdueOrders.length} total):\\n`;
+                overdueOrders.sort((a, b) => a.days - b.days).forEach(o => {
+                    stats += `Line ${o.line}: Part=${o.part} | Customer=${o.cust} | ${Math.abs(o.days)} days overdue | Status=${o.status}\\n`;
+                });
+            }
+
+            // Inventory stats
+            if (inventoryData.length > 0) {
+                const lowItems = inventoryData.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
+                const okItems = inventoryData.filter(i => i.fusionQty >= i.minimum || i.minimum === 0);
+                stats += `\\n### Inventory: ${inventoryData.length} items total, ${lowItems.length} LOW (below minimum), ${okItems.length} OK\\n`;
+                if (lowItems.length > 0) {
+                    stats += `Low inventory items:\\n`;
+                    lowItems.sort((a, b) => (a.fusionQty / (a.minimum || 1)) - (b.fusionQty / (b.minimum || 1))).forEach(i => {
+                        stats += `Part ${i.partNumber}: Qty=${i.fusionQty} / Min=${i.minimum} (${i.minimum > 0 ? Math.round(i.fusionQty / i.minimum * 100) : 0}% of minimum)\\n`;
+                    });
+                }
+            }
+
+            return stats;
         }
 
         // Build compact data context string from live dashboard data
         function buildAiDataContext() {
             let ctx = '';
             const hasSalesAccess = salesUnlocked === true;
-            // Orders summary
+
+            // Pre-computed statistics (Option 1: helps AI avoid miscounting)
+            ctx += buildAiStatistics();
+
+            // Raw orders data
             if (allData.length > 0) {
-                ctx += '\\n## Current Orders Data\\n';
+                ctx += '\\n## Raw Orders Data (for detailed lookups)\\n';
                 allData.forEach((row, i) => {
                     const line = getVal(row, 'LINE') || '-';
                     const cust = getVal(row, 'CUSTOMER') || '-';
@@ -8383,9 +8490,9 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
                     ctx += orderLine + '\\n';
                 });
             }
-            // Inventory summary
+            // Inventory data
             if (inventoryData.length > 0) {
-                ctx += '\\n## Current Inventory Data\\n';
+                ctx += '\\n## Raw Inventory Data (for detailed lookups)\\n';
                 inventoryData.forEach((item, i) => {
                     const status = item.fusionQty < item.minimum ? 'LOW' : (item.fusionQty >= (item.manualTarget || item.minimum) ? 'OK' : 'WATCH');
                     ctx += `Inv ${i+1}: Part=${item.partNumber} | Product=${item.product} | FusionQty=${item.fusionQty} | Min=${item.minimum} | Target=${item.manualTarget || '-'} | QtyNeeded=${item.qtyNeeded} | ToMake=${item.partsToBeMade} | MoldType=${item.moldType || '-'} | Status=${status}\\n`;
@@ -8398,18 +8505,105 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
             return ctx;
         }
 
+        // Option 3: Pre-filter data based on user query to give AI targeted results
+        function buildQueryHelper(userMessage) {
+            const msg = userMessage.toLowerCase();
+            let helper = '';
+
+            // Detect part number mentions (patterns like 620.308.2211, FS-TPO, THRESH-1.5, etc.)
+            const partPatterns = msg.match(/\b[\d]{3}[\.\-][\d]{3}[\.\-][\d]{3,}[\w]*/gi) || [];
+            const partWords = msg.match(/\b(?:fs|sp|spo|spec|spcf|spef|thresh|rubb|earthedge|padasm)[\-\w]+/gi) || [];
+            const allPartMentions = [...partPatterns, ...partWords];
+
+            if (allPartMentions.length > 0) {
+                allPartMentions.forEach(searchPart => {
+                    const sp = searchPart.toLowerCase();
+                    const matchingOrders = allData.filter(row => {
+                        const part = (getVal(row, 'PART') || '').toString().toLowerCase();
+                        return part.includes(sp) || sp.includes(part);
+                    });
+                    const matchingInv = inventoryData.filter(item => {
+                        const part = (item.partNumber || '').toLowerCase();
+                        return part.includes(sp) || sp.includes(part);
+                    });
+                    if (matchingOrders.length > 0 || matchingInv.length > 0) {
+                        helper += `\\n[QUERY HELPER — pre-filtered results for "${searchPart}"]\\n`;
+                        if (matchingOrders.length > 0) {
+                            helper += `Matching orders: exactly ${matchingOrders.length} found\\n`;
+                            matchingOrders.forEach((row, i) => {
+                                helper += `  ${i+1}. Line=${getVal(row,'LINE')} | IF#=${getVal(row,'IF_NUM')} | Customer=${getVal(row,'CUSTOMER')} | Part=${getVal(row,'PART')} | Qty=${getVal(row,'QTY')} | Status=${getStatus(row)} | DaysUntil=${getVal(row,'DAYS_UNTIL')}\\n`;
+                            });
+                        }
+                        if (matchingInv.length > 0) {
+                            helper += `Matching inventory: exactly ${matchingInv.length} found\\n`;
+                            matchingInv.forEach((item, i) => {
+                                helper += `  ${i+1}. Part=${item.partNumber} | FusionQty=${item.fusionQty} | Min=${item.minimum} | Status=${item.fusionQty < item.minimum ? 'LOW' : 'OK'}\\n`;
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Detect customer name mentions
+            const knownCustomers = [...new Set(allData.map(r => (getVal(r, 'CUSTOMER') || '').toString().trim()).filter(Boolean))];
+            knownCustomers.forEach(cust => {
+                if (msg.includes(cust.toLowerCase())) {
+                    const matchingOrders = allData.filter(row => (getVal(row, 'CUSTOMER') || '').toString().trim().toLowerCase() === cust.toLowerCase());
+                    if (matchingOrders.length > 0) {
+                        helper += `\\n[QUERY HELPER — pre-filtered results for customer "${cust}"]\\n`;
+                        helper += `Matching orders: exactly ${matchingOrders.length} found\\n`;
+                        matchingOrders.forEach((row, i) => {
+                            helper += `  ${i+1}. Line=${getVal(row,'LINE')} | Part=${getVal(row,'PART')} | Qty=${getVal(row,'QTY')} | Status=${getStatus(row)} | DaysUntil=${getVal(row,'DAYS_UNTIL')}\\n`;
+                        });
+                    }
+                }
+            });
+
+            // Detect status queries
+            const statusTerms = { 'late': 'overdue', 'overdue': 'overdue', 'atrasad': 'overdue', 'retrasad': 'overdue', 'urgent': 'urgent', 'urgente': 'urgent' };
+            Object.entries(statusTerms).forEach(([term, type]) => {
+                if (msg.includes(term)) {
+                    if (type === 'overdue') {
+                        const overdue = allData.filter(row => {
+                            const days = parseNumber(getVal(row, 'DAYS_UNTIL'));
+                            return days < 0 && getStatus(row) !== 'shipped';
+                        });
+                        helper += `\\n[QUERY HELPER — overdue/late orders]\\n`;
+                        helper += `Overdue active orders: exactly ${overdue.length} found\\n`;
+                        overdue.sort((a, b) => parseNumber(getVal(a, 'DAYS_UNTIL')) - parseNumber(getVal(b, 'DAYS_UNTIL'))).forEach((row, i) => {
+                            helper += `  ${i+1}. Line=${getVal(row,'LINE')} | Customer=${getVal(row,'CUSTOMER')} | Part=${getVal(row,'PART')} | ${Math.abs(parseNumber(getVal(row,'DAYS_UNTIL')))} days overdue | Status=${getStatus(row)}\\n`;
+                        });
+                    }
+                    if (type === 'urgent') {
+                        const urgents = allData.filter(row => {
+                            const u = (getVal(row, 'URGENT') || '').toString().toLowerCase().trim();
+                            return u === 'urgent' || u === 'true' || u === '1' || u === 'yes' || u === 'x';
+                        });
+                        helper += `\\n[QUERY HELPER — urgent orders]\\n`;
+                        helper += `Urgent orders: exactly ${urgents.length} found\\n`;
+                        urgents.forEach((row, i) => {
+                            helper += `  ${i+1}. Line=${getVal(row,'LINE')} | Customer=${getVal(row,'CUSTOMER')} | Part=${getVal(row,'PART')} | Status=${getStatus(row)}\\n`;
+                        });
+                    }
+                }
+            });
+
+            return helper;
+        }
+
         // Call Gemini API
         async function callGemini(userMessage) {
             const systemInstruction = buildAiSystemInstruction();
             const dataContext = buildAiDataContext();
+            const queryHelper = buildQueryHelper(userMessage);
 
             // Add data context as first user message if not already there
             const contents = [];
             if (aiChatHistory.length === 0) {
-                // First message — prepend data context
+                // First message — prepend data context + query helper
                 contents.push({
                     role: 'user',
-                    parts: [{ text: `Here is the current live data from the dashboard:\\n${dataContext}\\n\\nMy question: ${userMessage}` }]
+                    parts: [{ text: `Here is the current live data from the dashboard:\\n${dataContext}${queryHelper}\\n\\nMy question: ${userMessage}` }]
                 });
             } else {
                 // Subsequent messages — include history
@@ -8420,14 +8614,14 @@ ${salesUnlocked ? '✅ The user HAS unlocked Sales & Finance. You can answer que
                 };
                 const firstResp = {
                     role: 'model',
-                    parts: [{ text: 'Got it, I have the latest data. What would you like to know?' }]
+                    parts: [{ text: 'Got it, I have the latest data.' }]
                 };
                 contents.push(firstMsg, firstResp);
-                // Add prior conversation (skip the first data-injection pair)
+                // Add prior conversation
                 for (let i = 0; i < aiChatHistory.length; i++) {
                     contents.push(aiChatHistory[i]);
                 }
-                contents.push({ role: 'user', parts: [{ text: userMessage }] });
+                contents.push({ role: 'user', parts: [{ text: `${queryHelper}\\n\\n${userMessage}` }] });
             }
 
             let lastError = null;
