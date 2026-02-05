@@ -394,6 +394,19 @@
         .pallet-detail { font-size: 11px; }
         .pallet-detail .label { color: var(--text-secondary); }
         .pallet-detail .value { font-weight: 600; color: var(--text-primary); }
+        .drawing-thumbnails { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+        .drawing-thumb {
+            width: 180px; cursor: pointer; border-radius: 8px; overflow: hidden;
+            border: 2px solid var(--border); transition: all 0.2s; background: var(--bg-card);
+        }
+        .drawing-thumb:hover { border-color: #ed8936; transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .drawing-thumb img { width: 100%; height: 120px; object-fit: cover; display: block; }
+        .drawing-thumb .drawing-label { padding: 6px 10px; font-size: 11px; font-weight: 600; text-align: center; color: var(--text-primary); background: rgba(237, 137, 54, 0.15); }
+        .drawing-thumbnails { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+        .drawing-thumb { width: 180px; cursor: pointer; border-radius: 8px; overflow: hidden; border: 2px solid var(--border); transition: all 0.2s; background: var(--bg-card); }
+        .drawing-thumb:hover { border-color: #ed8936; transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .drawing-thumb img { width: 100%; height: 120px; object-fit: cover; display: block; }
+        .drawing-thumb .drawing-label { padding: 6px 10px; font-size: 11px; font-weight: 600; text-align: center; color: var(--text-primary); background: rgba(237, 137, 54, 0.15); }
         .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
         .image-modal.active { display: flex; }
         .image-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; }
@@ -968,7 +981,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.20</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.21</div>
     </div>
 
     <div class="main-content">
@@ -2074,8 +2087,16 @@
                 'photo.noFusionPictures': 'No fusion pictures',
                 'photo.noShipmentPhotos': 'No shipment photos',
                 'photo.noCloseUpPictures': 'No close-up pictures',
+                'drawing.tireDrawing': 'Tire Drawing',
+                'drawing.hubDrawing': 'Hub Drawing',
+                'drawing.noDrawings': 'No drawings available',
+                'drawing.drawings': 'Drawings',
                 'photo.ship': 'Ship',
                 'photo.docs': 'Docs',
+                'drawing.tireDrawing': 'Tire Drawing',
+                'drawing.hubDrawing': 'Hub Drawing',
+                'drawing.noDrawings': 'No drawings available',
+                'drawing.drawings': 'Drawings',
                 // Theme translations
                 'ui.darkTheme': 'Dark',
                 'ui.lightTheme': 'Light',
@@ -2334,6 +2355,10 @@
                 'photo.noFusionPictures': 'Sin fotos de fusion',
                 'photo.noShipmentPhotos': 'Sin fotos de envío',
                 'photo.noCloseUpPictures': 'Sin fotos de cerca',
+                'drawing.tireDrawing': 'Dibujo de Llanta',
+                'drawing.hubDrawing': 'Dibujo de Hub',
+                'drawing.noDrawings': 'No hay dibujos disponibles',
+                'drawing.drawings': 'Dibujos',
                 'photo.ship': 'Envío',
                 'photo.docs': 'Docs',
                 // Theme translations
@@ -3304,6 +3329,8 @@
                                 rawUpper: row['Fusion Inventory'] 
                             });
                         }
+                        var drawing1Url = row['Drawing 1 URL'] || row['Drawing 1 url'] || '';
+                        var drawing2Url = row['Drawing 2 URL'] || row['Drawing 2 url'] || '';
                         prodTotalsMap[partNum] = {
                             product: row['Product'] || '',
                             qtyNeeded: parseNumber(row['Quantity Needed']),
@@ -3311,8 +3338,15 @@
                             manualTarget: parseNumber(row['Manual target']) || parseNumber(row['Manual Target']),
                             moldType: row['Mold type'] || row['Mold Type'] || '',
                             fusionInventory: fusionInv,
-                            partsToBeMade: parseNumber(row['Parts to be made']) || parseNumber(row['Parts to be Made'])
+                            partsToBeMade: parseNumber(row['Parts to be made']) || parseNumber(row['Parts to be Made']),
+                            drawing1Url: drawing1Url,
+                            drawing2Url: drawing2Url
                         };
+                        // Build global drawing lookup map
+                        if (drawing1Url || drawing2Url) {
+                            if (!window.drawingMap) window.drawingMap = {};
+                            window.drawingMap[partNum] = { drawing1: drawing1Url, drawing2: drawing2Url };
+                        }
                     }
                 });
                 const mergedData = [];
@@ -4625,6 +4659,11 @@
             
             galleryHtml += '</div>'; // Close grid
             
+            // Add drawing thumbnails for tire and hub
+            var drillTirePartNum = orderData ? getVal(orderData, 'TIRE') : '';
+            var drillHubPartNum = orderData ? getVal(orderData, 'HUB') : '';
+            galleryHtml += buildDrawingThumbnails(drillTirePartNum, drillHubPartNum);
+            
             // Build the full drilldown HTML
             const drilldownHtml = `
                 <tr id="orderDrilldownRow" class="order-drilldown-row">
@@ -4739,6 +4778,11 @@
                 palletHtml = `<div style="text-align:center; padding: 30px; color: var(--text-secondary);"><p style="font-size: 14px;">📦 ${t('photo.noPalletData')}</p><p style="font-size: 12px; margin-top: 8px;">No pallet records found for Line #${lineNum}</p></div>`;
             }
             
+            // Add drawing thumbnails for NTM drilldown
+            var ntmTirePartNum = orderData ? getVal(orderData, 'TIRE') : '';
+            var ntmHubPartNum = orderData ? getVal(orderData, 'HUB') : '';
+            var ntmDrawingHtml = buildDrawingThumbnails(ntmTirePartNum, ntmHubPartNum);
+            
             const colCount = document.getElementById('ordersQueueTableHeader').querySelectorAll('th').length;
             const drilldownHtml = `
                 <tr id="orderDrilldownRow" class="order-drilldown-row">
@@ -4755,6 +4799,7 @@
                                 ${summaryHtml}
                             </div>
                             ${palletHtml}
+                            ${ntmDrawingHtml}
                         </div>
                     </td>
                 </tr>
@@ -4779,6 +4824,71 @@
         
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
+        }
+        
+        // Extract Google Drive file ID from URL and build thumbnail URL
+        function getDriveThumbUrl(driveUrl, size) {
+            if (!driveUrl) return null;
+            var m = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            return m ? 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w' + (size || 400) : null;
+        }
+
+        // Build drawing thumbnails HTML for tire/hub
+        function buildDrawingThumbnails(tirePartNum, hubPartNum) {
+            if (!window.drawingMap) return '';
+            var tireDrawings = tirePartNum ? (window.drawingMap[tirePartNum.toString().trim()] || null) : null;
+            var hubDrawings = hubPartNum ? (window.drawingMap[hubPartNum.toString().trim()] || null) : null;
+            
+            if (!tireDrawings && !hubDrawings) return '';
+            
+            var html = '<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">';
+            html += '<h4 style="font-size: 14px; font-weight: 600; color: #ed8936; margin: 0 0 12px 0;">\uD83D\uDCD0 ' + t('drawing.drawings') + '</h4>';
+            html += '<div class="drawing-thumbnails">';
+            
+            if (tireDrawings) {
+                if (tireDrawings.drawing1) {
+                    var thumbUrl = getDriveThumbUrl(tireDrawings.drawing1, 400);
+                    var fullUrl = getDriveThumbUrl(tireDrawings.drawing1, 1200);
+                    if (thumbUrl) {
+                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + fullUrl + '\')">';
+                        html += '<img src="' + thumbUrl + '" alt="Tire Drawing 1" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+                        html += '<div class="drawing-label">' + t('drawing.tireDrawing') + ' 1</div></div>';
+                    }
+                }
+                if (tireDrawings.drawing2) {
+                    var thumbUrl2 = getDriveThumbUrl(tireDrawings.drawing2, 400);
+                    var fullUrl2 = getDriveThumbUrl(tireDrawings.drawing2, 1200);
+                    if (thumbUrl2) {
+                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + fullUrl2 + '\')">';
+                        html += '<img src="' + thumbUrl2 + '" alt="Tire Drawing 2" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+                        html += '<div class="drawing-label">' + t('drawing.tireDrawing') + ' 2</div></div>';
+                    }
+                }
+            }
+            
+            if (hubDrawings) {
+                if (hubDrawings.drawing1) {
+                    var hThumbUrl = getDriveThumbUrl(hubDrawings.drawing1, 400);
+                    var hFullUrl = getDriveThumbUrl(hubDrawings.drawing1, 1200);
+                    if (hThumbUrl) {
+                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + hFullUrl + '\')">';
+                        html += '<img src="' + hThumbUrl + '" alt="Hub Drawing 1" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+                        html += '<div class="drawing-label">' + t('drawing.hubDrawing') + ' 1</div></div>';
+                    }
+                }
+                if (hubDrawings.drawing2) {
+                    var hThumbUrl2 = getDriveThumbUrl(hubDrawings.drawing2, 400);
+                    var hFullUrl2 = getDriveThumbUrl(hubDrawings.drawing2, 1200);
+                    if (hThumbUrl2) {
+                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + hFullUrl2 + '\')">';
+                        html += '<img src="' + hThumbUrl2 + '" alt="Hub Drawing 2" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+                        html += '<div class="drawing-label">' + t('drawing.hubDrawing') + ' 2</div></div>';
+                    }
+                }
+            }
+            
+            html += '</div></div>';
+            return html;
         }
         
         function sortOrdersStagedTable(field) {
