@@ -3580,12 +3580,23 @@
                     }
                     if (!dims) dims = row[keys[5]] || ''; // Fallback to column F
                     
+                    // Find parts/boxes per pallet (Column K)
+                    let partsBoxes = '';
+                    for (const k of keys) {
+                        if (k.toLowerCase().includes('parts') || k.toLowerCase().includes('boxes') || k.toLowerCase().includes('per pallet')) {
+                            partsBoxes = row[k];
+                            break;
+                        }
+                    }
+                    if (!partsBoxes) partsBoxes = row[keys[10]] || ''; // Fallback to column K (index 10)
+                    
                     return {
                         orderNumber: String(orderNum).trim(),
                         palletNumber: palletNum,
                         pictureUrl: pictureUrl,
                         weight: weight,
-                        dimensions: dims
+                        dimensions: dims,
+                        partsPerPallet: partsBoxes
                     };
                 }).filter(p => p.orderNumber && p.orderNumber !== '');
                 
