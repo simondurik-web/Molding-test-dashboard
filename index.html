@@ -939,6 +939,7 @@
             <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">🚚</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
             <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
             <div class="nav-item sub-item" data-page="inventory-history" onclick="navigateTo('inventory-history')"><span class="icon">📈</span> <span data-i18n="nav.inventoryHistory">Inventory History</span></div>
+            <div class="nav-item sub-item" data-page="drawings-library" onclick="navigateTo('drawings-library')"><span class="icon">📐</span> <span data-i18n="nav.drawingsLibrary">Drawings</span></div>
             <div class="nav-item" data-page="pallet-records" onclick="navigateTo('pallet-records')"><span class="icon">📷</span> <span data-i18n="nav.palletRecords">Pallet Records</span></div>
             <div class="nav-item" data-page="shipping-records" onclick="navigateTo('shipping-records')"><span class="icon">🚛</span> <span data-i18n="nav.shippingRecords">Shipping Records</span></div>
             <div class="nav-item" data-page="staged-records" onclick="navigateTo('staged-records')"><span class="icon">📋</span> <span data-i18n="nav.stagedRecords">Staged Records</span></div>
@@ -967,7 +968,7 @@
         </div>
         <div class="nav-divider"></div>
         <div class="nav-section">
-            <div class="nav-item" onclick="toggleAiChat()" style="background:linear-gradient(135deg,rgba(66,133,244,0.15),rgba(52,168,83,0.1));"><span class="icon">🤖</span> <span data-i18n="nav.aiAssistant">Phil Assistant</span></div>
+            <div class="nav-item" onclick="toggleAiChat()" style="background:linear-gradient(135deg,rgba(66,133,244,0.15),rgba(52,168,83,0.1));"><span class="icon">🤖</span> <span data-i18n="nav.aiAssistant">AI Assistant</span></div>
         </div>
         <div class="nav-divider"></div>
         <div class="zoom-controls">
@@ -981,7 +982,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.21</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.22</div>
     </div>
 
     <div class="main-content">
@@ -1715,6 +1716,25 @@
         </div>
 
         <!-- PALLET RECORDS PAGE -->
+        <!-- DRAWINGS LIBRARY PAGE -->
+        <div id="drawings-library" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 data-i18n="drawing.drawingsLibrary">📐 Drawings Library</h2>
+                    <p id="drawingsLibraryCount" style="color: var(--text-secondary); font-size: 13px;"></p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="drawingsSearch" placeholder="Search by part number..." data-i18n-placeholder="drawing.searchPlaceholder" oninput="filterDrawingsLibrary()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px; width: 250px;">
+                    <select id="drawingsTypeFilter" onchange="filterDrawingsLibrary()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 13px;">
+                        <option value="all" data-i18n="drawing.allTypes">All Types</option>
+                        <option value="Tire">Tire</option>
+                        <option value="Hub">Hub</option>
+                    </select>
+                </div>
+            </div>
+            <div id="drawingsLibraryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 16px;"></div>
+        </div>
+
         <div id="pallet-records" class="page">
             <div class="page-header">
                 <div><h2 data-i18n="palletRecords.title">Pallet Records</h2><p data-i18n="palletRecords.subtitle">Pallet photos and dimension records</p></div>
@@ -1818,13 +1838,13 @@
     </div>
 
     <!-- AI Chat Panel -->
-    <button class="ai-chat-fab" id="aiChatFab" onclick="toggleAiChat()" title="Phil Assistant">🤖</button>
+    <button class="ai-chat-fab" id="aiChatFab" onclick="toggleAiChat()" title="AI Assistant">🤖</button>
     <div class="ai-chat-panel" id="aiChatPanel">
         <div class="ai-chat-header">
             <div class="ai-chat-header-left">
                 <span class="ai-icon">🤖</span>
                 <div>
-                    <div class="ai-title" data-i18n="ai.title">Phil Assistant</div>
+                    <div class="ai-title" data-i18n="ai.title">AI Assistant</div>
                     <div class="ai-subtitle" data-i18n="ai.subtitle">Ask about orders, inventory & production</div>
                 </div>
             </div>
@@ -1873,6 +1893,7 @@
                 'nav.shippingRecords': 'Shipping Records',
                 'nav.stagedRecords': 'Staged Records',
                 'nav.inventoryHistory': 'Inventory History',
+                'nav.drawingsLibrary': 'Drawings',
                 'palletRecords.title': 'Pallet Records',
                 'palletRecords.subtitle': 'Pallet photos and dimension records',
                 'shippingRecords.title': 'Shipping Records',
@@ -2087,22 +2108,23 @@
                 'photo.noFusionPictures': 'No fusion pictures',
                 'photo.noShipmentPhotos': 'No shipment photos',
                 'photo.noCloseUpPictures': 'No close-up pictures',
-                'drawing.tireDrawing': 'Tire Drawing',
-                'drawing.hubDrawing': 'Hub Drawing',
-                'drawing.noDrawings': 'No drawings available',
-                'drawing.drawings': 'Drawings',
                 'photo.ship': 'Ship',
                 'photo.docs': 'Docs',
                 'drawing.tireDrawing': 'Tire Drawing',
                 'drawing.hubDrawing': 'Hub Drawing',
+                'drawing.partDrawing': 'Part Drawing',
                 'drawing.noDrawings': 'No drawings available',
                 'drawing.drawings': 'Drawings',
+                'drawing.drawingsLibrary': 'Drawings Library',
+                'drawing.searchPlaceholder': 'Search by part number...',
+                'drawing.allTypes': 'All Types',
+                'drawing.noResults': 'No drawings found',
                 // Theme translations
                 'ui.darkTheme': 'Dark',
                 'ui.lightTheme': 'Light',
                 // AI Assistant
-                'nav.aiAssistant': 'Phil Assistant',
-                'ai.title': 'Phil Assistant',
+                'nav.aiAssistant': 'AI Assistant',
+                'ai.title': 'AI Assistant',
                 'ai.subtitle': 'Ask about orders, inventory & production',
                 'ai.placeholder': 'Ask about your data...',
                 'ai.welcome': 'Hi! I can answer questions about your production orders, inventory, and shipping data. Try asking something!',
@@ -2141,6 +2163,7 @@
                 'nav.shippingRecords': 'Registros de Envíos',
                 'nav.stagedRecords': 'Registros de Staging',
                 'nav.inventoryHistory': 'Historial de Inventario',
+                'nav.drawingsLibrary': 'Dibujos',
                 'palletRecords.title': 'Registros de Paletas',
                 'palletRecords.subtitle': 'Fotos y dimensiones de paletas',
                 'shippingRecords.title': 'Registros de Envíos',
@@ -2355,18 +2378,23 @@
                 'photo.noFusionPictures': 'Sin fotos de fusion',
                 'photo.noShipmentPhotos': 'Sin fotos de envío',
                 'photo.noCloseUpPictures': 'Sin fotos de cerca',
-                'drawing.tireDrawing': 'Dibujo de Llanta',
-                'drawing.hubDrawing': 'Dibujo de Hub',
-                'drawing.noDrawings': 'No hay dibujos disponibles',
-                'drawing.drawings': 'Dibujos',
                 'photo.ship': 'Envío',
                 'photo.docs': 'Docs',
+                'drawing.tireDrawing': 'Dibujo de Llanta',
+                'drawing.hubDrawing': 'Dibujo de Hub',
+                'drawing.partDrawing': 'Dibujo de Pieza',
+                'drawing.noDrawings': 'No hay dibujos disponibles',
+                'drawing.drawings': 'Dibujos',
+                'drawing.drawingsLibrary': 'Biblioteca de Dibujos',
+                'drawing.searchPlaceholder': 'Buscar por número de parte...',
+                'drawing.allTypes': 'Todos los Tipos',
+                'drawing.noResults': 'No se encontraron dibujos',
                 // Theme translations
                 'ui.darkTheme': 'Oscuro',
                 'ui.lightTheme': 'Claro',
                 // AI Assistant
-                'nav.aiAssistant': 'Asistente Phil',
-                'ai.title': 'Asistente Phil',
+                'nav.aiAssistant': 'Asistente IA',
+                'ai.title': 'Asistente IA',
                 'ai.subtitle': 'Pregunta sobre órdenes, inventario y producción',
                 'ai.placeholder': 'Pregunta sobre tus datos...',
                 'ai.welcome': '¡Hola! Puedo responder preguntas sobre tus órdenes de producción, inventario y datos de envío. ¡Intenta preguntar algo!',
@@ -2407,6 +2435,7 @@
                 else if (currentPage === 'orders-shipped') updateOrdersShippedPage();
             } else if (currentPage === 'inventory') updateInventoryPage();
             else if (currentPage === 'inventory-history') updateInventoryHistoryPage();
+            else if (currentPage === 'drawings-library') updateDrawingsLibrary();
             else if (currentPage === 'main') updateMainDashboard();
             else if (currentPage === 'sales-overview') updateSalesOverview();
             else if (currentPage === 'sales-parts') updateSalesPartsPage();
@@ -3345,7 +3374,10 @@
                         // Build global drawing lookup map
                         if (drawing1Url || drawing2Url) {
                             if (!window.drawingMap) window.drawingMap = {};
+                            if (!window.drawingTypeMap) window.drawingTypeMap = {};
                             window.drawingMap[partNum] = { drawing1: drawing1Url, drawing2: drawing2Url };
+                            var productType = (row['Product'] || '').toString().trim();
+                            window.drawingTypeMap[partNum] = productType === 'Tire' ? 'Tire' : productType === 'Hub' ? 'Hub' : (productType || 'Other');
                         }
                     }
                 });
@@ -3691,6 +3723,7 @@
                 case 'orders-shipped': updateOrdersShippedPage(); break;
                 case 'inventory': updateInventoryPage(); break;
                 case 'inventory-history': updateInventoryHistoryPage(); break;
+                case 'drawings-library': updateDrawingsLibrary(); break;
                 case 'sales-overview': updateSalesOverview(); break;
                 case 'sales-parts': updateSalesPartsPage(); break;
                 case 'sales-customers': updateSalesCustomersPage(); break;
@@ -4243,7 +4276,7 @@
                 const rowStyle = isUrgent ? 'background:rgba(229,62,62,0.25);' : isMissing ? 'background:rgba(229,62,62,0.1);' : '';
                 const lineNum = getVal(r, 'LINE') || '';
                 const statusVal = getStatus(r);
-                const clickable = statusVal === 'wip' ? ` class="clickable-row" style="${rowStyle}cursor:pointer;" onclick="showNtmPalletDetails('${lineNum}', this)"` : ` style="${rowStyle}"`;
+                const clickable = ` class="clickable-row" style="${rowStyle}cursor:pointer;" onclick="showNtmPalletDetails('${lineNum}', this)"`;
                 return `${catRow}<tr${clickable}>${cells}</tr>`;
             }).join('');
             
@@ -4555,7 +4588,6 @@
             console.log('============================');
             
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
-            const totalPackages = orderData ? parseNumber(getVal(orderData, 'NUM_PACKAGES')) : 0;
             
             // Build summary section with IF# and days info
             let summaryHtml = `
@@ -4574,7 +4606,7 @@
             }
             
             summaryHtml += `
-                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}${totalPackages ? ' of ' + totalPackages : ''}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
@@ -4588,11 +4620,10 @@
                 galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">`;
                 pallets.forEach((p, idx) => {
                     const num = p.palletNumber || (idx + 1);
-                    const ofTotal = totalPackages ? ` of ${totalPackages}` : '';
                     if (p.pictureUrl) {
-                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" class="photo-btn" style="background: var(--accent);">Pallet ${num}${ofTotal}</a>`;
+                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" class="photo-btn" style="background: var(--accent);">Pallet ${num}</a>`;
                     } else {
-                        galleryHtml += `<span class="photo-btn" style="background: #4a5568;">Pallet ${num}${ofTotal}</span>`;
+                        galleryHtml += `<span class="photo-btn" style="background: #4a5568;">Pallet ${num}</span>`;
                     }
                 });
                 galleryHtml += `</div>`;
@@ -4659,10 +4690,12 @@
             
             galleryHtml += '</div>'; // Close grid
             
-            // Add drawing thumbnails for tire and hub
+            // Add drawing thumbnails for tire and hub (category-aware)
             var drillTirePartNum = orderData ? getVal(orderData, 'TIRE') : '';
             var drillHubPartNum = orderData ? getVal(orderData, 'HUB') : '';
-            galleryHtml += buildDrawingThumbnails(drillTirePartNum, drillHubPartNum);
+            var drillCategory = orderData ? getCategory(orderData) : '';
+            var drillPartNum = orderData ? getVal(orderData, 'PART') : '';
+            galleryHtml += buildDrawingThumbnails(drillTirePartNum, drillHubPartNum, drillCategory, drillPartNum);
             
             // Build the full drilldown HTML
             const drilldownHtml = `
@@ -4741,7 +4774,6 @@
             const qty = orderData ? parseNumber(getVal(orderData, 'QTY')) : 0;
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
             const totalParts = pallets.reduce((s, p) => s + parseNumber(p.partsPerPallet || p.boxesPerPallet), 0);
-            const totalPackages = orderData ? parseNumber(getVal(orderData, 'NUM_PACKAGES')) : 0;
             
             // Summary info
             let summaryHtml = `
@@ -4749,7 +4781,7 @@
                 <div class="pallet-summary-item"><div class="label">${t('col.part')}</div><div class="value">${part}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('col.ifNum')}</div><div class="value">${ifNum || '-'}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('col.qty')}</div><div class="value">${formatNumber(qty)}</div></div>
-                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}${totalPackages ? ' of ' + totalPackages : ''}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
@@ -4761,7 +4793,7 @@
                     const num = p.palletNumber || (idx + 1);
                     palletHtml += `<div style="background: rgba(49, 130, 206, 0.1); border: 1px solid var(--accent); border-radius: 10px; overflow: hidden;">`;
                     palletHtml += `<div style="padding: 12px 16px; background: rgba(49, 130, 206, 0.15); border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center;">`;
-                    palletHtml += `<strong style="color: var(--accent);">📦 Pallet ${num}</strong>${totalPackages ? `<span style="color: var(--text-secondary); font-size: 12px; font-weight: 400;"> of ${totalPackages}</span>` : ''}`;
+                    palletHtml += `<strong style="color: var(--accent);">📦 Pallet ${num}</strong>`;
                     if (p.pictureUrl) {
                         palletHtml += `<a href="${p.pictureUrl}" target="_blank" style="background: var(--accent); color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: 600;">📷 Photo</a>`;
                     }
@@ -4778,10 +4810,12 @@
                 palletHtml = `<div style="text-align:center; padding: 30px; color: var(--text-secondary);"><p style="font-size: 14px;">📦 ${t('photo.noPalletData')}</p><p style="font-size: 12px; margin-top: 8px;">No pallet records found for Line #${lineNum}</p></div>`;
             }
             
-            // Add drawing thumbnails for NTM drilldown
+            // Add drawing thumbnails for NTM drilldown (category-aware)
             var ntmTirePartNum = orderData ? getVal(orderData, 'TIRE') : '';
             var ntmHubPartNum = orderData ? getVal(orderData, 'HUB') : '';
-            var ntmDrawingHtml = buildDrawingThumbnails(ntmTirePartNum, ntmHubPartNum);
+            var ntmCategory = orderData ? getCategory(orderData) : '';
+            var ntmPartNum = orderData ? getVal(orderData, 'PART') : '';
+            var ntmDrawingHtml = buildDrawingThumbnails(ntmTirePartNum, ntmHubPartNum, ntmCategory, ntmPartNum);
             
             const colCount = document.getElementById('ordersQueueTableHeader').querySelectorAll('th').length;
             const drilldownHtml = `
@@ -4833,62 +4867,160 @@
             return m ? 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w' + (size || 400) : null;
         }
 
-        // Build drawing thumbnails HTML for tire/hub
-        function buildDrawingThumbnails(tirePartNum, hubPartNum) {
+        // Build drawing thumbnails HTML — category-aware labels
+        // For Roll Tech: shows Tire Drawing + Hub Drawing separately
+        // For other categories: shows Part Drawing (using part number lookup)
+        function buildDrawingThumbnails(tirePartNum, hubPartNum, category, partNum) {
             if (!window.drawingMap) return '';
-            var tireDrawings = tirePartNum ? (window.drawingMap[tirePartNum.toString().trim()] || null) : null;
-            var hubDrawings = hubPartNum ? (window.drawingMap[hubPartNum.toString().trim()] || null) : null;
+            var isRollTech = category === 'rolltech';
+            var drawings = [];
             
-            if (!tireDrawings && !hubDrawings) return '';
+            if (isRollTech) {
+                // Roll Tech: separate tire and hub drawings
+                var tireDrawings = tirePartNum ? (window.drawingMap[tirePartNum.toString().trim()] || null) : null;
+                var hubDrawings = hubPartNum ? (window.drawingMap[hubPartNum.toString().trim()] || null) : null;
+                if (tireDrawings) {
+                    if (tireDrawings.drawing1) drawings.push({ url: tireDrawings.drawing1, label: t('drawing.tireDrawing') + ' 1', alt: 'Tire Drawing 1' });
+                    if (tireDrawings.drawing2) drawings.push({ url: tireDrawings.drawing2, label: t('drawing.tireDrawing') + ' 2', alt: 'Tire Drawing 2' });
+                }
+                if (hubDrawings) {
+                    if (hubDrawings.drawing1) drawings.push({ url: hubDrawings.drawing1, label: t('drawing.hubDrawing') + ' 1', alt: 'Hub Drawing 1' });
+                    if (hubDrawings.drawing2) drawings.push({ url: hubDrawings.drawing2, label: t('drawing.hubDrawing') + ' 2', alt: 'Hub Drawing 2' });
+                }
+            } else {
+                // Other categories: look up part number directly
+                var partDrawings = partNum ? (window.drawingMap[partNum.toString().trim()] || null) : null;
+                if (partDrawings) {
+                    if (partDrawings.drawing1) drawings.push({ url: partDrawings.drawing1, label: t('drawing.partDrawing') + ' 1', alt: 'Part Drawing 1' });
+                    if (partDrawings.drawing2) drawings.push({ url: partDrawings.drawing2, label: t('drawing.partDrawing') + ' 2', alt: 'Part Drawing 2' });
+                }
+            }
+            
+            if (drawings.length === 0) return '';
             
             var html = '<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">';
             html += '<h4 style="font-size: 14px; font-weight: 600; color: #ed8936; margin: 0 0 12px 0;">\uD83D\uDCD0 ' + t('drawing.drawings') + '</h4>';
             html += '<div class="drawing-thumbnails">';
             
-            if (tireDrawings) {
-                if (tireDrawings.drawing1) {
-                    var thumbUrl = getDriveThumbUrl(tireDrawings.drawing1, 400);
-                    var fullUrl = getDriveThumbUrl(tireDrawings.drawing1, 1200);
-                    if (thumbUrl) {
-                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + fullUrl + '\')">';
-                        html += '<img src="' + thumbUrl + '" alt="Tire Drawing 1" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
-                        html += '<div class="drawing-label">' + t('drawing.tireDrawing') + ' 1</div></div>';
-                    }
+            drawings.forEach(function(d) {
+                var thumbUrl = getDriveThumbUrl(d.url, 400);
+                var fullUrl = getDriveThumbUrl(d.url, 1200);
+                if (thumbUrl) {
+                    html += '<div class="drawing-thumb" onclick="openImageModal(\'' + fullUrl + '\')">';
+                    html += '<img src="' + thumbUrl + '" alt="' + d.alt + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+                    html += '<div class="drawing-label">' + d.label + '</div></div>';
                 }
-                if (tireDrawings.drawing2) {
-                    var thumbUrl2 = getDriveThumbUrl(tireDrawings.drawing2, 400);
-                    var fullUrl2 = getDriveThumbUrl(tireDrawings.drawing2, 1200);
-                    if (thumbUrl2) {
-                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + fullUrl2 + '\')">';
-                        html += '<img src="' + thumbUrl2 + '" alt="Tire Drawing 2" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
-                        html += '<div class="drawing-label">' + t('drawing.tireDrawing') + ' 2</div></div>';
-                    }
-                }
-            }
-            
-            if (hubDrawings) {
-                if (hubDrawings.drawing1) {
-                    var hThumbUrl = getDriveThumbUrl(hubDrawings.drawing1, 400);
-                    var hFullUrl = getDriveThumbUrl(hubDrawings.drawing1, 1200);
-                    if (hThumbUrl) {
-                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + hFullUrl + '\')">';
-                        html += '<img src="' + hThumbUrl + '" alt="Hub Drawing 1" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
-                        html += '<div class="drawing-label">' + t('drawing.hubDrawing') + ' 1</div></div>';
-                    }
-                }
-                if (hubDrawings.drawing2) {
-                    var hThumbUrl2 = getDriveThumbUrl(hubDrawings.drawing2, 400);
-                    var hFullUrl2 = getDriveThumbUrl(hubDrawings.drawing2, 1200);
-                    if (hThumbUrl2) {
-                        html += '<div class="drawing-thumb" onclick="openImageModal(\'' + hFullUrl2 + '\')">';
-                        html += '<img src="' + hThumbUrl2 + '" alt="Hub Drawing 2" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
-                        html += '<div class="drawing-label">' + t('drawing.hubDrawing') + ' 2</div></div>';
-                    }
-                }
-            }
+            });
             
             html += '</div></div>';
             return html;
+        }
+        
+        // ============================================================
+        // DRAWINGS LIBRARY PAGE
+        // ============================================================
+        function updateDrawingsLibrary() {
+            if (!window.drawingMap) {
+                // Drawings not loaded yet — try loading inventory data first
+                loadInventoryData().then(function() { renderDrawingsLibrary(); });
+                return;
+            }
+            renderDrawingsLibrary();
+        }
+        
+        function filterDrawingsLibrary() {
+            renderDrawingsLibrary();
+        }
+        
+        function renderDrawingsLibrary() {
+            var grid = document.getElementById('drawingsLibraryGrid');
+            var countEl = document.getElementById('drawingsLibraryCount');
+            if (!grid) return;
+            
+            if (!window.drawingMap || Object.keys(window.drawingMap).length === 0) {
+                grid.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-secondary);"><p style="font-size: 16px;">📐 ' + t('drawing.noResults') + '</p></div>';
+                if (countEl) countEl.textContent = '0 ' + t('drawing.drawings').toLowerCase();
+                return;
+            }
+            
+            var search = (document.getElementById('drawingsSearch')?.value || '').toLowerCase().trim();
+            var typeFilter = document.getElementById('drawingsTypeFilter')?.value || 'all';
+            
+            // Build list of all parts with drawings, with their type from prodTotalsData
+            var entries = [];
+            var drawingMapKeys = Object.keys(window.drawingMap);
+            
+            // Also build type info from drawingTypeMap (populated during data load)
+            drawingMapKeys.forEach(function(partNum) {
+                var d = window.drawingMap[partNum];
+                var typeInfo = window.drawingTypeMap ? (window.drawingTypeMap[partNum] || 'Other') : 'Other';
+                
+                // Apply filters
+                if (search && !partNum.toLowerCase().includes(search)) return;
+                if (typeFilter !== 'all' && typeInfo !== typeFilter) return;
+                
+                entries.push({
+                    partNum: partNum,
+                    type: typeInfo,
+                    drawing1: d.drawing1,
+                    drawing2: d.drawing2
+                });
+            });
+            
+            // Sort: Tires first, then Hubs, then others
+            var typeOrder = { 'Tire': 0, 'Hub': 1, 'Other': 2 };
+            entries.sort(function(a, b) {
+                var ta = typeOrder[a.type] !== undefined ? typeOrder[a.type] : 2;
+                var tb = typeOrder[b.type] !== undefined ? typeOrder[b.type] : 2;
+                if (ta !== tb) return ta - tb;
+                return a.partNum.localeCompare(b.partNum);
+            });
+            
+            if (countEl) countEl.textContent = entries.length + ' ' + t('drawing.drawings').toLowerCase();
+            
+            if (entries.length === 0) {
+                grid.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-secondary); grid-column: 1 / -1;"><p style="font-size: 16px;">📐 ' + t('drawing.noResults') + '</p></div>';
+                return;
+            }
+            
+            var html = '';
+            entries.forEach(function(entry) {
+                var typeColor = entry.type === 'Tire' ? '#3182ce' : entry.type === 'Hub' ? '#38b2ac' : '#ed8936';
+                var typeBadge = '<span style="background:' + typeColor + '; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">' + entry.type + '</span>';
+                
+                html += '<div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: all 0.2s;" onmouseover="this.style.borderColor=\'#ed8936\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
+                html += '<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">';
+                html += '<strong style="font-size: 14px; color: var(--text-primary);">' + entry.partNum + '</strong>';
+                html += typeBadge;
+                html += '</div>';
+                html += '<div style="display: flex; gap: 8px; padding: 12px;">';
+                
+                if (entry.drawing1) {
+                    var thumb1 = getDriveThumbUrl(entry.drawing1, 400);
+                    var full1 = getDriveThumbUrl(entry.drawing1, 1200);
+                    if (thumb1) {
+                        html += '<div style="flex: 1; cursor: pointer; border-radius: 6px; overflow: hidden; border: 1px solid var(--border);" onclick="openImageModal(\'' + full1 + '\')">';
+                        html += '<img src="' + thumb1 + '" style="width:100%; height: 100px; object-fit: cover; display: block;" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+                        html += '<div style="padding: 4px; text-align: center; font-size: 10px; color: var(--text-secondary); background: rgba(237,137,54,0.1);">Drawing 1</div>';
+                        html += '</div>';
+                    }
+                }
+                
+                if (entry.drawing2) {
+                    var thumb2 = getDriveThumbUrl(entry.drawing2, 400);
+                    var full2 = getDriveThumbUrl(entry.drawing2, 1200);
+                    if (thumb2) {
+                        html += '<div style="flex: 1; cursor: pointer; border-radius: 6px; overflow: hidden; border: 1px solid var(--border);" onclick="openImageModal(\'' + full2 + '\')">';
+                        html += '<img src="' + thumb2 + '" style="width:100%; height: 100px; object-fit: cover; display: block;" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+                        html += '<div style="padding: 4px; text-align: center; font-size: 10px; color: var(--text-secondary); background: rgba(237,137,54,0.1);">Drawing 2</div>';
+                        html += '</div>';
+                    }
+                }
+                
+                html += '</div></div>';
+            });
+            
+            grid.innerHTML = html;
         }
         
         function sortOrdersStagedTable(field) {
