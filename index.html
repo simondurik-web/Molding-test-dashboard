@@ -950,7 +950,8 @@
         <div class="nav-section">
             <div class="nav-section-title" data-i18n="nav.production">Production</div>
             <div class="nav-item" data-page="orders-data" onclick="navigateTo('orders-data')"><span class="icon">📋</span> <span data-i18n="nav.ordersData">Orders Data</span></div>
-            <div class="nav-item sub-item" data-page="orders-queue" onclick="navigateTo('orders-queue')"><span class="icon">🔧</span> <span data-i18n="nav.ordersQueue">Need to Make</span></div>
+            <div class="nav-item sub-item" data-page="production-make" onclick="navigateTo('production-make')"><span class="icon">🏭</span> <span data-i18n="nav.productionMake">Need to Make</span></div>
+            <div class="nav-item sub-item" data-page="orders-queue" onclick="navigateTo('orders-queue')"><span class="icon">📦</span> <span data-i18n="nav.ordersQueue">Need to Package</span></div>
             <div class="nav-item sub-item" data-page="orders-staged" onclick="navigateTo('orders-staged')"><span class="icon">📦</span> <span data-i18n="nav.ordersStaged">Ready to Ship</span></div>
             <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">🚚</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
             <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
@@ -1088,7 +1089,50 @@
             </div>
         </div>
 
-        <!-- ORDERS QUEUE PAGE -->
+        <!-- PRODUCTION MAKE PAGE (Parts to be manufactured) -->
+        <div id="production-make" class="page">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:8px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <button class="category-btn" id="prodMakeBtnTire" onclick="toggleProdMakeCategory('Tire')" style="padding:4px 10px;font-size:11px;background:#ed8936;"><span class="indicator"></span> Tires</button>
+                    <button class="category-btn" id="prodMakeBtnHub" onclick="toggleProdMakeCategory('Hub')" style="padding:4px 10px;font-size:11px;background:#38b2ac;"><span class="indicator"></span> Hubs</button>
+                    <button class="category-btn" id="prodMakeBtnFinished" onclick="toggleProdMakeCategory('Rubber molded finished part')" style="padding:4px 10px;font-size:11px;background:#805ad5;"><span class="indicator"></span> Finished Parts</button>
+                    <button class="category-btn" id="prodMakeBtnBearing" onclick="toggleProdMakeCategory('Bearing')" style="padding:4px 10px;font-size:11px;background:#4a5568;"><span class="indicator"></span> Bearings</button>
+                    <button class="category-btn active" id="prodMakeBtnAll" onclick="toggleProdMakeCategory('all')" style="padding:4px 10px;font-size:11px;"><span class="indicator"></span> All</button>
+                    <span style="margin:0 4px;color:var(--text-secondary);">|</span>
+                    <span style="font-size:12px;color:var(--text-secondary);">Total Parts:</span> <strong id="prodMakeTotalParts" style="font-size:14px;">-</strong>
+                    <span style="font-size:11px;color:var(--text-secondary);" id="prodMakeTotalUnits">-</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <input type="text" class="search-box" id="prodMakeSearch" placeholder="Search part #, mold type..." oninput="filterProdMakeTable()" style="width:180px;padding:4px 8px;font-size:12px;">
+                    <button class="toolbar-btn" onclick="exportProdMakeToCSV()" style="padding:4px 8px;font-size:11px;">📥 CSV</button>
+                    <button class="toolbar-btn" onclick="navigateTo('main')" style="padding:4px 8px;font-size:11px;">← Back</button>
+                </div>
+            </div>
+            <div class="chart-container" style="margin:0 8px;">
+                <div class="chart-header" style="padding:4px 12px;">
+                    <h3 style="font-size:13px;">🏭 Parts to Manufacture</h3>
+                    <span style="color:var(--text-secondary);font-size:11px;" id="prodMakeTableCount">-</span>
+                </div>
+                <div class="scrollable-table" style="max-height:calc(100vh - 120px);">
+                    <table class="data-table" style="font-size:12px;">
+                        <thead>
+                            <tr id="prodMakeTableHeader">
+                                <th style="cursor:pointer;" onclick="sortProdMakeTable('product')">Product ↕</th>
+                                <th style="cursor:pointer;" onclick="sortProdMakeTable('partNumber')">Part # ↕</th>
+                                <th style="cursor:pointer;" onclick="sortProdMakeTable('moldType')">Mold Type ↕</th>
+                                <th style="cursor:pointer;" onclick="sortProdMakeTable('fusionInventory')">Fusion Inv ↕</th>
+                                <th style="cursor:pointer;" onclick="sortProdMakeTable('minimums')">Minimums ↕</th>
+                                <th style="cursor:pointer;" onclick="sortProdMakeTable('partsToBeMade')">Parts to Make ↕</th>
+                                <th>📐 Drawing</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prodMakeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDERS QUEUE PAGE (Need to Package) -->
         <div id="orders-queue" class="page">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:8px;flex-wrap:wrap;">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -1889,7 +1933,8 @@
                 'nav.main': 'Main Dashboard',
                 'nav.production': 'PRODUCTION',
                 'nav.ordersData': 'Orders Data',
-                'nav.ordersQueue': 'Need to Make',
+                'nav.productionMake': 'Need to Make',
+                'nav.ordersQueue': 'Need to Package',
                 'nav.ordersStaged': 'Ready to Ship',
                 'nav.ordersShipped': 'Shipped',
                 'nav.inventory': 'Inventory',
@@ -2159,7 +2204,8 @@
                 'nav.main': 'Panel Principal',
                 'nav.production': 'PRODUCCIÓN',
                 'nav.ordersData': 'Datos de Órdenes',
-                'nav.ordersQueue': 'Por Fabricar',
+                'nav.productionMake': 'Por Fabricar',
+                'nav.ordersQueue': 'Por Empacar',
                 'nav.ordersStaged': 'Listo para Enviar',
                 'nav.ordersShipped': 'Enviados',
                 'nav.inventory': 'Inventario',
@@ -3745,6 +3791,7 @@
             switch(page) {
                 case 'main': updateMainDashboard(); break;
                 case 'orders-data': updateOrdersDataPage(); break;
+                case 'production-make': updateProdMakePage(); break;
                 case 'orders-queue': updateOrdersQueuePage(); break;
                 case 'orders-staged': updateOrdersStagedPage(); break;
                 case 'orders-shipped': updateOrdersShippedPage(); break;
@@ -4069,6 +4116,199 @@
             document.getElementById('ordersQueueBtnMolding').classList.toggle('active', ordersQueueFilters.categories.molding);
             document.getElementById('ordersQueueBtnSnapPad').classList.toggle('active', ordersQueueFilters.categories.snappad);
             updateOrdersQueuePage();
+        }
+        
+        // ============================================================
+        // PRODUCTION MAKE PAGE (Parts to Manufacture from Production Data Totals)
+        // ============================================================
+        let prodMakeData = [];
+        let prodMakeFilter = 'all';
+        let prodMakeSortCol = 'partsToBeMade';
+        let prodMakeSortDir = 'desc';
+        let prodMakeExpandedPart = null;
+        
+        function updateProdMakePage() {
+            // Build production data from prodTotalsMap
+            if (!window.prodTotalsMap || Object.keys(prodTotalsMap).length === 0) {
+                loadInventoryData().then(() => buildProdMakeData());
+            } else {
+                buildProdMakeData();
+            }
+        }
+        
+        function buildProdMakeData() {
+            prodMakeData = [];
+            for (const [partNum, data] of Object.entries(prodTotalsMap)) {
+                const partsToBeMade = parseNumber(data.partsToBeMade) || 0;
+                // Only include items that need to be made (parts to be made > 0)
+                if (partsToBeMade > 0) {
+                    prodMakeData.push({
+                        product: data.product || '',
+                        partNumber: partNum,
+                        moldType: data.moldType || '',
+                        fusionInventory: parseNumber(data.fusionInventory) || 0,
+                        minimums: parseNumber(data.minimums) || 0,
+                        manualTarget: parseNumber(data.manualTarget) || 0,
+                        partsToBeMade: partsToBeMade,
+                        drawing1: data.drawing1Url || '',
+                        drawing2: data.drawing2Url || ''
+                    });
+                }
+            }
+            renderProdMakeTable();
+        }
+        
+        function toggleProdMakeCategory(cat) {
+            prodMakeFilter = cat;
+            // Update button states
+            document.querySelectorAll('#production-make .category-btn').forEach(btn => btn.classList.remove('active'));
+            if (cat === 'all') {
+                document.getElementById('prodMakeBtnAll').classList.add('active');
+            } else if (cat === 'Tire') {
+                document.getElementById('prodMakeBtnTire').classList.add('active');
+            } else if (cat === 'Hub') {
+                document.getElementById('prodMakeBtnHub').classList.add('active');
+            } else if (cat === 'Rubber molded finished part') {
+                document.getElementById('prodMakeBtnFinished').classList.add('active');
+            } else if (cat === 'Bearing') {
+                document.getElementById('prodMakeBtnBearing').classList.add('active');
+            }
+            renderProdMakeTable();
+        }
+        
+        function sortProdMakeTable(col) {
+            if (prodMakeSortCol === col) {
+                prodMakeSortDir = prodMakeSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                prodMakeSortCol = col;
+                prodMakeSortDir = 'desc';
+            }
+            renderProdMakeTable();
+        }
+        
+        function filterProdMakeTable() {
+            renderProdMakeTable();
+        }
+        
+        function renderProdMakeTable() {
+            const searchTerm = (document.getElementById('prodMakeSearch')?.value || '').toLowerCase();
+            
+            // Filter data
+            let filtered = prodMakeData.filter(row => {
+                // Category filter
+                if (prodMakeFilter !== 'all' && row.product !== prodMakeFilter) return false;
+                // Search filter
+                if (searchTerm) {
+                    const searchStr = (row.partNumber + ' ' + row.moldType + ' ' + row.product).toLowerCase();
+                    if (!searchStr.includes(searchTerm)) return false;
+                }
+                return true;
+            });
+            
+            // Sort data
+            filtered.sort((a, b) => {
+                let valA = a[prodMakeSortCol];
+                let valB = b[prodMakeSortCol];
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return prodMakeSortDir === 'asc' ? valA - valB : valB - valA;
+                }
+                valA = String(valA || '').toLowerCase();
+                valB = String(valB || '').toLowerCase();
+                if (valA < valB) return prodMakeSortDir === 'asc' ? -1 : 1;
+                if (valA > valB) return prodMakeSortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Update stats
+            const totalUnits = filtered.reduce((s, r) => s + r.partsToBeMade, 0);
+            document.getElementById('prodMakeTotalParts').textContent = filtered.length;
+            document.getElementById('prodMakeTotalUnits').textContent = formatNumber(totalUnits) + ' units';
+            document.getElementById('prodMakeTableCount').textContent = filtered.length + ' items';
+            
+            // Build table rows
+            const tbody = document.getElementById('prodMakeTableBody');
+            let html = '';
+            
+            filtered.forEach(row => {
+                const hasDrawing = row.drawing1 || row.drawing2;
+                const productColor = row.product === 'Tire' ? '#ed8936' : 
+                                    row.product === 'Hub' ? '#38b2ac' : 
+                                    row.product === 'Bearing' ? '#4a5568' : '#805ad5';
+                
+                html += `<tr class="clickable-row" onclick="toggleProdMakeDrawing('${row.partNumber}')" style="cursor:pointer;">
+                    <td><span style="background:${productColor};color:white;padding:2px 8px;border-radius:4px;font-size:10px;">${row.product}</span></td>
+                    <td><strong>${row.partNumber}</strong></td>
+                    <td>${row.moldType || '-'}</td>
+                    <td style="text-align:right;">${formatNumber(row.fusionInventory)}</td>
+                    <td style="text-align:right;">${formatNumber(row.minimums)}</td>
+                    <td style="text-align:right;font-weight:bold;color:#ed8936;">${formatNumber(row.partsToBeMade)}</td>
+                    <td style="text-align:center;">${hasDrawing ? '📐 View' : '-'}</td>
+                </tr>`;
+                
+                // Add expanded drawing row if this part is expanded
+                if (prodMakeExpandedPart === row.partNumber && hasDrawing) {
+                    html += `<tr class="drawing-expanded-row">
+                        <td colspan="7" style="background:rgba(237,137,54,0.1);padding:16px;border:2px solid #ed8936;">
+                            <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">`;
+                    if (row.drawing1) {
+                        const thumb1 = getDriveThumbUrl(row.drawing1, 400);
+                        const full1 = getDriveThumbUrl(row.drawing1, 1200);
+                        if (thumb1) {
+                            html += `<div class="drawing-thumb" onclick="event.stopPropagation();openImageModal('${full1}')">
+                                <img src="${thumb1}" alt="Drawing 1" loading="lazy" onerror="this.parentElement.style.display='none'">
+                                <div class="drawing-label">Drawing 1</div>
+                            </div>`;
+                        }
+                    }
+                    if (row.drawing2) {
+                        const thumb2 = getDriveThumbUrl(row.drawing2, 400);
+                        const full2 = getDriveThumbUrl(row.drawing2, 1200);
+                        if (thumb2) {
+                            html += `<div class="drawing-thumb" onclick="event.stopPropagation();openImageModal('${full2}')">
+                                <img src="${thumb2}" alt="Drawing 2" loading="lazy" onerror="this.parentElement.style.display='none'">
+                                <div class="drawing-label">Drawing 2</div>
+                            </div>`;
+                        }
+                    }
+                    html += `</div></td></tr>`;
+                }
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        function toggleProdMakeDrawing(partNumber) {
+            if (prodMakeExpandedPart === partNumber) {
+                prodMakeExpandedPart = null;
+            } else {
+                prodMakeExpandedPart = partNumber;
+            }
+            renderProdMakeTable();
+        }
+        
+        function exportProdMakeToCSV() {
+            const searchTerm = (document.getElementById('prodMakeSearch')?.value || '').toLowerCase();
+            let filtered = prodMakeData.filter(row => {
+                if (prodMakeFilter !== 'all' && row.product !== prodMakeFilter) return false;
+                if (searchTerm) {
+                    const searchStr = (row.partNumber + ' ' + row.moldType + ' ' + row.product).toLowerCase();
+                    if (!searchStr.includes(searchTerm)) return false;
+                }
+                return true;
+            });
+            
+            let csv = 'Product,Part Number,Mold Type,Fusion Inventory,Minimums,Parts to Make\\n';
+            filtered.forEach(row => {
+                csv += `"${row.product}","${row.partNumber}","${row.moldType}",${row.fusionInventory},${row.minimums},${row.partsToBeMade}\\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'parts-to-make-' + new Date().toISOString().slice(0,10) + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
         }
         
         function updateOrdersQueuePage() {
