@@ -4878,17 +4878,38 @@
             document.getElementById('imageModal').classList.remove('active');
         }
         
-        // Get thumbnail and full URLs for a photo (handles Google Drive and direct URLs)
+        // Get thumbnail and full URLs for a photo (handles Google Drive/Forms and direct URLs)
         function getPhotoUrls(url) {
             if (!url) return null;
-            // Check if it's a Google Drive URL
-            var driveMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (driveMatch) {
+            url = String(url).trim();
+            if (!url) return null;
+            
+            var fileId = null;
+            
+            // Pattern 1: /d/FILEID/ (standard Drive share link)
+            var m1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (m1) fileId = m1[1];
+            
+            // Pattern 2: id=FILEID (Google Forms, open?id=, export?id=)
+            if (!fileId) {
+                var m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                if (m2) fileId = m2[1];
+            }
+            
+            // Pattern 3: lh3.googleusercontent.com/d/FILEID
+            if (!fileId) {
+                var m3 = url.match(/googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/);
+                if (m3) fileId = m3[1];
+            }
+            
+            // If we found a Google file ID, use thumbnail API
+            if (fileId) {
                 return {
-                    thumb: 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w200',
-                    full: 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w1200'
+                    thumb: 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w200',
+                    full: 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1200'
                 };
             }
+            
             // Direct image URL - use as-is for both
             return { thumb: url, full: url };
         }
