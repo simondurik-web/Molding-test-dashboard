@@ -407,6 +407,22 @@
         .drawing-thumb:hover { border-color: #ed8936; transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         .drawing-thumb img { width: 100%; height: 120px; object-fit: cover; display: block; }
         .drawing-thumb .drawing-label { padding: 6px 10px; font-size: 11px; font-weight: 600; text-align: center; color: var(--text-primary); background: rgba(237, 137, 54, 0.15); }
+        /* Photo thumbnails - smaller than drawings */
+        .photo-thumbnails { display: flex; gap: 8px; flex-wrap: wrap; }
+        .photo-thumb { width: 100px; cursor: pointer; border-radius: 6px; overflow: hidden; border: 2px solid var(--border); transition: all 0.2s; background: var(--bg-card); }
+        .photo-thumb:hover { border-color: var(--accent); transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .photo-thumb img { width: 100%; height: 75px; object-fit: cover; display: block; }
+        .photo-thumb .photo-label { padding: 4px 6px; font-size: 10px; font-weight: 600; text-align: center; color: var(--text-primary); background: rgba(0,0,0,0.2); }
+        .photo-thumb.pallet-photo:hover { border-color: var(--accent); }
+        .photo-thumb.pallet-photo .photo-label { background: rgba(49, 130, 206, 0.3); }
+        .photo-thumb.fusion-photo:hover { border-color: #38b2ac; }
+        .photo-thumb.fusion-photo .photo-label { background: rgba(56, 178, 172, 0.3); }
+        .photo-thumb.shipment-photo:hover { border-color: var(--success); }
+        .photo-thumb.shipment-photo .photo-label { background: rgba(56, 161, 105, 0.3); }
+        .photo-thumb.paperwork-photo:hover { border-color: #718096; }
+        .photo-thumb.paperwork-photo .photo-label { background: rgba(113, 128, 150, 0.3); }
+        .photo-thumb.closeup-photo:hover { border-color: #805ad5; }
+        .photo-thumb.closeup-photo .photo-label { background: rgba(128, 90, 213, 0.3); }
         .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
         .image-modal.active { display: flex; }
         .image-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; }
@@ -4617,18 +4633,17 @@
             galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(49, 130, 206, 0.15); border: 1px solid var(--accent); border-top: 4px solid var(--accent);">`;
             galleryHtml += `<h4 style="color: var(--accent);">📦 ${t('photo.palletDetails')}</h4>`;
             if (pallets.length > 0) {
-                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">`;
+                // Show pallet info with photo thumbnails
+                galleryHtml += `<div class="photo-thumbnails" style="margin-bottom: 12px;">`;
                 pallets.forEach((p, idx) => {
                     const num = p.palletNumber || (idx + 1);
                     if (p.pictureUrl) {
-                        galleryHtml += `<a href="${p.pictureUrl}" target="_blank" class="photo-btn" style="background: var(--accent);">Pallet ${num}</a>`;
-                    } else {
-                        galleryHtml += `<span class="photo-btn" style="background: #4a5568;">Pallet ${num}</span>`;
+                        galleryHtml += buildPhotoThumb(p.pictureUrl, `Pallet ${num}`, 'pallet-photo');
                     }
                 });
                 galleryHtml += `</div>`;
-                galleryHtml += `<div class="photo-info">`;
-                galleryHtml += pallets.map((p, idx) => `#${p.palletNumber || (idx + 1)}: ${p.weight || '-'}lbs<br>${p.dimensions || '-'}`).join('<br>');
+                galleryHtml += `<div class="photo-info" style="font-size: 11px;">`;
+                galleryHtml += pallets.map((p, idx) => `#${p.palletNumber || (idx + 1)}: ${p.weight || '-'}lbs, ${p.dimensions || '-'}`).join(' | ');
                 galleryHtml += `</div>`;
             } else {
                 galleryHtml += `<div class="photo-info">${t('photo.noPalletData')}</div>`;
@@ -4639,9 +4654,9 @@
             galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(56, 178, 172, 0.15); border: 1px solid #38b2ac; border-top: 4px solid #38b2ac;">`;
             galleryHtml += `<h4 style="color: #38b2ac;">📄 ${t('photo.fusionPictures')}</h4>`;
             if (fusionPictures.length > 0) {
-                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
+                galleryHtml += `<div class="photo-thumbnails">`;
                 fusionPictures.forEach((url, i) => {
-                    galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: #38b2ac;">Fusion${fusionPictures.length > 1 ? ' ' + (i + 1) : ''}</a>`;
+                    galleryHtml += buildPhotoThumb(url, `Fusion ${i + 1}`, 'fusion-photo');
                 });
                 galleryHtml += `</div>`;
             } else {
@@ -4655,17 +4670,17 @@
             if (shipmentPictures.length > 0 || paperworkPictures.length > 0) {
                 if (shipmentPictures.length > 0) {
                     galleryHtml += `<div style="margin-bottom: 10px;"><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">${t('photo.ship')}:</div>`;
-                    galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
+                    galleryHtml += `<div class="photo-thumbnails">`;
                     shipmentPictures.forEach((url, i) => {
-                        galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: var(--success);">${t('photo.ship')} ${i + 1}</a>`;
+                        galleryHtml += buildPhotoThumb(url, `${t('photo.ship')} ${i + 1}`, 'shipment-photo');
                     });
                     galleryHtml += `</div></div>`;
                 }
                 if (paperworkPictures.length > 0) {
                     galleryHtml += `<div><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">${t('photo.docs')}:</div>`;
-                    galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
+                    galleryHtml += `<div class="photo-thumbnails">`;
                     paperworkPictures.forEach((url, i) => {
-                        galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: #718096;">Doc ${i + 1}</a>`;
+                        galleryHtml += buildPhotoThumb(url, `Doc ${i + 1}`, 'paperwork-photo');
                     });
                     galleryHtml += `</div></div>`;
                 }
@@ -4678,9 +4693,9 @@
             galleryHtml += `<div class="photo-drilldown-box" style="background: rgba(128, 90, 213, 0.15); border: 1px solid #805ad5; border-top: 4px solid #805ad5;">`;
             galleryHtml += `<h4 style="color: #805ad5;">🔍 ${t('photo.closeUpPictures')}</h4>`;
             if (closeUpPictures.length > 0) {
-                galleryHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
+                galleryHtml += `<div class="photo-thumbnails">`;
                 closeUpPictures.forEach((url, i) => {
-                    galleryHtml += `<a href="${url}" target="_blank" class="photo-btn" style="background: #805ad5;">Close-up ${i + 1}</a>`;
+                    galleryHtml += buildPhotoThumb(url, `Close-up ${i + 1}`, 'closeup-photo');
                 });
                 galleryHtml += `</div>`;
             } else {
@@ -4791,13 +4806,16 @@
                 palletHtml += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; width: 100%;">`;
                 pallets.forEach((p, idx) => {
                     const num = p.palletNumber || (idx + 1);
+                    const photoUrls = p.pictureUrl ? getPhotoUrls(p.pictureUrl) : null;
                     palletHtml += `<div style="background: rgba(49, 130, 206, 0.1); border: 1px solid var(--accent); border-radius: 10px; overflow: hidden;">`;
-                    palletHtml += `<div style="padding: 12px 16px; background: rgba(49, 130, 206, 0.15); border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center;">`;
+                    palletHtml += `<div style="padding: 12px 16px; background: rgba(49, 130, 206, 0.15); border-bottom: 1px solid var(--accent);">`;
                     palletHtml += `<strong style="color: var(--accent);">📦 Pallet ${num}</strong>`;
-                    if (p.pictureUrl) {
-                        palletHtml += `<a href="${p.pictureUrl}" target="_blank" style="background: var(--accent); color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: 600;">📷 Photo</a>`;
-                    }
                     palletHtml += `</div>`;
+                    if (photoUrls) {
+                        palletHtml += `<div style="padding: 12px; cursor: pointer;" onclick="openImageModal('${photoUrls.full}')">`;
+                        palletHtml += `<img src="${photoUrls.thumb}" alt="Pallet ${num}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; border: 2px solid var(--border); transition: all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onerror="this.parentElement.style.display='none'">`;
+                        palletHtml += `</div>`;
+                    }
                     palletHtml += `<div class="pallet-card-details">`;
                     palletHtml += `<div class="pallet-detail"><span class="label">Weight:</span> <span class="value">${p.weight || '-'} lbs</span></div>`;
                     palletHtml += `<div class="pallet-detail"><span class="label">Dimensions:</span> <span class="value">${p.dimensions || '-'}</span></div>`;
@@ -4858,6 +4876,30 @@
         
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
+        }
+        
+        // Get thumbnail and full URLs for a photo (handles Google Drive and direct URLs)
+        function getPhotoUrls(url) {
+            if (!url) return null;
+            // Check if it's a Google Drive URL
+            var driveMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (driveMatch) {
+                return {
+                    thumb: 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w200',
+                    full: 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w1200'
+                };
+            }
+            // Direct image URL - use as-is for both
+            return { thumb: url, full: url };
+        }
+        
+        // Build photo thumbnail HTML
+        function buildPhotoThumb(url, label, cssClass) {
+            var urls = getPhotoUrls(url);
+            if (!urls) return '';
+            return '<div class="photo-thumb ' + cssClass + '" onclick="openImageModal(\'' + urls.full + '\')">' +
+                   '<img src="' + urls.thumb + '" alt="' + label + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'">' +
+                   '<div class="photo-label">' + label + '</div></div>';
         }
         
         // Extract Google Drive file ID from URL and build thumbnail URL
