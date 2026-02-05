@@ -4127,10 +4127,18 @@
         let prodMakeSortDir = 'desc';
         let prodMakeExpandedPart = null;
         
-        function updateProdMakePage() {
+        async function updateProdMakePage() {
             // Build production data from prodTotalsMap
             if (!window.prodTotalsMap || Object.keys(prodTotalsMap).length === 0) {
-                loadInventoryData().then(() => buildProdMakeData());
+                // Show loading state
+                document.getElementById('prodMakeTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading data...</td></tr>';
+                try {
+                    await loadInventoryData();
+                    buildProdMakeData();
+                } catch (e) {
+                    console.error('Failed to load production data:', e);
+                    document.getElementById('prodMakeTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#fc8181;">Error loading data. Please refresh.</td></tr>';
+                }
             } else {
                 buildProdMakeData();
             }
