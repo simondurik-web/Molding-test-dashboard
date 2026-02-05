@@ -3443,6 +3443,8 @@
                         }
                     }
                 });
+                // Expose prodTotalsMap globally for Production Make page
+                window.prodTotalsMap = prodTotalsMap;
                 const mergedData = [];
                 const seenParts = new Set();
                 fusionData.forEach(row => {
