@@ -4130,19 +4130,31 @@
         let prodMakeExpandedPart = null;
         
         async function updateProdMakePage() {
-            // Build production data from prodTotalsMap
-            if (!window.prodTotalsMap || Object.keys(prodTotalsMap).length === 0) {
-                // Show loading state
-                document.getElementById('prodMakeTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading data...</td></tr>';
-                try {
-                    await loadInventoryData();
-                    buildProdMakeData();
-                } catch (e) {
-                    console.error('Failed to load production data:', e);
-                    document.getElementById('prodMakeTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#fc8181;">Error loading data. Please refresh.</td></tr>';
-                }
-            } else {
+            // Show loading state
+            document.getElementById('prodMakeTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading data...</td></tr>';
+            try {
+                // Load production data directly from sheet
+                const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                window.prodTotalsMap = {};
+                prodTotalsData.forEach(row => {
+                    let partNum = (row['Part Number'] || '').toString().trim();
+                    if (partNum) {
+                        window.prodTotalsMap[partNum] = {
+                            product: row['Product'] || '',
+                            minimums: parseNumber(row['Minimums']),
+                            moldType: row['Mold type'] || row['Mold Type'] || '',
+                            fusionInventory: parseNumber(row['Fusion inventory']) || parseNumber(row['Fusion Inventory']),
+                            partsToBeMade: parseNumber(row['Parts to be made']) || parseNumber(row['Parts to be Made']),
+                            drawing1Url: row['Drawing 1 URL'] || '',
+                            drawing2Url: row['Drawing 2 URL'] || ''
+                        };
+                    }
+                });
+                console.log('Production Make: Loaded', Object.keys(window.prodTotalsMap).length, 'parts');
                 buildProdMakeData();
+            } catch (e) {
+                console.error('Failed to load production data:', e);
+                document.getElementById('prodMakeTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#fc8181;">Error loading data. Please refresh.</td></tr>';
             }
         }
         
