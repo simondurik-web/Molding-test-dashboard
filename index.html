@@ -924,8 +924,11 @@
         }
         .ai-chat-input-area button.ai-voice-btn:hover { background: rgba(66,133,244,0.25); transform: scale(1.08); }
         .ai-chat-input-area button.ai-voice-btn.listening {
-            background: linear-gradient(135deg, #ea4335 0%, #fbbc04 100%);
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
             color: white; animation: pulse-voice 1s infinite;
+        }
+        .ai-chat-input-area button.ai-voice-btn.listening.auto-send {
+            background: linear-gradient(135deg, #ea4335 0%, #ff6b35 100%);
         }
         .ai-chat-input-area button.ai-voice-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         @keyframes pulse-voice {
@@ -9981,12 +9984,15 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
             voiceRecognition.onstart = () => {
                 console.log('[Voice] Started listening, autoSend:', voiceAutoSend);
                 isListening = true;
-                document.getElementById('aiVoiceBtn').classList.add('listening');
+                const btn = document.getElementById('aiVoiceBtn');
+                btn.classList.add('listening');
                 document.getElementById('aiVoiceStatus').classList.add('visible');
                 if (voiceAutoSend) {
-                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '🚀 Auto-enviar...' : '🚀 Auto-send...';
+                    btn.classList.add('auto-send');
+                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '🚀 Auto-enviar' : '🚀 Auto-send';
                 } else {
-                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '✏️ Editar...' : '✏️ Edit mode...';
+                    btn.classList.remove('auto-send');
+                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '✏️ Modo editar' : '✏️ Edit mode';
                 }
             };
             
@@ -10042,7 +10048,11 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
             // Start timer for long press detection (500ms)
             voiceLongPressTimer = setTimeout(() => {
                 voiceAutoSend = true;
-                document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '🚀 Auto-enviar...' : '🚀 Auto-send...';
+                // Visual feedback for long press before release
+                const btn = document.getElementById('aiVoiceBtn');
+                btn.style.transform = 'scale(1.15)';
+                btn.style.background = 'linear-gradient(135deg, #ea4335 0%, #ff6b35 100%)';
+                btn.style.color = 'white';
                 console.log('[Voice] Long press detected - auto-send mode');
             }, 500);
         }
@@ -10064,6 +10074,11 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
                 voiceLongPressTimer = null;
             }
             voiceAutoSend = false;
+            // Reset button style
+            const btn = document.getElementById('aiVoiceBtn');
+            btn.style.transform = '';
+            btn.style.background = '';
+            btn.style.color = '';
         }
         
         function toggleVoiceInput() {
@@ -10107,7 +10122,9 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
         function stopVoiceInput() {
             isListening = false;
             voiceAutoSend = false; // Reset for next time
-            document.getElementById('aiVoiceBtn').classList.remove('listening');
+            const btn = document.getElementById('aiVoiceBtn');
+            btn.classList.remove('listening');
+            btn.classList.remove('auto-send');
             document.getElementById('aiVoiceStatus').classList.remove('visible');
         }
 
