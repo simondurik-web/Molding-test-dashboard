@@ -1258,6 +1258,7 @@
             body.tablet-portrait .main-content { padding-bottom: 70px !important; }
             body.tablet-portrait .chart-container { display: block; }
             body.tablet-portrait .toolbar { display: none; }
+            body.tablet-portrait .mobile-filter-bar { display: flex !important; }
             
             /* Larger cards for iPad */
             body.tablet-portrait .mobile-order-card { padding: 18px; }
@@ -1689,7 +1690,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.25.2</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.11</div>
     </div>
 
     <div class="main-content">
@@ -11048,8 +11049,12 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             let daysText = days >= 0 ? `${days} days` : `${Math.abs(days)} days overdue`;
             let daysClass = days < 0 ? 'overdue' : '';
             
+            // Use showMobilePhotos on mobile/tablet, showPalletPictures on desktop
+            const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
+            const clickFn = isCardMode ? `showMobilePhotos('${line}')` : `showPalletPictures('${line}')`;
+            
             return `
-                <div class="${cardClass}" onclick="showPalletPictures('${line}')">
+                <div class="${cardClass}" onclick="${clickFn}">
                     <div class="mobile-card-header">
                         <div>
                             <div class="mobile-card-title">${customer}</div>
