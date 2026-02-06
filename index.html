@@ -1805,6 +1805,8 @@
                 <div class="stat-card financial-data"><div class="label" data-i18n="stats.avgOrderValue">Avg Order Value</div><div class="value" id="ordersStagedAvgValue">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.customers">Customers</div><div class="value" id="ordersStagedCustomers">-</div></div>
             </div>
+            <!-- Mobile Cards Container for Staged -->
+            <div class="mobile-cards-container" id="mobileStagedCardsContainer"></div>
             <div class="chart-container">
                 <div class="chart-header"><h3 data-i18n="table.readyToShip">Ready to Ship</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersStagedTableCount">-</span></div>
                 <div class="scrollable-table" style="max-height:calc(100vh - 340px);">
@@ -1876,6 +1878,8 @@
                 <div class="stat-card"><div class="label" data-i18n="stats.needsProduction">Needs Production</div><div class="value" style="color:var(--warning);" id="invStatNeeded">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.adequateStock">Adequate Stock</div><div class="value" style="color:var(--success);" id="invStatOk">-</div></div>
             </div>
+            <!-- Mobile Cards Container for Inventory -->
+            <div class="mobile-cards-container" id="mobileInventoryCardsContainer"></div>
             <div class="chart-container">
                 <div class="chart-header"><h3 data-i18n="table.inventoryStatus">Inventory Status</h3><span style="color:var(--text-secondary);font-size:12px;" id="invTableCount">-</span></div>
                 <div class="scrollable-table" style="max-height:calc(100vh - 340px);">
@@ -10896,6 +10900,147 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
     function isUrgent(row) {
         const u = (getVal(row, 'URGENT') || '').toString().toLowerCase().trim();
         return u === 'urgent' || u === 'true' || u === '1' || u === 'yes' || u === 'x';
+    }
+    
+    // Render STAGED order cards
+    function renderMobileStagedCards() {
+        const container = document.getElementById('mobileStagedCardsContainer');
+        if (!container || window.innerWidth > 480) return;
+        
+        const orders = allData.filter(row => getStatus(row) === 'staged');
+        
+        container.innerHTML = orders.slice(0, 50).map(row => {
+            const line = getVal(row, 'LINE') || '-';
+            const customer = getVal(row, 'CUSTOMER') || '-';
+            const part = getVal(row, 'PART') || '-';
+            const qty = formatNumber(parseNumber(getVal(row, 'QTY')));
+            const ifNum = getVal(row, 'IF_NUM') || '-';
+            
+            return `
+                <div class="mobile-order-card" onclick="showPalletPictures('${line}')" style="border-left: 4px solid var(--success);">
+                    <div class="mobile-card-header">
+                        <div>
+                            <div class="mobile-card-title">${customer}</div>
+                            <div class="mobile-card-subtitle">Line ${line} • ${part}</div>
+                        </div>
+                        <span class="mobile-card-badge staged">STAGED</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Quantity</span>
+                            <span class="mobile-card-value large">${qty}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">IF #</span>
+                            <span class="mobile-card-value">${ifNum}</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-footer">
+                        <span class="mobile-card-date">📦 Ready to ship</span>
+                        <span style="color:var(--text-secondary);font-size:11px;">Tap for photos →</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Render INVENTORY cards
+    function renderMobileInventoryCards() {
+        const container = document.getElementById('mobileInventoryCardsContainer');
+        if (!container || window.innerWidth > 480) return;
+        
+        // Sort: low stock first, then by part number
+        const items = [...inventoryData].sort((a, b) => {
+            const aLow = a.fusionQty < a.minimum ? 0 : 1;
+            const bLow = b.fusionQty < b.minimum ? 0 : 1;
+            if (aLow !== bLow) return aLow - bLow;
+            return (a.partNumber || '').localeCompare(b.partNumber || '');
+        });
+        
+        container.innerHTML = items.slice(0, 50).map(item => {
+            const partNum = item.partNumber || '-';
+            const product = item.product || '-';
+            const qty = formatNumber(item.fusionQty || 0);
+            const min = formatNumber(item.minimum || 0);
+            const target = formatNumber(item.manualTarget || item.minimum || 0);
+            const toMake = formatNumber(item.partsToBeMade || 0);
+            
+            const isLow = item.fusionQty < item.minimum && item.minimum > 0;
+            const isOut = item.fusionQty === 0;
+            const pct = item.minimum > 0 ? Math.round((item.fusionQty / item.minimum) * 100) : 100;
+            
+            let borderColor = 'var(--success)';
+            let statusBadge = '<span class="mobile-card-badge" style="background:var(--success);">OK</span>';
+            if (isOut) {
+                borderColor = 'var(--danger)';
+                statusBadge = '<span class="mobile-card-badge" style="background:var(--danger);">OUT</span>';
+            } else if (isLow) {
+                borderColor = 'var(--warning)';
+                statusBadge = '<span class="mobile-card-badge" style="background:var(--warning);color:black;">LOW</span>';
+            }
+            
+            return `
+                <div class="mobile-order-card" style="border-left: 4px solid ${borderColor};">
+                    <div class="mobile-card-header">
+                        <div>
+                            <div class="mobile-card-title">${partNum}</div>
+                            <div class="mobile-card-subtitle">${product}</div>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">In Stock</span>
+                            <span class="mobile-card-value large ${isLow ? 'danger' : 'success'}">${qty}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Minimum</span>
+                            <span class="mobile-card-value">${min}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Target</span>
+                            <span class="mobile-card-value">${target}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">To Make</span>
+                            <span class="mobile-card-value ${item.partsToBeMade > 0 ? 'warning' : ''}">${toMake}</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-footer">
+                        <span class="mobile-card-date">${pct}% of minimum</span>
+                        <div style="width:60px;height:6px;background:var(--bg-dark);border-radius:3px;overflow:hidden;">
+                            <div style="width:${Math.min(pct, 100)}%;height:100%;background:${borderColor};"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Update mobileNavTo to render appropriate cards
+    const originalMobileNavTo = mobileNavTo;
+    mobileNavTo = function(page) {
+        // Update active state
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.page === page);
+        });
+        
+        // Navigate to page
+        navigateTo(page);
+        
+        // Render cards based on page
+        setTimeout(() => {
+            if (page === 'orders-queue') renderMobileOrderCards('orders-queue');
+            else if (page === 'orders-staged') renderMobileStagedCards();
+            else if (page === 'inventory') renderMobileInventoryCards();
+        }, 100);
+    };
+    
+    // Auto-render cards when data loads on mobile
+    const originalLoadDashboard = typeof loadDashboard === 'function' ? loadDashboard : null;
+    if (originalLoadDashboard) {
+        const patchedLoad = loadDashboard;
+        // Cards will render when user navigates via mobile nav
     }
     </script>
 </body>
