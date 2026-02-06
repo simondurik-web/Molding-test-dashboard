@@ -878,12 +878,12 @@
 
         .ai-msg { max-width: 88%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.55; word-wrap: break-word; }
         .ai-msg.user { align-self: flex-end; background: linear-gradient(135deg, #4285f4 0%, #5a9cf5 100%); color: white; border-bottom-right-radius: 4px; }
-        .ai-msg.bot { align-self: flex-start; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 4px; overflow: hidden; }
+        .ai-msg.bot { align-self: flex-start; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
         .ai-msg.bot .ai-table-wrap { overflow-x: auto; margin: 8px 0; -webkit-overflow-scrolling: touch; border-radius: 6px; border: 1px solid var(--border); max-width: 100%; display: block; scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg-card); }
         .ai-msg.bot .ai-table-wrap::-webkit-scrollbar { height: 8px; }
         .ai-msg.bot .ai-table-wrap::-webkit-scrollbar-track { background: var(--bg-card); border-radius: 4px; }
         .ai-msg.bot .ai-table-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
-        .ai-msg.bot table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .ai-msg.bot table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
         .ai-msg.bot table th, .ai-msg.bot table td { padding: 5px 10px; border: 1px solid var(--border); text-align: left; white-space: nowrap; }
         .ai-msg.bot table th { background: rgba(66,133,244,0.2); font-weight: 600; font-size: 11px; }
         .ai-msg.bot code { background: rgba(0,0,0,0.2); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
