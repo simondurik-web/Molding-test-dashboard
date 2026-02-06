@@ -868,6 +868,11 @@
             font-size: 16px; padding: 4px 6px; border-radius: 6px; transition: all 0.2s;
         }
         .ai-chat-header-actions button:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+        .ai-chat-header-actions .close-btn {
+            background: var(--danger); color: white; font-size: 20px; font-weight: bold;
+            padding: 8px 14px; border-radius: 8px; min-width: 40px;
+        }
+        .ai-chat-header-actions .close-btn:hover { background: #c53030; }
 
         .ai-chat-messages {
             flex: 1 1 0; height: 0; min-height: 0; overflow-y: scroll; padding: 16px; display: flex; flex-direction: column; gap: 12px;
@@ -1690,7 +1695,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.11</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.12</div>
     </div>
 
     <div class="main-content">
@@ -2638,7 +2643,7 @@
             </div>
             <div class="ai-chat-header-actions">
                 <button onclick="clearAiChat()" title="Clear chat">🗑️</button>
-                <button onclick="toggleAiChat()" title="Close">✕</button>
+                <button class="close-btn" onclick="toggleAiChat()" title="Close">✕</button>
             </div>
         </div>
         <div class="ai-chat-messages" id="aiChatMessages">
@@ -11017,6 +11022,24 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         
         orders = allData.filter(filterFn);
         
+        // Apply mobile filter state (All/Urgent/Due This Week/Roll Tech/Molding)
+        if (typeof mobileFilterState !== 'undefined' && mobileFilterState !== 'all') {
+            orders = orders.filter(row => {
+                const cat = getCategory(row);
+                const urgent = isUrgent(row);
+                const days = parseNumber(getVal(row, 'DAYS_UNTIL'));
+                
+                switch (mobileFilterState) {
+                    case 'urgent': return urgent;
+                    case 'due-week': return days >= 0 && days <= 7;
+                    case 'rolltech': return cat === 'rolltech';
+                    case 'molding': return cat === 'molding';
+                    case 'snappad': return cat === 'snappad';
+                    default: return true;
+                }
+            });
+        }
+        
         // Sort by urgency then days until
         orders.sort((a, b) => {
             const aUrgent = isUrgent(a) ? 0 : 1;
@@ -11024,6 +11047,18 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             if (aUrgent !== bUrgent) return aUrgent - bUrgent;
             return parseNumber(getVal(a, 'DAYS_UNTIL')) - parseNumber(getVal(b, 'DAYS_UNTIL'));
         });
+        
+        // Update mobile summary stats
+        const statsContainer = document.querySelector('.mobile-summary-bar');
+        if (statsContainer) {
+            const urgentCount = orders.filter(r => isUrgent(r)).length;
+            const dueWeekCount = orders.filter(r => { const d = parseNumber(getVal(r, 'DAYS_UNTIL')); return d >= 0 && d <= 7; }).length;
+            statsContainer.innerHTML = `
+                <div class="mobile-summary-stat"><span class="stat-value">${orders.length}</span><span class="stat-label">Orders</span></div>
+                <div class="mobile-summary-stat"><span class="stat-value" style="color:var(--danger)">${urgentCount}</span><span class="stat-label">Urgent</span></div>
+                <div class="mobile-summary-stat"><span class="stat-value">${dueWeekCount}</span><span class="stat-label">Due This Week</span></div>
+            `;
+        }
         
         // Render cards
         container.innerHTML = orders.slice(0, 50).map(row => {
