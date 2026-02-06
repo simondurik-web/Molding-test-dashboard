@@ -2072,7 +2072,10 @@
         <div class="ai-suggestions" id="aiSuggestions"></div>
         <div class="ai-chat-input-area" style="position:relative;">
             <input type="text" id="aiChatInput" data-i18n-placeholder="ai.placeholder" placeholder="Ask about your data..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}">
-            <button class="ai-voice-btn" id="aiVoiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
+            <button class="ai-voice-btn" id="aiVoiceBtn" 
+                onmousedown="startVoiceLongPress()" onmouseup="endVoiceLongPress()" onmouseleave="cancelVoiceLongPress()"
+                ontouchstart="startVoiceLongPress()" ontouchend="endVoiceLongPress()" ontouchcancel="cancelVoiceLongPress()"
+                title="Tap = edit, Hold = auto-send">🎤</button>
             <span class="ai-voice-status" id="aiVoiceStatus">Listening...</span>
             <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiMessage()" title="Send">➤</button>
         </div>
@@ -9958,6 +9961,8 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
         // ============================================
         let voiceRecognition = null;
         let isListening = false;
+        let voiceAutoSend = false; // true = auto-send after speech, false = edit mode
+        let voiceLongPressTimer = null;
         
         function initVoiceRecognition() {
             // Check browser support
@@ -9974,11 +9979,15 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
             voiceRecognition.lang = currentLang === 'es' ? 'es-MX' : 'en-US';
             
             voiceRecognition.onstart = () => {
-                console.log('[Voice] Started listening');
+                console.log('[Voice] Started listening, autoSend:', voiceAutoSend);
                 isListening = true;
                 document.getElementById('aiVoiceBtn').classList.add('listening');
                 document.getElementById('aiVoiceStatus').classList.add('visible');
-                document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
+                if (voiceAutoSend) {
+                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '🚀 Auto-enviar...' : '🚀 Auto-send...';
+                } else {
+                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '✏️ Editar...' : '✏️ Edit mode...';
+                }
             };
             
             voiceRecognition.onresult = (event) => {
@@ -10015,18 +10024,50 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
             };
             
             voiceRecognition.onend = () => {
-                console.log('[Voice] Ended');
+                console.log('[Voice] Ended, autoSend:', voiceAutoSend);
                 stopVoiceInput();
-                // Focus input so user can edit or press Enter to send
                 const input = document.getElementById('aiChatInput');
-                input.focus();
-                // Place cursor at end of text
-                input.selectionStart = input.selectionEnd = input.value.length;
+                if (voiceAutoSend && input.value.trim()) {
+                    // Auto-send mode (long press)
+                    setTimeout(() => sendAiMessage(), 300);
+                } else {
+                    // Edit mode (tap) - focus input so user can edit
+                    input.focus();
+                    input.selectionStart = input.selectionEnd = input.value.length;
+                }
             };
         }
         
+        function startVoiceLongPress() {
+            // Start timer for long press detection (500ms)
+            voiceLongPressTimer = setTimeout(() => {
+                voiceAutoSend = true;
+                document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '🚀 Auto-enviar...' : '🚀 Auto-send...';
+                console.log('[Voice] Long press detected - auto-send mode');
+            }, 500);
+        }
+        
+        function endVoiceLongPress() {
+            if (voiceLongPressTimer) {
+                clearTimeout(voiceLongPressTimer);
+                voiceLongPressTimer = null;
+            }
+            // If not already listening, start voice input
+            if (!isListening) {
+                toggleVoiceInput();
+            }
+        }
+        
+        function cancelVoiceLongPress() {
+            if (voiceLongPressTimer) {
+                clearTimeout(voiceLongPressTimer);
+                voiceLongPressTimer = null;
+            }
+            voiceAutoSend = false;
+        }
+        
         function toggleVoiceInput() {
-            console.log('[Voice] toggleVoiceInput called');
+            console.log('[Voice] toggleVoiceInput called, autoSend:', voiceAutoSend);
             
             // Check browser support first
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -10065,6 +10106,7 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
         
         function stopVoiceInput() {
             isListening = false;
+            voiceAutoSend = false; // Reset for next time
             document.getElementById('aiVoiceBtn').classList.remove('listening');
             document.getElementById('aiVoiceStatus').classList.remove('visible');
         }
