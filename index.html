@@ -4845,13 +4845,16 @@
             hideBtn.textContent = '✕ Hide';
             localStorage.setItem('sidebarCollapsed', isCollapsed);
         }
-        // Restore sidebar state (or auto-collapse on mobile)
+        // Restore sidebar state (or auto-collapse on mobile/tablet portrait)
         (function initSidebar() {
-            const isMobile = window.innerWidth <= 480;
+            const width = window.innerWidth;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isMobile = width <= 480;
+            const isTabletPortrait = width > 480 && width <= 1024 && isPortrait;
             const wasCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
             
-            // On mobile, always start collapsed
-            if (isMobile || wasCollapsed) {
+            // On mobile or tablet portrait, always start collapsed
+            if (isMobile || isTabletPortrait || wasCollapsed) {
                 document.getElementById('mainSidebar').classList.add('collapsed');
                 document.getElementById('sidebarTabBtn').classList.add('visible');
                 document.querySelector('.main-content').classList.add('expanded');
@@ -10886,9 +10889,39 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
     }
     
     // Initialize on load, resize, and orientation change
-    window.addEventListener('load', checkMobileMode);
+    window.addEventListener('load', () => {
+        checkMobileMode();
+        // Render cards after data loads (give it time)
+        setTimeout(() => {
+            if (document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait')) {
+                const currentPage = document.querySelector('.page:not([style*="display: none"])')?.id || 
+                                   document.querySelector('.nav-item.active')?.dataset?.page || 'main';
+                console.log('[Mobile] Initial render for page:', currentPage);
+                if (currentPage === 'orders-queue' || currentPage === 'main') {
+                    if (typeof renderMobileOrderCards === 'function') renderMobileOrderCards('orders-queue');
+                }
+                if (currentPage === 'orders-staged') {
+                    if (typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
+                }
+                if (currentPage === 'inventory') {
+                    if (typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
+                }
+            }
+        }, 2000); // Wait for data to load
+    });
     window.addEventListener('resize', checkMobileMode);
-    window.addEventListener('orientationchange', () => setTimeout(checkMobileMode, 100));
+    window.addEventListener('orientationchange', () => {
+        setTimeout(checkMobileMode, 100);
+        // Re-render cards after orientation change
+        setTimeout(() => {
+            if (document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait')) {
+                const currentPage = document.querySelector('.page:not([style*="display: none"])')?.id || 'main';
+                if (currentPage === 'orders-queue') renderMobileOrderCards('orders-queue');
+                else if (currentPage === 'orders-staged' && typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
+                else if (currentPage === 'inventory' && typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
+            }
+        }, 500);
+    });
     
     // Mobile navigation
     function mobileNavTo(page) {
