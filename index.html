@@ -1229,6 +1229,7 @@
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <input type="text" class="search-box" id="prodMakeSearch" placeholder="Search part #, mold type..." oninput="filterProdMakeTable()" style="width:180px;padding:4px 8px;font-size:12px;">
+                    <button class="toolbar-btn clear-all-filters-btn" id="prodMakeClearFiltersBtn" onclick="clearAllTableFilters('prodMake')" style="padding:4px 8px;font-size:11px;">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                     <button class="toolbar-btn columns-btn" id="prodMakeColumnsBtn" onclick="openColumnToggle('prodMake')" style="padding:4px 8px;font-size:11px;">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                     <button class="toolbar-btn" onclick="exportProdMakeToCSV()" style="padding:4px 8px;font-size:11px;">📥 CSV</button>
                     <button class="toolbar-btn" onclick="navigateTo('main')" style="padding:4px 8px;font-size:11px;">← Back</button>
@@ -3092,6 +3093,7 @@
                 case 'palletRecords': sortPalletRecordsTable(columnKey); break;
                 case 'shippingRecords': sortShippingRecordsTable(columnKey); break;
                 case 'stagedRecords': sortStagedRecordsTable(columnKey); break;
+                case 'prodMake': sortProdMakeTable(columnKey); break;
             }
         }
         
@@ -3621,8 +3623,29 @@
                     return getUniqueShippingRecordsColumnValues(columnKey);
                 case 'stagedRecords':
                     return getUniqueStagedRecordsColumnValues(columnKey);
+                case 'prodMake':
+                    return getUniqueProdMakeColumnValues(columnKey);
             }
             return Array.from(values).sort();
+        }
+        
+        function getUniqueProdMakeColumnValues(columnKey) {
+            const values = new Set();
+            prodMakeData.forEach(row => {
+                switch(columnKey) {
+                    case 'product': values.add(row.product || '-'); break;
+                    case 'partNumber': values.add(row.partNumber || '-'); break;
+                    case 'moldType': values.add(row.moldType || '-'); break;
+                    case 'fusionInventory': values.add(String(row.fusionInventory)); break;
+                    case 'minimums': values.add(String(row.minimums)); break;
+                    case 'partsToBeMade': values.add(String(row.partsToBeMade)); break;
+                }
+            });
+            return Array.from(values).sort((a, b) => {
+                const numA = parseFloat(a), numB = parseFloat(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.localeCompare(b);
+            });
         }
         
         function getUniquePartsColumnValues(columnKey) {
@@ -4677,6 +4700,7 @@
         
         function renderProdMakeTable() {
             initHiddenColumns('prodMake');
+            initTableFilters('prodMake');
             const searchTerm = (document.getElementById('prodMakeSearch')?.value || '').toLowerCase();
             
             // Filter data
@@ -4688,6 +4712,13 @@
                     const searchStr = (row.partNumber + ' ' + row.moldType + ' ' + row.product).toLowerCase();
                     if (!searchStr.includes(searchTerm)) return false;
                 }
+                // Column filters
+                if (!passesColumnFilter('prodMake', 'product', row.product || '-')) return false;
+                if (!passesColumnFilter('prodMake', 'partNumber', row.partNumber || '-')) return false;
+                if (!passesColumnFilter('prodMake', 'moldType', row.moldType || '-')) return false;
+                if (!passesColumnFilter('prodMake', 'fusionInventory', String(row.fusionInventory))) return false;
+                if (!passesColumnFilter('prodMake', 'minimums', String(row.minimums))) return false;
+                if (!passesColumnFilter('prodMake', 'partsToBeMade', String(row.partsToBeMade))) return false;
                 return true;
             });
             
@@ -4711,27 +4742,28 @@
             document.getElementById('prodMakeTotalUnits').textContent = formatNumber(totalUnits) + ' units';
             document.getElementById('prodMakeTableCount').textContent = filtered.length + ' items';
             
-            // Update Columns button
+            // Update Columns button and Clear Filters button
             updateColumnsButton('prodMake');
+            updateClearAllButton('prodMake');
             
-            // Build header with hidden column support
+            // Build header with filter support
             const headers = [
-                { key: 'product', label: 'Product', sortKey: 'product' },
-                { key: 'partNumber', label: 'Part #', sortKey: 'partNumber' },
-                { key: 'moldType', label: 'Mold Type', sortKey: 'moldType' },
-                { key: 'fusionInventory', label: 'Fusion Inv', sortKey: 'fusionInventory' },
-                { key: 'minimums', label: 'Minimums', sortKey: 'minimums' },
-                { key: 'partsToBeMade', label: 'Parts to Make', sortKey: 'partsToBeMade' },
-                { key: 'drawing', label: '📐 Drawing', sortKey: null }
+                { key: 'product', label: 'Product' },
+                { key: 'partNumber', label: 'Part #' },
+                { key: 'moldType', label: 'Mold Type' },
+                { key: 'fusionInventory', label: 'Fusion Inv' },
+                { key: 'minimums', label: 'Minimums' },
+                { key: 'partsToBeMade', label: 'Parts to Make' },
+                { key: 'drawing', label: '📐 Drawing' }
             ];
             const visibleHeaders = headers.filter(h => !isColumnHidden('prodMake', h.key));
             const colSpan = visibleHeaders.length;
             
             document.getElementById('prodMakeTableHeader').innerHTML = visibleHeaders.map(h => {
-                if (h.sortKey) {
-                    return `<th style="cursor:pointer;" onclick="sortProdMakeTable('${h.sortKey}')">${h.label} ↕</th>`;
+                if (h.key === 'drawing') {
+                    return `<th>${h.label}</th>`;
                 }
-                return `<th>${h.label}</th>`;
+                return createFilterHeader('prodMake', h.key, h.label, true);
             }).join('');
             
             // Build table rows with hidden column support
