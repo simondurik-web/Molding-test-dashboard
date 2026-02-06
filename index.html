@@ -913,6 +913,32 @@
         }
         .ai-chat-input-area button.ai-send-btn:hover { transform: scale(1.08); }
         .ai-chat-input-area button.ai-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        /* Voice input button */
+        .ai-chat-input-area button.ai-voice-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: none;
+            background: rgba(66,133,244,0.15); color: #4285f4;
+            font-size: 18px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            margin-right: 6px;
+        }
+        .ai-chat-input-area button.ai-voice-btn:hover { background: rgba(66,133,244,0.25); transform: scale(1.08); }
+        .ai-chat-input-area button.ai-voice-btn.listening {
+            background: linear-gradient(135deg, #ea4335 0%, #fbbc04 100%);
+            color: white; animation: pulse-voice 1s infinite;
+        }
+        .ai-chat-input-area button.ai-voice-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        @keyframes pulse-voice {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234,67,53,0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(234,67,53,0); }
+        }
+        .ai-voice-status {
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); color: white; padding: 6px 12px;
+            border-radius: 6px; font-size: 11px; white-space: nowrap;
+            margin-bottom: 8px; display: none;
+        }
+        .ai-voice-status.visible { display: block; }
 
         .ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px; border-top: 1px solid var(--border); }
         .ai-suggestion-chip {
@@ -2044,8 +2070,10 @@
             <div class="ai-msg system" id="aiWelcomeMsg"></div>
         </div>
         <div class="ai-suggestions" id="aiSuggestions"></div>
-        <div class="ai-chat-input-area">
+        <div class="ai-chat-input-area" style="position:relative;">
             <input type="text" id="aiChatInput" data-i18n-placeholder="ai.placeholder" placeholder="Ask about your data..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}">
+            <button class="ai-voice-btn" id="aiVoiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
+            <span class="ai-voice-status" id="aiVoiceStatus">Listening...</span>
             <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiMessage()" title="Send">➤</button>
         </div>
     </div>
@@ -2325,7 +2353,11 @@
                 'ai.suggestion1': 'Which orders are late?',
                 'ai.suggestion2': 'Low inventory items',
                 'ai.suggestion3': 'Orders by customer',
-                'ai.suggestion4': 'Status summary'
+                'ai.suggestion4': 'Status summary',
+                // Voice input
+                'ai.voiceListening': 'Listening...',
+                'ai.voiceNotSupported': 'Voice input not supported in this browser',
+                'ai.voiceMicDenied': 'Microphone permission denied. Please allow microphone access.'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones de Moldeo',
@@ -2597,7 +2629,11 @@
                 'ai.suggestion1': '¿Qué órdenes están atrasadas?',
                 'ai.suggestion2': 'Artículos con bajo inventario',
                 'ai.suggestion3': 'Órdenes por cliente',
-                'ai.suggestion4': 'Resumen de estados'
+                'ai.suggestion4': 'Resumen de estados',
+                // Voice input
+                'ai.voiceListening': 'Escuchando...',
+                'ai.voiceNotSupported': 'Entrada de voz no soportada en este navegador',
+                'ai.voiceMicDenied': 'Permiso de micrófono denegado. Por favor permite el acceso al micrófono.'
             }
         };
         
@@ -9915,6 +9951,101 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
                 initAiChat();
                 setTimeout(() => document.getElementById('aiChatInput').focus(), 300);
             }
+        }
+
+        // ============================================
+        // VOICE INPUT (Web Speech API)
+        // ============================================
+        let voiceRecognition = null;
+        let isListening = false;
+        
+        function initVoiceRecognition() {
+            // Check browser support
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.log('[Voice] Speech recognition not supported');
+                document.getElementById('aiVoiceBtn').style.display = 'none';
+                return;
+            }
+            
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.continuous = false;
+            voiceRecognition.interimResults = true;
+            voiceRecognition.lang = currentLang === 'es' ? 'es-MX' : 'en-US';
+            
+            voiceRecognition.onstart = () => {
+                console.log('[Voice] Started listening');
+                isListening = true;
+                document.getElementById('aiVoiceBtn').classList.add('listening');
+                document.getElementById('aiVoiceStatus').classList.add('visible');
+                document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
+            };
+            
+            voiceRecognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // Show interim in input field
+                const input = document.getElementById('aiChatInput');
+                if (interimTranscript) {
+                    input.value = interimTranscript;
+                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
+                }
+                if (finalTranscript) {
+                    input.value = finalTranscript;
+                    console.log('[Voice] Final transcript:', finalTranscript);
+                }
+            };
+            
+            voiceRecognition.onerror = (event) => {
+                console.log('[Voice] Error:', event.error);
+                stopVoiceInput();
+                if (event.error === 'not-allowed') {
+                    alert(currentLang === 'es' ? 'Permiso de micrófono denegado. Por favor permite el acceso al micrófono.' : 'Microphone permission denied. Please allow microphone access.');
+                }
+            };
+            
+            voiceRecognition.onend = () => {
+                console.log('[Voice] Ended');
+                const input = document.getElementById('aiChatInput');
+                stopVoiceInput();
+                // Auto-send if we have text
+                if (input.value.trim()) {
+                    setTimeout(() => sendAiMessage(), 300);
+                }
+            };
+        }
+        
+        function toggleVoiceInput() {
+            if (!voiceRecognition) {
+                initVoiceRecognition();
+                if (!voiceRecognition) return;
+            }
+            
+            // Update language based on current setting
+            voiceRecognition.lang = currentLang === 'es' ? 'es-MX' : 'en-US';
+            
+            if (isListening) {
+                voiceRecognition.stop();
+            } else {
+                document.getElementById('aiChatInput').value = '';
+                voiceRecognition.start();
+            }
+        }
+        
+        function stopVoiceInput() {
+            isListening = false;
+            document.getElementById('aiVoiceBtn').classList.remove('listening');
+            document.getElementById('aiVoiceStatus').classList.remove('visible');
         }
 
         // Initialize chat UI
