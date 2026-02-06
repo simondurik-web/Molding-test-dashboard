@@ -389,6 +389,53 @@
         }
         .column-toggle-overlay.active { display: block; }
         
+        /* Password Modal Styles */
+        .password-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); z-index: 20000; display: none;
+        }
+        .password-modal-overlay.active { display: block; }
+        .password-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--bg-card); border-radius: 12px; z-index: 20001;
+            min-width: 320px; max-width: 90vw; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            display: none; border: 1px solid var(--border);
+        }
+        .password-modal.active { display: block; }
+        .password-modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+        }
+        .password-modal-header h4 { margin: 0; font-size: 16px; color: var(--text-primary); }
+        .password-modal-header button {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 18px; cursor: pointer; padding: 4px 8px;
+        }
+        .password-modal-header button:hover { color: var(--text-primary); }
+        .password-modal-body { padding: 20px; }
+        .password-input {
+            width: 100%; padding: 12px 14px; font-size: 14px;
+            background: var(--bg-dark); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-primary); outline: none;
+        }
+        .password-input:focus { border-color: var(--accent); }
+        .password-error { color: #e53e3e; font-size: 12px; margin-top: 8px; display: none; }
+        .password-error.show { display: block; }
+        .password-modal-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            padding: 16px 20px; border-top: 1px solid var(--border);
+        }
+        .password-cancel-btn {
+            padding: 10px 18px; background: transparent; border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-secondary); cursor: pointer; font-size: 13px;
+        }
+        .password-cancel-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+        .password-submit-btn {
+            padding: 10px 24px; background: var(--accent); border: none;
+            border-radius: 8px; color: white; cursor: pointer; font-size: 13px; font-weight: 600;
+        }
+        .password-submit-btn:hover { background: var(--accent-hover); }
+        
         .watchlist-star { cursor: pointer; color: var(--text-secondary); transition: color 0.2s; }
         .watchlist-star:hover { color: var(--warning); }
         .watchlist-star.active { color: var(--warning); }
@@ -922,6 +969,24 @@
         <div class="column-toggle-list" id="columnToggleList"></div>
     </div>
 
+    <!-- Password Modal -->
+    <div class="password-modal-overlay" id="passwordModalOverlay" onclick="closePasswordModal()"></div>
+    <div class="password-modal" id="passwordModal">
+        <div class="password-modal-header">
+            <h4>🔒 <span data-i18n="nav.salesFinance">Sales & Finance</span></h4>
+            <button onclick="closePasswordModal()">✕</button>
+        </div>
+        <div class="password-modal-body">
+            <p style="margin:0 0 12px;color:var(--text-secondary);font-size:13px;">Enter password to access this section:</p>
+            <input type="password" id="salesPasswordInput" class="password-input" placeholder="Password" onkeyup="handlePasswordKeyup(event)">
+            <div id="passwordError" class="password-error"></div>
+        </div>
+        <div class="password-modal-footer">
+            <button onclick="closePasswordModal()" class="password-cancel-btn">Cancel</button>
+            <button onclick="submitSalesPassword()" class="password-submit-btn">Unlock</button>
+        </div>
+    </div>
+
     <!-- Inventory History Modal -->
     <div class="history-modal-overlay" id="inventoryHistoryModal" onclick="closeInventoryHistoryModal(event)">
         <div class="history-modal" onclick="event.stopPropagation()">
@@ -1164,6 +1229,7 @@
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <input type="text" class="search-box" id="prodMakeSearch" placeholder="Search part #, mold type..." oninput="filterProdMakeTable()" style="width:180px;padding:4px 8px;font-size:12px;">
+                    <button class="toolbar-btn columns-btn" id="prodMakeColumnsBtn" onclick="openColumnToggle('prodMake')" style="padding:4px 8px;font-size:11px;">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                     <button class="toolbar-btn" onclick="exportProdMakeToCSV()" style="padding:4px 8px;font-size:11px;">📥 CSV</button>
                     <button class="toolbar-btn" onclick="navigateTo('main')" style="padding:4px 8px;font-size:11px;">← Back</button>
                 </div>
@@ -1174,7 +1240,7 @@
                     <span style="color:var(--text-secondary);font-size:11px;" id="prodMakeTableCount">-</span>
                 </div>
                 <div class="scrollable-table" style="max-height:calc(100vh - 120px);">
-                    <table class="data-table" style="font-size:12px;">
+                    <table class="data-table" id="prodMakeTable" style="font-size:12px;">
                         <thead>
                             <tr id="prodMakeTableHeader">
                                 <th style="cursor:pointer;" onclick="sortProdMakeTable('product')">Product ↕</th>
@@ -3165,6 +3231,7 @@
                 case 'palletRecords': renderPalletRecordsTable(); break;
                 case 'shippingRecords': renderShippingRecordsTable(); break;
                 case 'stagedRecords': renderStagedRecordsTable(); break;
+                case 'prodMake': renderProdMakeTable(); break;
             }
         }
         
@@ -3346,6 +3413,15 @@
                 { key: 'stagedBy', labelEn: 'Staged By', labelEs: 'Preparado Por' },
                 { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
                 { key: 'status', labelEn: 'Status', labelEs: 'Estado' }
+            ],
+            prodMake: [
+                { key: 'product', labelEn: 'Product', labelEs: 'Producto' },
+                { key: 'partNumber', labelEn: 'Part #', labelEs: 'Parte #' },
+                { key: 'moldType', labelEn: 'Mold Type', labelEs: 'Tipo de Molde' },
+                { key: 'fusionInventory', labelEn: 'Fusion Inv', labelEs: 'Inv. Fusion' },
+                { key: 'minimums', labelEn: 'Minimums', labelEs: 'Mínimos' },
+                { key: 'partsToBeMade', labelEn: 'Parts to Make', labelEs: 'Partes a Fabricar' },
+                { key: 'drawing', labelEn: 'Drawing', labelEs: 'Dibujo' }
             ],
             // Dynamic tables - columns read from actual table headers
             allData: 'dynamic',
@@ -3615,15 +3691,32 @@
             data.forEach(r => {
                 switch(columnKey) {
                     case 'line': values.add(getVal(r, 'LINE') || '-'); break;
+                    case 'ifNum': values.add(getVal(r, 'IF_NUM') || '-'); break;
+                    case 'poNum': values.add(getVal(r, 'PO_NUM') || '-'); break;
                     case 'priority': values.add(getVal(r, 'PRIORITY') || '-'); break;
+                    case 'daysUntil': {
+                        const days = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                        values.add(isNaN(days) ? '-' : String(days));
+                        break;
+                    }
                     case 'customer': values.add(getVal(r, 'CUSTOMER') || '-'); break;
                     case 'part': values.add(getVal(r, 'PART') || '-'); break;
+                    case 'qty': {
+                        const qty = parseNumber(getVal(r, 'QTY'));
+                        values.add(isNaN(qty) ? '-' : String(qty));
+                        break;
+                    }
                     case 'status': values.add(getStatus(r)); break;
                     case 'tire': values.add(isMissingComponent(getVal(r, 'TIRE')) ? 'Missing' : 'Available'); break;
                     case 'hub': values.add(isMissingComponent(getVal(r, 'HUB')) ? 'Missing' : 'Available'); break;
                     case 'bearings': values.add(isMissingComponent(getVal(r, 'BEARINGS')) ? 'Missing' : 'Available'); break;
                     case 'assigned': values.add(getVal(r, 'ASSIGNED') || '-'); break;
                     case 'packaging': values.add(getVal(r, 'PACKAGING') || '-'); break;
+                    case 'revenue': values.add(formatCurrency(parseNumber(r[COL.REVENUE]) || 0)); break;
+                    case 'shippedDate': values.add(getVal(r, 'SHIPPED_DATE') || '-'); break;
+                    case 'fusionStatus': values.add(getVal(r, 'FUSION_STATUS') || '-'); break;
+                    case 'tireStock': values.add(getVal(r, 'TIRE_STOCK') || '-'); break;
+                    case 'hubStock': values.add(getVal(r, 'HUB_STOCK') || '-'); break;
                 }
             });
             return Array.from(values).sort();
@@ -4065,24 +4158,50 @@
             if (salesUnlocked) {
                 navigateTo('all-data');
             } else {
-                promptSalesPassword();
-                if (salesUnlocked) {
-                    navigateTo('all-data');
-                }
+                promptSalesPassword('all-data');
             }
         }
         
-        function promptSalesPassword() {
-            const password = prompt('Enter password to access Sales & Finance:');
-            if (password === null) return; // User cancelled
-            
+        let pendingPasswordNavigation = null; // Track where to navigate after unlock
+        
+        function promptSalesPassword(navigateTo = null) {
+            pendingPasswordNavigation = navigateTo;
+            document.getElementById('salesPasswordInput').value = '';
+            document.getElementById('passwordError').classList.remove('show');
+            document.getElementById('passwordModalOverlay').classList.add('active');
+            document.getElementById('passwordModal').classList.add('active');
+            // Focus the input after a brief delay to ensure modal is visible
+            setTimeout(() => document.getElementById('salesPasswordInput').focus(), 100);
+        }
+        
+        function closePasswordModal() {
+            document.getElementById('passwordModalOverlay').classList.remove('active');
+            document.getElementById('passwordModal').classList.remove('active');
+            pendingPasswordNavigation = null;
+        }
+        
+        function handlePasswordKeyup(event) {
+            if (event.key === 'Enter') submitSalesPassword();
+            if (event.key === 'Escape') closePasswordModal();
+        }
+        
+        function submitSalesPassword() {
+            const password = document.getElementById('salesPasswordInput').value;
             if (simpleHash(password) === SALES_HASH) {
                 salesUnlocked = true;
                 sessionStorage.setItem('salesUnlocked', 'true');
                 checkSalesUnlock();
-                alert('Access granted! Sales & Finance section is now unlocked.');
+                closePasswordModal();
+                // Navigate if there was a pending navigation
+                if (pendingPasswordNavigation) {
+                    navigateTo(pendingPasswordNavigation);
+                    pendingPasswordNavigation = null;
+                }
             } else {
-                alert('Incorrect password. Please try again.');
+                document.getElementById('passwordError').textContent = 'Incorrect password. Please try again.';
+                document.getElementById('passwordError').classList.add('show');
+                document.getElementById('salesPasswordInput').value = '';
+                document.getElementById('salesPasswordInput').focus();
             }
         }
         
@@ -4117,8 +4236,8 @@
             // Check if trying to access sales pages without unlock
             const salesPages = ['sales-overview', 'sales-parts', 'sales-customers', 'sales-dates'];
             if (salesPages.includes(page) && !salesUnlocked) {
-                promptSalesPassword();
-                if (!salesUnlocked) return; // Still not unlocked, don't navigate
+                promptSalesPassword(page);
+                return; // Password modal will handle navigation after unlock
             }
             
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -4549,6 +4668,7 @@
         }
         
         function renderProdMakeTable() {
+            initHiddenColumns('prodMake');
             const searchTerm = (document.getElementById('prodMakeSearch')?.value || '').toLowerCase();
             
             // Filter data
@@ -4583,7 +4703,30 @@
             document.getElementById('prodMakeTotalUnits').textContent = formatNumber(totalUnits) + ' units';
             document.getElementById('prodMakeTableCount').textContent = filtered.length + ' items';
             
-            // Build table rows
+            // Update Columns button
+            updateColumnsButton('prodMake');
+            
+            // Build header with hidden column support
+            const headers = [
+                { key: 'product', label: 'Product', sortKey: 'product' },
+                { key: 'partNumber', label: 'Part #', sortKey: 'partNumber' },
+                { key: 'moldType', label: 'Mold Type', sortKey: 'moldType' },
+                { key: 'fusionInventory', label: 'Fusion Inv', sortKey: 'fusionInventory' },
+                { key: 'minimums', label: 'Minimums', sortKey: 'minimums' },
+                { key: 'partsToBeMade', label: 'Parts to Make', sortKey: 'partsToBeMade' },
+                { key: 'drawing', label: '📐 Drawing', sortKey: null }
+            ];
+            const visibleHeaders = headers.filter(h => !isColumnHidden('prodMake', h.key));
+            const colSpan = visibleHeaders.length;
+            
+            document.getElementById('prodMakeTableHeader').innerHTML = visibleHeaders.map(h => {
+                if (h.sortKey) {
+                    return `<th style="cursor:pointer;" onclick="sortProdMakeTable('${h.sortKey}')">${h.label} ↕</th>`;
+                }
+                return `<th>${h.label}</th>`;
+            }).join('');
+            
+            // Build table rows with hidden column support
             const tbody = document.getElementById('prodMakeTableBody');
             let html = '';
             
@@ -4593,20 +4736,20 @@
                                     row.product === 'Hub' ? '#38b2ac' : 
                                     row.product === 'Bearing' ? '#4a5568' : '#805ad5';
                 
-                html += `<tr class="clickable-row" onclick="toggleProdMakeDrawing('${row.partNumber}')" style="cursor:pointer;">
-                    <td><span style="background:${productColor};color:white;padding:2px 8px;border-radius:4px;font-size:10px;">${row.product}</span></td>
-                    <td><strong>${row.partNumber}</strong></td>
-                    <td>${row.moldType || '-'}</td>
-                    <td style="text-align:right;">${formatNumber(row.fusionInventory)}</td>
-                    <td style="text-align:right;">${formatNumber(row.minimums)}</td>
-                    <td style="text-align:right;font-weight:bold;color:#ed8936;">${formatNumber(row.partsToBeMade)}</td>
-                    <td style="text-align:center;">${hasDrawing ? '📐 View' : '-'}</td>
-                </tr>`;
+                html += `<tr class="clickable-row" onclick="toggleProdMakeDrawing('${row.partNumber}')" style="cursor:pointer;">`;
+                if (!isColumnHidden('prodMake', 'product')) html += `<td><span style="background:${productColor};color:white;padding:2px 8px;border-radius:4px;font-size:10px;">${row.product}</span></td>`;
+                if (!isColumnHidden('prodMake', 'partNumber')) html += `<td><strong>${row.partNumber}</strong></td>`;
+                if (!isColumnHidden('prodMake', 'moldType')) html += `<td>${row.moldType || '-'}</td>`;
+                if (!isColumnHidden('prodMake', 'fusionInventory')) html += `<td style="text-align:right;">${formatNumber(row.fusionInventory)}</td>`;
+                if (!isColumnHidden('prodMake', 'minimums')) html += `<td style="text-align:right;">${formatNumber(row.minimums)}</td>`;
+                if (!isColumnHidden('prodMake', 'partsToBeMade')) html += `<td style="text-align:right;font-weight:bold;color:#ed8936;">${formatNumber(row.partsToBeMade)}</td>`;
+                if (!isColumnHidden('prodMake', 'drawing')) html += `<td style="text-align:center;">${hasDrawing ? '📐 View' : '-'}</td>`;
+                html += `</tr>`;
                 
                 // Add expanded drawing row if this part is expanded
                 if (prodMakeExpandedPart === row.partNumber && hasDrawing) {
                     html += `<tr class="drawing-expanded-row">
-                        <td colspan="7" style="background:rgba(237,137,54,0.1);padding:16px;border:2px solid #ed8936;">
+                        <td colspan="${colSpan}" style="background:rgba(237,137,54,0.1);padding:16px;border:2px solid #ed8936;">
                             <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">`;
                     if (row.drawing1) {
                         const thumb1 = getDriveThumbUrl(row.drawing1, 400);
@@ -8002,7 +8145,7 @@
         
         function handleRefDataClick(page) {
             if (!salesUnlocked) {
-                promptSalesPassword();
+                promptSalesPassword(page);
                 return;
             }
             navigateTo(page);
