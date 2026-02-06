@@ -3451,10 +3451,18 @@
             const columns = [];
             const headers = headerRow.querySelectorAll('th');
             headers.forEach((th, index) => {
-                // Get the text content, stripping filter buttons
-                let text = th.textContent || '';
-                // Clean up - remove sort arrows and filter symbols
-                text = text.replace(/[↕▼]/g, '').trim();
+                // Get the label text - try to find span first (the label is in the first span)
+                let text = '';
+                const labelSpan = th.querySelector('.filter-th-content > span');
+                if (labelSpan) {
+                    // Get only the direct text, not filter indicators
+                    text = labelSpan.childNodes[0]?.textContent || labelSpan.textContent || '';
+                } else {
+                    // Fallback: get first text node only
+                    text = th.textContent || '';
+                }
+                // Clean up - remove any remaining sort arrows, filter symbols, and their Unicode variants
+                text = text.replace(/[↕▼📋]/g, '').replace(/[\u25BC\u2195]/g, '').trim();
                 if (text) {
                     columns.push({
                         key: `col_${index}`,
