@@ -1438,6 +1438,35 @@
         }
         .mobile-filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
         
+        /* Mobile photo modal */
+        .mobile-photo-modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-dark); z-index: 5000; flex-direction: column;
+        }
+        .mobile-photo-modal.active { display: flex; }
+        .mobile-photo-modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; background: var(--primary); color: white;
+            border-bottom: 1px solid var(--border);
+        }
+        .mobile-photo-modal-body {
+            flex: 1; overflow-y: auto; padding: 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .mobile-photo-section { margin-bottom: 24px; }
+        .mobile-photo-section h4 { 
+            font-size: 14px; margin-bottom: 12px; color: var(--text-primary);
+            padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .mobile-photo-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+        }
+        .mobile-photo-grid img {
+            width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px;
+            border: 2px solid var(--border); cursor: pointer;
+        }
+        .mobile-photo-grid img:active { opacity: 0.7; }
+        
         /* Show mobile elements on small screens */
         @media (max-width: 480px) {
             body.mobile-mode .mobile-bottom-nav { display: block; }
@@ -11081,7 +11110,7 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const ifNum = getVal(row, 'IF_NUM') || '-';
             
             return `
-                <div class="mobile-order-card" onclick="showPalletPictures('${line}')" style="border-left: 4px solid var(--success);">
+                <div class="mobile-order-card" onclick="showMobilePhotos('${line}')" style="border-left: 4px solid var(--success);">
                     <div class="mobile-card-header">
                         <div>
                             <div class="mobile-card-title">${customer}</div>
@@ -11180,6 +11209,273 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                 </div>
             `;
         }).join('');
+    }
+    
+    // Mobile filter state
+    let mobileFilterState = 'all';
+    
+    // Mobile filter function for order cards
+    function mobileFilterOrders(filter) {
+        mobileFilterState = filter;
+        
+        // Update chip active states
+        document.querySelectorAll('.mobile-filter-chip').forEach(chip => {
+            const chipFilter = chip.getAttribute('onclick')?.match(/mobileFilterOrders\('([^']+)'\)/)?.[1];
+            chip.classList.toggle('active', chipFilter === filter);
+        });
+        
+        // Re-render cards with filter
+        renderMobileOrderCards('orders-queue');
+    }
+    
+    // Override renderMobileOrderCards to respect filter
+    const _origRenderMobileOrderCards = renderMobileOrderCards;
+    renderMobileOrderCards = function(pageType) {
+        const container = document.getElementById('mobileCardsContainer');
+        if (!container) return;
+        
+        let orders = [];
+        let filterFn = () => true;
+        
+        if (pageType === 'orders-queue') {
+            filterFn = row => {
+                const status = getStatus(row);
+                return status === 'pending' || status === 'wip';
+            };
+        } else if (pageType === 'orders-staged') {
+            filterFn = row => getStatus(row) === 'staged';
+        } else if (pageType === 'orders-shipped') {
+            filterFn = row => getStatus(row) === 'shipped';
+        }
+        
+        orders = allData.filter(filterFn);
+        
+        // Apply mobile filter
+        if (mobileFilterState !== 'all') {
+            orders = orders.filter(row => {
+                const cat = getCategory(row);
+                const urgent = isUrgent(row);
+                const days = parseNumber(getVal(row, 'DAYS_UNTIL'));
+                
+                switch (mobileFilterState) {
+                    case 'urgent': return urgent;
+                    case 'due-week': return days >= 0 && days <= 7;
+                    case 'rolltech': return cat === 'rolltech';
+                    case 'molding': return cat === 'molding';
+                    case 'snappad': return cat === 'snappad';
+                    default: return true;
+                }
+            });
+        }
+        
+        // Sort by urgency then days until
+        orders.sort((a, b) => {
+            const aUrgent = isUrgent(a) ? 0 : 1;
+            const bUrgent = isUrgent(b) ? 0 : 1;
+            if (aUrgent !== bUrgent) return aUrgent - bUrgent;
+            return parseNumber(getVal(a, 'DAYS_UNTIL')) - parseNumber(getVal(b, 'DAYS_UNTIL'));
+        });
+        
+        // Update stats
+        const statsContainer = document.querySelector('.mobile-summary-bar');
+        if (statsContainer) {
+            const urgentCount = orders.filter(r => isUrgent(r)).length;
+            const dueWeekCount = orders.filter(r => { const d = parseNumber(getVal(r, 'DAYS_UNTIL')); return d >= 0 && d <= 7; }).length;
+            statsContainer.innerHTML = `
+                <div class="mobile-summary-stat"><span class="stat-value">${orders.length}</span><span class="stat-label">Orders</span></div>
+                <div class="mobile-summary-stat"><span class="stat-value" style="color:var(--danger)">${urgentCount}</span><span class="stat-label">Urgent</span></div>
+                <div class="mobile-summary-stat"><span class="stat-value">${dueWeekCount}</span><span class="stat-label">Due This Week</span></div>
+            `;
+        }
+        
+        // Render cards - use showMobilePhotos for mobile
+        const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
+        container.innerHTML = orders.slice(0, 50).map(row => {
+            const line = getVal(row, 'LINE') || '-';
+            const customer = getVal(row, 'CUSTOMER') || '-';
+            const part = getVal(row, 'PART') || '-';
+            const qty = formatNumber(parseNumber(getVal(row, 'QTY')));
+            const status = getStatus(row);
+            const days = parseNumber(getVal(row, 'DAYS_UNTIL'));
+            const urgent = isUrgent(row);
+            const dueDate = getVal(row, 'REQUESTED_DATE') || '-';
+            const tire = getVal(row, 'TIRE') || '-';
+            const hub = getVal(row, 'HUB') || '-';
+            
+            let cardClass = 'mobile-order-card';
+            if (urgent) cardClass += ' urgent';
+            else if (days < 0) cardClass += ' overdue';
+            
+            let badgeClass = 'mobile-card-badge ' + status;
+            let badgeText = status.toUpperCase();
+            if (urgent) { badgeClass = 'mobile-card-badge urgent'; badgeText = 'URGENT'; }
+            
+            let daysText = days >= 0 ? `${days} days` : `${Math.abs(days)} days overdue`;
+            let daysClass = days < 0 ? 'overdue' : '';
+            
+            // Use showMobilePhotos on mobile, showPalletPictures on desktop
+            const clickFn = isCardMode ? `showMobilePhotos('${line}')` : `showPalletPictures('${line}')`;
+            
+            return `
+                <div class="${cardClass}" onclick="${clickFn}">
+                    <div class="mobile-card-header">
+                        <div>
+                            <div class="mobile-card-title">${customer}</div>
+                            <div class="mobile-card-subtitle">Line ${line} • ${part}</div>
+                        </div>
+                        <span class="${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Quantity</span>
+                            <span class="mobile-card-value large">${qty}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Due</span>
+                            <span class="mobile-card-value ${days < 0 ? 'danger' : ''}">${daysText}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Tire</span>
+                            <span class="mobile-card-value">${tire}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Hub</span>
+                            <span class="mobile-card-value">${hub}</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-footer">
+                        <span class="mobile-card-date ${daysClass}">📅 ${dueDate}</span>
+                        <span style="color:var(--text-secondary);font-size:11px;">Tap for photos →</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+    
+    // Mobile photo viewer - full screen modal
+    async function showMobilePhotos(lineNum) {
+        // Load data if needed
+        await loadStagedRecordsData();
+        await loadShippingRecordsData();
+        
+        const orderData = allData.find(r => String(getVal(r, 'LINE')).trim() === String(lineNum).trim());
+        if (!orderData) { alert('Order not found'); return; }
+        
+        const customer = getVal(orderData, 'CUSTOMER') || '-';
+        const part = getVal(orderData, 'PART') || '-';
+        const ifNum = getVal(orderData, 'IF_NUM') || '-';
+        const pallets = getPalletDataForOrder(lineNum);
+        
+        // Get photos from staged and shipping records
+        const stagedRecord = getStagedRecordsForOrder(ifNum, lineNum);
+        const fusionPictures = stagedRecord ? (stagedRecord['Fusion Pictures'] || []) : [];
+        const shippingRecords = getShippingRecordsForOrder(ifNum);
+        const shipmentPictures = shippingRecords.flatMap(r => r['Shipment Pictures'] || []);
+        const closeUpPictures = shippingRecords.flatMap(r => r['Close Up Pictures'] || []);
+        
+        // Get drawings
+        const tirePartNum = getVal(orderData, 'TIRE') || '';
+        const hubPartNum = getVal(orderData, 'HUB') || '';
+        
+        // Build photo sections
+        let photosHtml = '';
+        
+        // Pallet photos
+        if (pallets.length > 0) {
+            photosHtml += `<div class="mobile-photo-section"><h4>📦 Pallet Photos</h4><div class="mobile-photo-grid">`;
+            pallets.forEach((p, i) => {
+                if (p.pictureUrl) {
+                    const urls = getPhotoUrls(p.pictureUrl);
+                    if (urls) photosHtml += `<img src="${urls.thumb}" onclick="openImageModal('${urls.full}')" alt="Pallet ${i+1}">`;
+                }
+            });
+            photosHtml += `</div></div>`;
+        }
+        
+        // Fusion photos
+        if (fusionPictures.length > 0) {
+            photosHtml += `<div class="mobile-photo-section"><h4>📄 Fusion Photos</h4><div class="mobile-photo-grid">`;
+            fusionPictures.forEach((url, i) => {
+                const urls = getPhotoUrls(url);
+                if (urls) photosHtml += `<img src="${urls.thumb}" onclick="openImageModal('${urls.full}')" alt="Fusion ${i+1}">`;
+            });
+            photosHtml += `</div></div>`;
+        }
+        
+        // Shipment photos
+        if (shipmentPictures.length > 0) {
+            photosHtml += `<div class="mobile-photo-section"><h4>🚚 Shipment Photos</h4><div class="mobile-photo-grid">`;
+            shipmentPictures.forEach((url, i) => {
+                const urls = getPhotoUrls(url);
+                if (urls) photosHtml += `<img src="${urls.thumb}" onclick="openImageModal('${urls.full}')" alt="Shipment ${i+1}">`;
+            });
+            photosHtml += `</div></div>`;
+        }
+        
+        // Close-up photos
+        if (closeUpPictures.length > 0) {
+            photosHtml += `<div class="mobile-photo-section"><h4>🔍 Close-Up Photos</h4><div class="mobile-photo-grid">`;
+            closeUpPictures.forEach((url, i) => {
+                const urls = getPhotoUrls(url);
+                if (urls) photosHtml += `<img src="${urls.thumb}" onclick="openImageModal('${urls.full}')" alt="Close-up ${i+1}">`;
+            });
+            photosHtml += `</div></div>`;
+        }
+        
+        // Drawings
+        if (window.drawingMap) {
+            const tireDrawing = window.drawingMap[tirePartNum];
+            const hubDrawing = window.drawingMap[hubPartNum];
+            if (tireDrawing || hubDrawing) {
+                photosHtml += `<div class="mobile-photo-section"><h4>📐 Drawings</h4><div class="mobile-photo-grid">`;
+                if (tireDrawing?.drawing1) {
+                    const url = getDriveThumbUrl(tireDrawing.drawing1, 400);
+                    const full = getDriveThumbUrl(tireDrawing.drawing1, 1200);
+                    if (url) photosHtml += `<img src="${url}" onclick="openImageModal('${full}')" alt="Tire Drawing">`;
+                }
+                if (hubDrawing?.drawing1) {
+                    const url = getDriveThumbUrl(hubDrawing.drawing1, 400);
+                    const full = getDriveThumbUrl(hubDrawing.drawing1, 1200);
+                    if (url) photosHtml += `<img src="${url}" onclick="openImageModal('${full}')" alt="Hub Drawing">`;
+                }
+                photosHtml += `</div></div>`;
+            }
+        }
+        
+        if (!photosHtml) {
+            photosHtml = '<p style="text-align:center;color:var(--text-secondary);padding:40px;">No photos available for this order.</p>';
+        }
+        
+        // Create modal
+        let modal = document.getElementById('mobilePhotoModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'mobilePhotoModal';
+            modal.className = 'mobile-photo-modal';
+            document.body.appendChild(modal);
+        }
+        
+        modal.innerHTML = `
+            <div class="mobile-photo-modal-header">
+                <div>
+                    <div style="font-size:16px;font-weight:600;">${customer}</div>
+                    <div style="font-size:12px;color:var(--text-secondary);">Line ${lineNum} • ${part} • IF: ${ifNum}</div>
+                </div>
+                <button onclick="closeMobilePhotos()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">✕</button>
+            </div>
+            <div class="mobile-photo-modal-body">
+                ${photosHtml}
+            </div>
+        `;
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeMobilePhotos() {
+        const modal = document.getElementById('mobilePhotoModal');
+        if (modal) modal.classList.remove('active');
+        document.body.style.overflow = '';
     }
     
     // Update mobileNavTo to render appropriate cards
