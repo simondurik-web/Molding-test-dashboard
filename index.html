@@ -3347,25 +3347,66 @@
                 { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
                 { key: 'status', labelEn: 'Status', labelEs: 'Estado' }
             ],
-            allData: [
-                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
-            ],
-            fpRef: [
-                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
-            ],
-            custRef: [
-                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
-            ],
-            quotes: [
-                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
-            ]
+            // Dynamic tables - columns read from actual table headers
+            allData: 'dynamic',
+            fpRef: 'dynamic',
+            custRef: 'dynamic',
+            quotes: 'dynamic'
         };
+        
+        // Map tableId to their actual table element IDs
+        const tableElementIds = {
+            allData: 'allDataTable',
+            fpRef: 'fpRefTable',
+            custRef: 'custRefTable',
+            quotes: 'quotesTable'
+        };
+        
+        function getColumnsFromTable(tableId) {
+            const tableElId = tableElementIds[tableId];
+            if (!tableElId) return [];
+            
+            const table = document.getElementById(tableElId);
+            if (!table) return [];
+            
+            const headerRow = table.querySelector('thead tr');
+            if (!headerRow) return [];
+            
+            const columns = [];
+            const headers = headerRow.querySelectorAll('th');
+            headers.forEach((th, index) => {
+                // Get the text content, stripping filter buttons
+                let text = th.textContent || '';
+                // Clean up - remove sort arrows and filter symbols
+                text = text.replace(/[↕▼]/g, '').trim();
+                if (text) {
+                    columns.push({
+                        key: `col_${index}`,
+                        labelEn: text,
+                        labelEs: text // Same text since it comes from sheet
+                    });
+                }
+            });
+            return columns;
+        }
         
         function openColumnToggle(tableId) {
             if (!tableColumnDefs[tableId]) return;
             initHiddenColumns(tableId);
             
-            activeColumnToggle = { tableId, columns: tableColumnDefs[tableId] };
+            // Get columns - either from static definition or dynamically from table
+            let columns;
+            if (tableColumnDefs[tableId] === 'dynamic') {
+                columns = getColumnsFromTable(tableId);
+                if (columns.length === 0) {
+                    // Table not rendered yet, show message
+                    columns = [{ key: 'none', labelEn: 'No columns available', labelEs: 'Sin columnas disponibles' }];
+                }
+            } else {
+                columns = tableColumnDefs[tableId];
+            }
+            
+            activeColumnToggle = { tableId, columns: columns };
             
             const dropdown = document.getElementById('columnToggleDropdown');
             const overlay = document.getElementById('columnToggleOverlay');
@@ -3373,13 +3414,20 @@
             
             // Render column list with checkboxes
             list.innerHTML = activeColumnToggle.columns.map(col => {
+                if (col.key === 'none') {
+                    return `<div class="column-toggle-item" style="color:var(--text-secondary);font-style:italic;">
+                        ${currentLang === 'es' ? col.labelEs : col.labelEn}
+                    </div>`;
+                }
                 const isHidden = hiddenColumns[tableId] && hiddenColumns[tableId].has(col.key);
                 const label = currentLang === 'es' ? col.labelEs : col.labelEn;
                 const itemClass = isHidden ? 'column-toggle-item hidden-col' : 'column-toggle-item';
+                // Use encodeURIComponent for the key to handle special chars
+                const safeKey = encodeURIComponent(col.key);
                 return `<div class="${itemClass}">
-                    <input type="checkbox" id="col_${col.key}" ${!isHidden ? 'checked' : ''} 
-                           onchange="toggleColumnVisibility('${tableId}', '${col.key}')">
-                    <label for="col_${col.key}">${label}</label>
+                    <input type="checkbox" id="col_${safeKey}" ${!isHidden ? 'checked' : ''} 
+                           onchange="toggleColumnVisibility('${tableId}', '${safeKey}')">
+                    <label for="col_${safeKey}">${label}</label>
                 </div>`;
             }).join('');
             
@@ -3395,7 +3443,8 @@
             activeColumnToggle = null;
         }
         
-        function toggleColumnVisibility(tableId, columnKey) {
+        function toggleColumnVisibility(tableId, encodedColumnKey) {
+            const columnKey = decodeURIComponent(encodedColumnKey);
             initHiddenColumns(tableId);
             if (hiddenColumns[tableId].has(columnKey)) {
                 hiddenColumns[tableId].delete(columnKey);
@@ -3407,9 +3456,13 @@
             
             // Update the visual state of the item in the dropdown
             if (activeColumnToggle && activeColumnToggle.tableId === tableId) {
-                const item = document.querySelector(`#col_${columnKey}`).closest('.column-toggle-item');
-                if (item) {
-                    item.classList.toggle('hidden-col', hiddenColumns[tableId].has(columnKey));
+                const safeKey = encodeURIComponent(columnKey);
+                const checkbox = document.getElementById(`col_${safeKey}`);
+                if (checkbox) {
+                    const item = checkbox.closest('.column-toggle-item');
+                    if (item) {
+                        item.classList.toggle('hidden-col', hiddenColumns[tableId].has(columnKey));
+                    }
                 }
             }
         }
