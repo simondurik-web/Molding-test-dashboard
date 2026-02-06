@@ -1264,6 +1264,7 @@
             body.tablet-portrait .chart-container { display: block; }
             body.tablet-portrait .toolbar { display: none; }
             body.tablet-portrait .mobile-filter-bar { display: flex !important; }
+            body.tablet-portrait .orders-queue-toolbar { display: none !important; }
             
             /* Larger cards for iPad */
             body.tablet-portrait .mobile-order-card { padding: 18px; }
@@ -1479,6 +1480,7 @@
             body.mobile-mode .mobile-cards-container { display: flex; }
             body.mobile-mode .mobile-summary-bar { display: block; }
             body.mobile-mode .mobile-filter-bar { display: flex; }
+            body.mobile-mode .orders-queue-toolbar { display: none !important; }
             /* Tables stay visible but optimized for mobile scroll */
             body.mobile-mode .scrollable-table { 
                 display: block; 
@@ -1695,7 +1697,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.13</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.14</div>
     </div>
 
     <div class="main-content">
@@ -1832,7 +1834,7 @@
 
         <!-- ORDERS QUEUE PAGE (Need to Package) -->
         <div id="orders-queue" class="page">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:8px;flex-wrap:wrap;">
+            <div class="orders-queue-toolbar" style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:8px;flex-wrap:wrap;">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                     <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')" style="padding:4px 10px;font-size:11px;"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
                     <button class="category-btn molding active" id="ordersQueueBtnMolding" onclick="toggleOrdersQueueCategory('molding')" style="padding:4px 10px;font-size:11px;"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
@@ -1885,8 +1887,9 @@
                 <span class="mobile-filter-chip active" onclick="mobileFilterOrders('all')">All</span>
                 <span class="mobile-filter-chip" onclick="mobileFilterOrders('urgent')">🔴 Urgent</span>
                 <span class="mobile-filter-chip" onclick="mobileFilterOrders('due-week')">📅 Due This Week</span>
-                <span class="mobile-filter-chip" onclick="mobileFilterOrders('rolltech')">Roll Tech</span>
-                <span class="mobile-filter-chip" onclick="mobileFilterOrders('molding')">Molding</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('rolltech')">🔵 Roll Tech</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('molding')">🟡 Molding</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('snappad')">🟣 Snap Pad</span>
             </div>
             
             <!-- Mobile Cards Container -->
