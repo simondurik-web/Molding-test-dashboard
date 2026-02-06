@@ -914,6 +914,20 @@
         .ai-chat-input-area button.ai-send-btn:hover { transform: scale(1.08); }
         .ai-chat-input-area button.ai-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
+        /* Voice mode toggle */
+        .ai-chat-input-area button.ai-voice-mode-toggle {
+            width: 28px; height: 28px; border-radius: 50%; border: none;
+            background: rgba(66,133,244,0.2); color: #4285f4;
+            font-size: 12px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            margin-right: 4px;
+        }
+        .ai-chat-input-area button.ai-voice-mode-toggle:hover { background: rgba(66,133,244,0.3); }
+        .ai-chat-input-area button.ai-voice-mode-toggle.auto-send {
+            background: rgba(234,67,53,0.2); color: #ea4335;
+        }
+        .ai-chat-input-area button.ai-voice-mode-toggle.auto-send:hover { background: rgba(234,67,53,0.3); }
+        
         /* Voice input button */
         .ai-chat-input-area button.ai-voice-btn {
             width: 38px; height: 38px; border-radius: 50%; border: none;
@@ -2075,10 +2089,8 @@
         <div class="ai-suggestions" id="aiSuggestions"></div>
         <div class="ai-chat-input-area" style="position:relative;">
             <input type="text" id="aiChatInput" data-i18n-placeholder="ai.placeholder" placeholder="Ask about your data..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}">
-            <button class="ai-voice-btn" id="aiVoiceBtn" 
-                onmousedown="startVoiceLongPress()" onmouseup="endVoiceLongPress()" onmouseleave="cancelVoiceLongPress()"
-                ontouchstart="startVoiceLongPress()" ontouchend="endVoiceLongPress()" ontouchcancel="cancelVoiceLongPress()"
-                title="Tap = edit, Hold = auto-send">🎤</button>
+            <button class="ai-voice-mode-toggle" id="aiVoiceModeToggle" onclick="toggleVoiceMode()" title="Toggle auto-send">✏️</button>
+            <button class="ai-voice-btn" id="aiVoiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
             <span class="ai-voice-status" id="aiVoiceStatus">Listening...</span>
             <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiMessage()" title="Send">➤</button>
         </div>
@@ -9965,7 +9977,6 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
         let voiceRecognition = null;
         let isListening = false;
         let voiceAutoSend = false; // true = auto-send after speech, false = edit mode
-        let voiceLongPressTimer = null;
         
         function initVoiceRecognition() {
             // Check browser support
@@ -9984,16 +9995,11 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
             voiceRecognition.onstart = () => {
                 console.log('[Voice] Started listening, autoSend:', voiceAutoSend);
                 isListening = true;
-                const btn = document.getElementById('aiVoiceBtn');
-                btn.classList.add('listening');
+                document.getElementById('aiVoiceBtn').classList.add('listening');
                 document.getElementById('aiVoiceStatus').classList.add('visible');
-                if (voiceAutoSend) {
-                    btn.classList.add('auto-send');
-                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '🚀 Auto-enviar' : '🚀 Auto-send';
-                } else {
-                    btn.classList.remove('auto-send');
-                    document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? '✏️ Modo editar' : '✏️ Edit mode';
-                }
+                document.getElementById('aiVoiceStatus').textContent = voiceAutoSend 
+                    ? (currentLang === 'es' ? '🚀 Auto-enviar' : '🚀 Auto-send')
+                    : (currentLang === 'es' ? '✏️ Editar' : '✏️ Edit');
             };
             
             voiceRecognition.onresult = (event) => {
@@ -10044,41 +10050,19 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
             };
         }
         
-        function startVoiceLongPress() {
-            // Start timer for long press detection (500ms)
-            voiceLongPressTimer = setTimeout(() => {
-                voiceAutoSend = true;
-                // Visual feedback for long press before release
-                const btn = document.getElementById('aiVoiceBtn');
-                btn.style.transform = 'scale(1.15)';
-                btn.style.background = 'linear-gradient(135deg, #ea4335 0%, #ff6b35 100%)';
-                btn.style.color = 'white';
-                console.log('[Voice] Long press detected - auto-send mode');
-            }, 500);
-        }
-        
-        function endVoiceLongPress() {
-            if (voiceLongPressTimer) {
-                clearTimeout(voiceLongPressTimer);
-                voiceLongPressTimer = null;
+        function toggleVoiceMode() {
+            voiceAutoSend = !voiceAutoSend;
+            const toggle = document.getElementById('aiVoiceModeToggle');
+            if (voiceAutoSend) {
+                toggle.classList.add('auto-send');
+                toggle.textContent = '🚀';
+                toggle.title = 'Auto-send ON (tap to switch to edit mode)';
+            } else {
+                toggle.classList.remove('auto-send');
+                toggle.textContent = '✏️';
+                toggle.title = 'Edit mode (tap to switch to auto-send)';
             }
-            // If not already listening, start voice input
-            if (!isListening) {
-                toggleVoiceInput();
-            }
-        }
-        
-        function cancelVoiceLongPress() {
-            if (voiceLongPressTimer) {
-                clearTimeout(voiceLongPressTimer);
-                voiceLongPressTimer = null;
-            }
-            voiceAutoSend = false;
-            // Reset button style
-            const btn = document.getElementById('aiVoiceBtn');
-            btn.style.transform = '';
-            btn.style.background = '';
-            btn.style.color = '';
+            console.log('[Voice] Mode toggled, autoSend:', voiceAutoSend);
         }
         
         function toggleVoiceInput() {
@@ -10121,10 +10105,7 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
         
         function stopVoiceInput() {
             isListening = false;
-            voiceAutoSend = false; // Reset for next time
-            const btn = document.getElementById('aiVoiceBtn');
-            btn.classList.remove('listening');
-            btn.classList.remove('auto-send');
+            document.getElementById('aiVoiceBtn').classList.remove('listening');
             document.getElementById('aiVoiceStatus').classList.remove('visible');
         }
 
