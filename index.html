@@ -343,6 +343,52 @@
         .clear-all-filters-btn.has-filters { background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%) !important; color: #1a202c !important; border-color: var(--warning) !important; }
         .show-hidden-btn { display: none; background: var(--bg-dark) !important; }
         .show-hidden-btn.has-hidden { display: inline-flex; background: linear-gradient(135deg, var(--accent) 0%, #4299e1 100%) !important; color: white !important; border-color: var(--accent) !important; }
+        
+        /* Column Toggle Dropdown */
+        .columns-btn { background: var(--bg-dark) !important; position: relative; }
+        .columns-btn.has-hidden { background: linear-gradient(135deg, var(--accent) 0%, #4299e1 100%) !important; color: white !important; border-color: var(--accent) !important; }
+        .column-toggle-dropdown {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10001; width: 320px; max-height: 80vh;
+            display: none; flex-direction: column; overflow: hidden;
+        }
+        .column-toggle-dropdown.active { display: flex; }
+        .column-toggle-header {
+            padding: 14px 16px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(135deg, rgba(66,153,225,0.15) 0%, rgba(49,130,206,0.1) 100%);
+        }
+        .column-toggle-header h4 { margin: 0; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .column-toggle-header button { background: transparent; border: none; color: var(--text-secondary); font-size: 18px; cursor: pointer; padding: 4px; }
+        .column-toggle-header button:hover { color: var(--text-primary); }
+        .column-toggle-actions {
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+            display: flex; gap: 8px; background: rgba(0,0,0,0.1);
+        }
+        .column-toggle-actions button {
+            flex: 1; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+            cursor: pointer; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .column-toggle-actions button:hover { border-color: var(--accent); color: white; }
+        .column-toggle-list { flex: 1; overflow-y: auto; padding: 8px 0; max-height: 400px; }
+        .column-toggle-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+            cursor: pointer; font-size: 13px; transition: background 0.15s;
+        }
+        .column-toggle-item:hover { background: rgba(255,255,255,0.05); }
+        .column-toggle-item input[type="checkbox"] {
+            width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent);
+        }
+        .column-toggle-item label { cursor: pointer; flex: 1; color: var(--text-primary); }
+        .column-toggle-item.hidden-col label { color: var(--text-secondary); text-decoration: line-through; }
+        .column-toggle-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 10000; display: none;
+        }
+        .column-toggle-overlay.active { display: block; }
+        
         .watchlist-star { cursor: pointer; color: var(--text-secondary); transition: color 0.2s; }
         .watchlist-star:hover { color: var(--warning); }
         .watchlist-star.active { color: var(--warning); }
@@ -862,6 +908,20 @@
         </div>
     </div>
 
+    <!-- Column Toggle Dropdown Modal -->
+    <div class="column-toggle-overlay" id="columnToggleOverlay" onclick="closeColumnToggle()"></div>
+    <div class="column-toggle-dropdown" id="columnToggleDropdown">
+        <div class="column-toggle-header">
+            <h4>⚙️ <span data-i18n="ui.columns">Columns</span></h4>
+            <button onclick="closeColumnToggle()">✕</button>
+        </div>
+        <div class="column-toggle-actions">
+            <button onclick="columnSelectAll()" data-i18n="ui.selectAll">Select All</button>
+            <button onclick="columnDeselectAll()" data-i18n="ui.deselectAll">Deselect All</button>
+        </div>
+        <div class="column-toggle-list" id="columnToggleList"></div>
+    </div>
+
     <!-- Inventory History Modal -->
     <div class="history-modal-overlay" id="inventoryHistoryModal" onclick="closeInventoryHistoryModal(event)">
         <div class="history-modal" onclick="event.stopPropagation()">
@@ -1070,7 +1130,7 @@
                     <button class="status-btn shipped" id="ordersDataStatusShipped" onclick="toggleOrdersDataStatus('shipped')"><span data-i18n="status.shipped">Shipped</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="ordersDataClearFiltersBtn" onclick="clearAllTableFilters('ordersData')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="ordersDataShowHiddenBtn" onclick="showAllColumns('ordersData')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="ordersDataColumnsBtn" onclick="openColumnToggle('ordersData')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersDataSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersDataTable()">
                 <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1152,7 +1212,7 @@
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <button class="toolbar-btn clear-all-filters-btn" id="ordersQueueClearFiltersBtn" onclick="clearAllTableFilters('ordersQueue')" style="padding:4px 8px;font-size:11px;">🗑 <span data-i18n="filter.clearFilters">Clear</span></button>
-                    <button class="toolbar-btn show-hidden-btn" id="ordersQueueShowHiddenBtn" onclick="showAllColumns('ordersQueue')" style="padding:4px 8px;font-size:11px;">👁</button>
+                    <button class="toolbar-btn columns-btn" id="ordersQueueColumnsBtn" onclick="openColumnToggle('ordersQueue')" style="padding:4px 8px;font-size:11px;">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                     <input type="text" class="search-box" id="ordersQueueSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersQueueTable()" style="width:140px;padding:4px 8px;font-size:12px;">
                     <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()" style="padding:4px 8px;font-size:11px;">📥</button>
                     <button class="toolbar-btn" onclick="navigateTo('main')" style="padding:4px 8px;font-size:11px;">← Back</button>
@@ -1184,7 +1244,7 @@
                     <button class="category-btn snappad active" id="ordersStagedBtnSnapPad" onclick="toggleOrdersStagedCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="ordersStagedClearFiltersBtn" onclick="clearAllTableFilters('ordersStaged')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="ordersStagedShowHiddenBtn" onclick="showAllColumns('ordersStaged')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="ordersStagedColumnsBtn" onclick="openColumnToggle('ordersStaged')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersStagedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersStagedTable()">
                 <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1224,7 +1284,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetShippedDateFilter()">🔄 Reset</button>
                 <button class="toolbar-btn clear-all-filters-btn" id="ordersShippedClearFiltersBtn" onclick="clearAllTableFilters('ordersShipped')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="ordersShippedShowHiddenBtn" onclick="showAllColumns('ordersShipped')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="ordersShippedColumnsBtn" onclick="openColumnToggle('ordersShipped')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersShippedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersShippedTable()">
                 <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1256,7 +1316,7 @@
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="inventoryShowHiddenBtn" onclick="showAllColumns('inventory')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="inventoryColumnsBtn" onclick="openColumnToggle('inventory')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportInvCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -1393,7 +1453,7 @@
                 <button class="toolbar-btn" onclick="resetPartsDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="partsWatchlistBtn" onclick="togglePartsWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="partsClearFiltersBtn" onclick="clearAllTableFilters('parts')">🗑 Clear Filters</button>
-                <button class="toolbar-btn show-hidden-btn" id="partsShowHiddenBtn" onclick="showAllColumns('parts')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="partsColumnsBtn" onclick="openColumnToggle('parts')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" data-i18n-placeholder="ui.search" placeholder="Search parts..." oninput="filterPartsTable()">
                 <button class="toolbar-btn" onclick="exportPartsCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1473,7 +1533,7 @@
                 <button class="toolbar-btn" onclick="resetCustomersDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn" id="customersWatchlistBtn" onclick="toggleCustomersWatchlistFilter()">⭐ <span data-i18n="btn.watchlist">Watchlist</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="customersClearFiltersBtn" onclick="clearAllTableFilters('customers')">🗑 Clear Filters</button>
-                <button class="toolbar-btn show-hidden-btn" id="customersShowHiddenBtn" onclick="showAllColumns('customers')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="customersColumnsBtn" onclick="openColumnToggle('customers')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" data-i18n-placeholder="ui.search" placeholder="Search customers..." oninput="filterCustomersTable()">
                 <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1552,7 +1612,7 @@
                 </div>
                 <button class="toolbar-btn" onclick="resetDatesDateFilter()">🔄 <span data-i18n="btn.clearDates">Clear Dates</span></button>
                 <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑 Clear Filters</button>
-                <button class="toolbar-btn show-hidden-btn" id="datesShowHiddenBtn" onclick="showAllColumns('dates')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="datesColumnsBtn" onclick="openColumnToggle('dates')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
             </div>
@@ -1658,7 +1718,7 @@
                     <span id="allDataColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="allDataClearFiltersBtn" onclick="clearAllTableFilters('allData')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="allDataShowHiddenBtn" onclick="showAllColumns('allData')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="allDataColumnsBtn" onclick="openColumnToggle('allData')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="allDataGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
                 <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1692,7 +1752,7 @@
                     <span id="fpRefColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="fpRefClearFiltersBtn" onclick="clearAllTableFilters('fpRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="fpRefShowHiddenBtn" onclick="showAllColumns('fpRef')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="fpRefColumnsBtn" onclick="openColumnToggle('fpRef')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="fpRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterFpRefTable()">
                 <button class="toolbar-btn" onclick="exportFpRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1726,7 +1786,7 @@
                     <span id="custRefColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="custRefClearFiltersBtn" onclick="clearAllTableFilters('custRef')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="custRefShowHiddenBtn" onclick="showAllColumns('custRef')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="custRefColumnsBtn" onclick="openColumnToggle('custRef')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="custRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterCustRefTable()">
                 <button class="toolbar-btn" onclick="exportCustRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1760,7 +1820,7 @@
                     <span id="quotesColCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="quotesClearFiltersBtn" onclick="clearAllTableFilters('quotes')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="quotesShowHiddenBtn" onclick="showAllColumns('quotes')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="quotesColumnsBtn" onclick="openColumnToggle('quotes')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="quotesGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterQuotesTable()">
                 <button class="toolbar-btn" onclick="exportQuotesToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
@@ -1814,7 +1874,7 @@
                     <span id="palletRecordsRowCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="palletRecordsClearFiltersBtn" onclick="clearAllTableFilters('palletRecords')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="palletRecordsShowHiddenBtn" onclick="showAllColumns('palletRecords')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="palletRecordsColumnsBtn" onclick="openColumnToggle('palletRecords')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="palletRecordsGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Search IF#, Order#, Customer..." oninput="filterPalletRecordsTable()">
             </div>
@@ -1848,7 +1908,7 @@
                     <span id="shippingRecordsRowCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="shippingRecordsClearFiltersBtn" onclick="clearAllTableFilters('shippingRecords')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="shippingRecordsShowHiddenBtn" onclick="showAllColumns('shippingRecords')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="shippingRecordsColumnsBtn" onclick="openColumnToggle('shippingRecords')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="shippingRecordsGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Search IF#, Order#, Customer, Carrier..." oninput="filterShippingRecordsTable()">
             </div>
@@ -1882,7 +1942,7 @@
                     <span id="stagedRecordsRowCount" style="color:var(--accent);font-weight:600;">-</span>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="stagedRecordsClearFiltersBtn" onclick="clearAllTableFilters('stagedRecords')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
-                <button class="toolbar-btn show-hidden-btn" id="stagedRecordsShowHiddenBtn" onclick="showAllColumns('stagedRecords')">👁 <span data-i18n="ui.showHidden">Show Hidden</span></button>
+                <button class="toolbar-btn columns-btn" id="stagedRecordsColumnsBtn" onclick="openColumnToggle('stagedRecords')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="stagedRecordsGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Search IF#, Line#, Customer..." oninput="filterStagedRecordsTable()">
             </div>
@@ -2072,6 +2132,7 @@
                 'ui.apply': 'Apply',
                 'ui.hideColumn': '👁 Hide',
                 'ui.showHidden': 'Show Hidden',
+                'ui.columns': 'Columns',
                 'ui.filterColumn': 'Filter Column',
                 'ui.search': 'Search...',
                 'ui.export': 'Export',
@@ -2343,6 +2404,7 @@
                 'ui.apply': 'Aplicar',
                 'ui.hideColumn': '👁 Ocultar',
                 'ui.showHidden': 'Mostrar Ocultas',
+                'ui.columns': 'Columnas',
                 'ui.filterColumn': 'Filtrar Columna',
                 'ui.search': 'Buscar...',
                 'ui.export': 'Exportar',
@@ -3168,6 +3230,227 @@
         function getVisibleHeaders(tableId, allHeaders) {
             if (!hiddenColumns[tableId] || hiddenColumns[tableId].size === 0) return allHeaders;
             return allHeaders.filter((h, i) => !hiddenColumns[tableId].has(h) && !hiddenColumns[tableId].has(`col_${i}`));
+        }
+        
+        // ============================================================
+        // COLUMN TOGGLE SYSTEM (⚙️ Columns button)
+        // ============================================================
+        let activeColumnToggle = null; // { tableId, columns: [{key, labelEn, labelEs}] }
+        
+        // Column definitions for each table - defines all possible columns
+        const tableColumnDefs = {
+            ordersData: [
+                { key: 'line', labelEn: 'Line', labelEs: 'Línea' },
+                { key: 'ifNum', labelEn: 'IF #', labelEs: 'IF #' },
+                { key: 'poNum', labelEn: 'PO #', labelEs: 'PO #' },
+                { key: 'priority', labelEn: 'Priority', labelEs: 'Prioridad' },
+                { key: 'daysUntil', labelEn: 'Days Until', labelEs: 'Días Restantes' },
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'part', labelEn: 'Part #', labelEs: 'Parte #' },
+                { key: 'qty', labelEn: 'Qty', labelEs: 'Cant.' },
+                { key: 'tire', labelEn: 'Tire', labelEs: 'Llanta' },
+                { key: 'hub', labelEn: 'Hub', labelEs: 'Centro' },
+                { key: 'bearings', labelEn: 'Bearings', labelEs: 'Baleros' },
+                { key: 'status', labelEn: 'Status', labelEs: 'Estado' }
+            ],
+            ordersQueue: [
+                { key: 'line', labelEn: 'Line', labelEs: 'Línea' },
+                { key: 'ifNum', labelEn: 'IF #', labelEs: 'IF #' },
+                { key: 'priority', labelEn: 'Priority', labelEs: 'Prioridad' },
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'part', labelEn: 'Part #', labelEs: 'Parte #' },
+                { key: 'qty', labelEn: 'Qty', labelEs: 'Cant.' },
+                { key: 'tire', labelEn: 'Tire', labelEs: 'Llanta' },
+                { key: 'tireStock', labelEn: 'Tire Stock', labelEs: 'Stock Llanta' },
+                { key: 'hub', labelEn: 'Hub', labelEs: 'Centro' },
+                { key: 'hubStock', labelEn: 'Hub Stock', labelEs: 'Stock Centro' },
+                { key: 'bearings', labelEn: 'Bearings', labelEs: 'Baleros' },
+                { key: 'assigned', labelEn: 'Assigned', labelEs: 'Asignado' },
+                { key: 'status', labelEn: 'Status', labelEs: 'Estado' },
+                { key: 'fusionStatus', labelEn: 'Fusion Status', labelEs: 'Estado Fusion' }
+            ],
+            ordersStaged: [
+                { key: 'line', labelEn: 'Line', labelEs: 'Línea' },
+                { key: 'ifNum', labelEn: 'IF #', labelEs: 'IF #' },
+                { key: 'poNum', labelEn: 'PO #', labelEs: 'PO #' },
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'part', labelEn: 'Part #', labelEs: 'Parte #' },
+                { key: 'qty', labelEn: 'Qty', labelEs: 'Cant.' },
+                { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
+                { key: 'daysUntil', labelEn: 'Days Until', labelEs: 'Días Restantes' }
+            ],
+            ordersShipped: [
+                { key: 'line', labelEn: 'Line', labelEs: 'Línea' },
+                { key: 'ifNum', labelEn: 'IF #', labelEs: 'IF #' },
+                { key: 'poNum', labelEn: 'PO #', labelEs: 'PO #' },
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'part', labelEn: 'Part #', labelEs: 'Parte #' },
+                { key: 'qty', labelEn: 'Qty', labelEs: 'Cant.' },
+                { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
+                { key: 'shippedDate', labelEn: 'Shipped', labelEs: 'Enviado' }
+            ],
+            inventory: [
+                { key: 'partNumber', labelEn: 'Part Number', labelEs: 'Número de Parte' },
+                { key: 'product', labelEn: 'Product', labelEs: 'Producto' },
+                { key: 'fusionInventory', labelEn: 'Fusion Inventory', labelEs: 'Inventario Fusion' },
+                { key: 'minimums', labelEn: 'Minimums', labelEs: 'Mínimos' },
+                { key: 'status', labelEn: 'Status', labelEs: 'Estado' },
+                { key: 'makeNeeded', labelEn: 'Make Needed', labelEs: 'Producción Necesaria' }
+            ],
+            parts: [
+                { key: 'part', labelEn: 'Part #', labelEs: 'Parte #' },
+                { key: 'orders', labelEn: 'Orders', labelEs: 'Órdenes' },
+                { key: 'units', labelEn: 'Units', labelEs: 'Unidades' },
+                { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
+                { key: 'pl', labelEn: 'P/L', labelEs: 'G/P' },
+                { key: 'margin', labelEn: 'Margin', labelEs: 'Margen' }
+            ],
+            customers: [
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'orders', labelEn: 'Orders', labelEs: 'Órdenes' },
+                { key: 'units', labelEn: 'Units', labelEs: 'Unidades' },
+                { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
+                { key: 'pl', labelEn: 'P/L', labelEs: 'G/P' },
+                { key: 'margin', labelEn: 'Margin', labelEs: 'Margen' }
+            ],
+            dates: [
+                { key: 'month', labelEn: 'Month', labelEs: 'Mes' },
+                { key: 'orders', labelEn: 'Orders', labelEs: 'Órdenes' },
+                { key: 'units', labelEn: 'Units', labelEs: 'Unidades' },
+                { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
+                { key: 'pl', labelEn: 'P/L', labelEs: 'G/P' },
+                { key: 'margin', labelEn: 'Margin', labelEs: 'Margen' }
+            ],
+            palletRecords: [
+                { key: 'timestamp', labelEn: 'Timestamp', labelEs: 'Fecha' },
+                { key: 'orderNum', labelEn: 'Order #', labelEs: 'Orden #' },
+                { key: 'palletNum', labelEn: 'Pallet #', labelEs: 'Paleta #' },
+                { key: 'weight', labelEn: 'Weight', labelEs: 'Peso' },
+                { key: 'dimensions', labelEn: 'Dimensions', labelEs: 'Dimensiones' },
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'photos', labelEn: 'Photos', labelEs: 'Fotos' }
+            ],
+            shippingRecords: [
+                { key: 'timestamp', labelEn: 'Timestamp', labelEs: 'Fecha' },
+                { key: 'carrier', labelEn: 'Carrier', labelEs: 'Transportista' },
+                { key: 'ifNum', labelEn: 'IF #', labelEs: 'IF #' },
+                { key: 'system', labelEn: 'System', labelEs: 'Sistema' },
+                { key: 'photos', labelEn: 'Photos', labelEs: 'Fotos' }
+            ],
+            stagedRecords: [
+                { key: 'timestamp', labelEn: 'Timestamp', labelEs: 'Fecha' },
+                { key: 'lineNum', labelEn: 'Line #', labelEs: 'Línea #' },
+                { key: 'ifNum', labelEn: 'IF #', labelEs: 'IF #' },
+                { key: 'qty', labelEn: 'Qty', labelEs: 'Cant.' },
+                { key: 'pallets', labelEn: 'Pallets', labelEs: 'Paletas' },
+                { key: 'stagedBy', labelEn: 'Staged By', labelEs: 'Preparado Por' },
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'status', labelEn: 'Status', labelEs: 'Estado' }
+            ],
+            allData: [
+                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
+            ],
+            fpRef: [
+                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
+            ],
+            custRef: [
+                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
+            ],
+            quotes: [
+                { key: 'all', labelEn: 'All Columns', labelEs: 'Todas las Columnas' }
+            ]
+        };
+        
+        function openColumnToggle(tableId) {
+            if (!tableColumnDefs[tableId]) return;
+            initHiddenColumns(tableId);
+            
+            activeColumnToggle = { tableId, columns: tableColumnDefs[tableId] };
+            
+            const dropdown = document.getElementById('columnToggleDropdown');
+            const overlay = document.getElementById('columnToggleOverlay');
+            const list = document.getElementById('columnToggleList');
+            
+            // Render column list with checkboxes
+            list.innerHTML = activeColumnToggle.columns.map(col => {
+                const isHidden = hiddenColumns[tableId] && hiddenColumns[tableId].has(col.key);
+                const label = currentLang === 'es' ? col.labelEs : col.labelEn;
+                const itemClass = isHidden ? 'column-toggle-item hidden-col' : 'column-toggle-item';
+                return `<div class="${itemClass}">
+                    <input type="checkbox" id="col_${col.key}" ${!isHidden ? 'checked' : ''} 
+                           onchange="toggleColumnVisibility('${tableId}', '${col.key}')">
+                    <label for="col_${col.key}">${label}</label>
+                </div>`;
+            }).join('');
+            
+            dropdown.classList.add('active');
+            overlay.classList.add('active');
+        }
+        
+        function closeColumnToggle() {
+            const dropdown = document.getElementById('columnToggleDropdown');
+            const overlay = document.getElementById('columnToggleOverlay');
+            dropdown.classList.remove('active');
+            overlay.classList.remove('active');
+            activeColumnToggle = null;
+        }
+        
+        function toggleColumnVisibility(tableId, columnKey) {
+            initHiddenColumns(tableId);
+            if (hiddenColumns[tableId].has(columnKey)) {
+                hiddenColumns[tableId].delete(columnKey);
+            } else {
+                hiddenColumns[tableId].add(columnKey);
+            }
+            updateColumnsButton(tableId);
+            refreshTableAfterFilter(tableId);
+            
+            // Update the visual state of the item in the dropdown
+            if (activeColumnToggle && activeColumnToggle.tableId === tableId) {
+                const item = document.querySelector(`#col_${columnKey}`).closest('.column-toggle-item');
+                if (item) {
+                    item.classList.toggle('hidden-col', hiddenColumns[tableId].has(columnKey));
+                }
+            }
+        }
+        
+        function columnSelectAll() {
+            if (!activeColumnToggle) return;
+            const { tableId } = activeColumnToggle;
+            if (hiddenColumns[tableId]) {
+                hiddenColumns[tableId].clear();
+            }
+            updateColumnsButton(tableId);
+            refreshTableAfterFilter(tableId);
+            // Re-render list
+            openColumnToggle(tableId);
+        }
+        
+        function columnDeselectAll() {
+            if (!activeColumnToggle) return;
+            const { tableId, columns } = activeColumnToggle;
+            initHiddenColumns(tableId);
+            columns.forEach(col => hiddenColumns[tableId].add(col.key));
+            updateColumnsButton(tableId);
+            refreshTableAfterFilter(tableId);
+            // Re-render list
+            openColumnToggle(tableId);
+        }
+        
+        function updateColumnsButton(tableId) {
+            const btnId = tableId + 'ColumnsBtn';
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                const hiddenCount = hiddenColumns[tableId] ? hiddenColumns[tableId].size : 0;
+                const hasHidden = hiddenCount > 0;
+                btn.classList.toggle('has-hidden', hasHidden);
+                const spanEl = btn.querySelector('span');
+                if (spanEl) {
+                    spanEl.textContent = hasHidden ? `${t('ui.columns')} (${hiddenCount})` : t('ui.columns');
+                }
+            }
+            // Also update old show-hidden button for backwards compatibility
+            updateShowHiddenButton(tableId);
         }
         
         function getUniqueValuesForColumn(tableId, columnKey) {
