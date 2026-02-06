@@ -10016,12 +10016,12 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
             
             voiceRecognition.onend = () => {
                 console.log('[Voice] Ended');
-                const input = document.getElementById('aiChatInput');
                 stopVoiceInput();
-                // Auto-send if we have text
-                if (input.value.trim()) {
-                    setTimeout(() => sendAiMessage(), 300);
-                }
+                // Focus input so user can edit or press Enter to send
+                const input = document.getElementById('aiChatInput');
+                input.focus();
+                // Place cursor at end of text
+                input.selectionStart = input.selectionEnd = input.value.length;
             };
         }
         
