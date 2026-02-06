@@ -1215,6 +1215,131 @@
             .mobile-header { display: none !important; } /* More space for content */
             .main-content { padding-top: 8px !important; }
         }
+        
+        /* ============================================================
+           MOBILE MODE - Card-based views
+           ============================================================ */
+        
+        /* Bottom Navigation Bar */
+        .mobile-bottom-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--bg-card); border-top: 1px solid var(--border);
+            padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom));
+            z-index: 2000; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+        .mobile-bottom-nav-inner {
+            display: flex; justify-content: space-around; align-items: center;
+            max-width: 500px; margin: 0 auto;
+        }
+        .mobile-nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 6px 12px; border-radius: 8px; cursor: pointer;
+            transition: all 0.2s; color: var(--text-secondary); text-decoration: none;
+            min-width: 60px;
+        }
+        .mobile-nav-item:hover, .mobile-nav-item.active {
+            background: rgba(49,130,206,0.15); color: var(--accent);
+        }
+        .mobile-nav-item .nav-icon { font-size: 20px; margin-bottom: 2px; }
+        .mobile-nav-item .nav-label { font-size: 10px; font-weight: 600; }
+        
+        /* Order Cards */
+        .mobile-cards-container {
+            display: none; flex-direction: column; gap: 10px;
+            padding: 10px; padding-bottom: 80px;
+        }
+        .mobile-order-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .mobile-order-card.urgent {
+            border-left: 4px solid var(--danger);
+            background: linear-gradient(90deg, rgba(229,62,62,0.1) 0%, var(--bg-card) 20%);
+        }
+        .mobile-order-card.overdue {
+            border-left: 4px solid var(--warning);
+            background: linear-gradient(90deg, rgba(214,158,46,0.1) 0%, var(--bg-card) 20%);
+        }
+        .mobile-card-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .mobile-card-title {
+            font-size: 16px; font-weight: 700; color: var(--text-primary);
+        }
+        .mobile-card-subtitle {
+            font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+        }
+        .mobile-card-badge {
+            padding: 4px 10px; border-radius: 12px; font-size: 10px;
+            font-weight: 700; text-transform: uppercase;
+        }
+        .mobile-card-badge.urgent { background: var(--danger); color: white; }
+        .mobile-card-badge.staged { background: var(--success); color: white; }
+        .mobile-card-badge.wip { background: var(--warning); color: black; }
+        .mobile-card-badge.pending { background: var(--accent); color: white; }
+        .mobile-card-body {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
+        .mobile-card-field {
+            display: flex; flex-direction: column;
+        }
+        .mobile-card-field.full-width { grid-column: 1 / -1; }
+        .mobile-card-label {
+            font-size: 10px; color: var(--text-secondary); 
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .mobile-card-value {
+            font-size: 14px; font-weight: 600; color: var(--text-primary);
+        }
+        .mobile-card-value.large { font-size: 18px; }
+        .mobile-card-value.danger { color: var(--danger); }
+        .mobile-card-value.success { color: var(--success); }
+        .mobile-card-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+        }
+        .mobile-card-date {
+            font-size: 11px; color: var(--text-secondary);
+        }
+        .mobile-card-date.overdue { color: var(--danger); font-weight: 600; }
+        
+        /* Mobile mode summary cards */
+        .mobile-summary-bar {
+            display: none; padding: 12px; background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+        }
+        .mobile-summary-stats {
+            display: flex; justify-content: space-around; text-align: center;
+        }
+        .mobile-summary-stat .stat-value { font-size: 20px; font-weight: 700; color: var(--accent); }
+        .mobile-summary-stat .stat-label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
+        
+        /* Mobile filter chips */
+        .mobile-filter-bar {
+            display: none; padding: 10px; overflow-x: auto;
+            -webkit-overflow-scrolling: touch; white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+        .mobile-filter-chip {
+            display: inline-block; padding: 8px 14px; margin-right: 8px;
+            background: var(--bg-dark); border: 1px solid var(--border);
+            border-radius: 20px; font-size: 12px; cursor: pointer;
+        }
+        .mobile-filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+        
+        /* Show mobile elements on small screens */
+        @media (max-width: 480px) {
+            body.mobile-mode .mobile-bottom-nav { display: block; }
+            body.mobile-mode .mobile-cards-container { display: flex; }
+            body.mobile-mode .mobile-summary-bar { display: block; }
+            body.mobile-mode .mobile-filter-bar { display: flex; }
+            body.mobile-mode .scrollable-table { display: none; }
+            body.mobile-mode .toolbar { display: none; }
+            body.mobile-mode .chart-container { display: none; }
+            body.mobile-mode .ai-chat-fab { bottom: 70px; }
+        }
     </style>
 </head>
 <body>
@@ -1578,6 +1703,37 @@
                 <p><strong id="ordersQueueMissingCount">0</strong> <span data-i18n="prod.missingMsg">orders have missing components.</span></p>
             </div>
             <div style="display:none;"><span id="ordersQueueLastUpdated">-</span></div>
+            
+            <!-- Mobile Summary Bar -->
+            <div class="mobile-summary-bar">
+                <div class="mobile-summary-stats">
+                    <div class="mobile-summary-stat">
+                        <div class="stat-value" id="mobileOrdersCount">-</div>
+                        <div class="stat-label">Orders</div>
+                    </div>
+                    <div class="mobile-summary-stat">
+                        <div class="stat-value" style="color:var(--danger);" id="mobileUrgentCount">-</div>
+                        <div class="stat-label">Urgent</div>
+                    </div>
+                    <div class="mobile-summary-stat">
+                        <div class="stat-value" style="color:var(--warning);" id="mobileDueCount">-</div>
+                        <div class="stat-label">Due This Week</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Filter Chips -->
+            <div class="mobile-filter-bar">
+                <span class="mobile-filter-chip active" onclick="mobileFilterOrders('all')">All</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('urgent')">🔴 Urgent</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('due-week')">📅 Due This Week</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('rolltech')">Roll Tech</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('molding')">Molding</span>
+            </div>
+            
+            <!-- Mobile Cards Container -->
+            <div class="mobile-cards-container" id="mobileCardsContainer"></div>
+            
             <div class="chart-container" style="margin:0 8px;">
                 <div class="chart-header" style="padding:4px 12px;"><h3 data-i18n="table.ordersToMake" style="font-size:13px;">Orders to Make</h3><span style="color:var(--text-secondary);font-size:11px;" id="ordersQueueTableCount">-</span></div>
                 <div class="scrollable-table" style="max-height:calc(100vh - 100px);">
@@ -10545,6 +10701,163 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             loadSavedTheme();
             loadDashboard();
         });
+    </script>
+<!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="mobile-bottom-nav-inner">
+            <a class="mobile-nav-item active" data-page="main" onclick="mobileNavTo('main')">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </a>
+            <a class="mobile-nav-item" data-page="orders-queue" onclick="mobileNavTo('orders-queue')">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Orders</span>
+            </a>
+            <a class="mobile-nav-item" data-page="orders-staged" onclick="mobileNavTo('orders-staged')">
+                <span class="nav-icon">📦</span>
+                <span class="nav-label">Staged</span>
+            </a>
+            <a class="mobile-nav-item" data-page="inventory" onclick="mobileNavTo('inventory')">
+                <span class="nav-icon">🏭</span>
+                <span class="nav-label">Inventory</span>
+            </a>
+            <a class="mobile-nav-item" onclick="toggleAiChat()">
+                <span class="nav-icon">🤖</span>
+                <span class="nav-label">Phil</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+    // ============================================================
+    // MOBILE MODE FUNCTIONS
+    // ============================================================
+    
+    // Auto-enable mobile mode on small screens
+    function checkMobileMode() {
+        const isMobile = window.innerWidth <= 480;
+        document.body.classList.toggle('mobile-mode', isMobile);
+        return isMobile;
+    }
+    
+    // Initialize on load and resize
+    window.addEventListener('load', checkMobileMode);
+    window.addEventListener('resize', checkMobileMode);
+    
+    // Mobile navigation
+    function mobileNavTo(page) {
+        // Update active state
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.page === page);
+        });
+        
+        // Navigate to page
+        navigateTo(page);
+        
+        // Render mobile cards for relevant pages
+        if (['orders-queue', 'orders-staged', 'orders-shipped'].includes(page)) {
+            renderMobileOrderCards(page);
+        }
+    }
+    
+    // Render order cards for mobile view
+    function renderMobileOrderCards(pageType) {
+        const container = document.getElementById('mobileCardsContainer');
+        if (!container) return;
+        
+        let orders = [];
+        let filterFn = () => true;
+        
+        if (pageType === 'orders-queue') {
+            filterFn = row => {
+                const status = getStatus(row);
+                return status === 'pending' || status === 'wip';
+            };
+        } else if (pageType === 'orders-staged') {
+            filterFn = row => getStatus(row) === 'staged';
+        } else if (pageType === 'orders-shipped') {
+            filterFn = row => getStatus(row) === 'shipped';
+        }
+        
+        orders = allData.filter(filterFn);
+        
+        // Sort by urgency then days until
+        orders.sort((a, b) => {
+            const aUrgent = isUrgent(a) ? 0 : 1;
+            const bUrgent = isUrgent(b) ? 0 : 1;
+            if (aUrgent !== bUrgent) return aUrgent - bUrgent;
+            return parseNumber(getVal(a, 'DAYS_UNTIL')) - parseNumber(getVal(b, 'DAYS_UNTIL'));
+        });
+        
+        // Render cards
+        container.innerHTML = orders.slice(0, 50).map(row => {
+            const line = getVal(row, 'LINE') || '-';
+            const customer = getVal(row, 'CUSTOMER') || '-';
+            const part = getVal(row, 'PART') || '-';
+            const qty = formatNumber(parseNumber(getVal(row, 'QTY')));
+            const status = getStatus(row);
+            const days = parseNumber(getVal(row, 'DAYS_UNTIL'));
+            const urgent = isUrgent(row);
+            const dueDate = getVal(row, 'REQUESTED_DATE') || '-';
+            const tire = getVal(row, 'TIRE') || '-';
+            const hub = getVal(row, 'HUB') || '-';
+            
+            let cardClass = 'mobile-order-card';
+            if (urgent) cardClass += ' urgent';
+            else if (days < 0) cardClass += ' overdue';
+            
+            let badgeClass = 'mobile-card-badge ' + status;
+            let badgeText = status.toUpperCase();
+            if (urgent) { badgeClass = 'mobile-card-badge urgent'; badgeText = 'URGENT'; }
+            
+            let daysText = days >= 0 ? `${days} days` : `${Math.abs(days)} days overdue`;
+            let daysClass = days < 0 ? 'overdue' : '';
+            
+            return `
+                <div class="${cardClass}" onclick="showPalletPictures('${line}')">
+                    <div class="mobile-card-header">
+                        <div>
+                            <div class="mobile-card-title">${customer}</div>
+                            <div class="mobile-card-subtitle">Line ${line} • ${part}</div>
+                        </div>
+                        <span class="${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Quantity</span>
+                            <span class="mobile-card-value large">${qty}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Due</span>
+                            <span class="mobile-card-value ${days < 0 ? 'danger' : ''}">${daysText}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Tire</span>
+                            <span class="mobile-card-value">${tire}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">Hub</span>
+                            <span class="mobile-card-value">${hub}</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-footer">
+                        <span class="mobile-card-date ${daysClass}">📅 ${dueDate}</span>
+                        <span style="color:var(--text-secondary);font-size:11px;">Tap for details →</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Show count
+        const countEl = container.previousElementSibling?.querySelector('.mobile-summary-stat .stat-value');
+        if (countEl) countEl.textContent = orders.length;
+    }
+    
+    // Helper to check if order is urgent
+    function isUrgent(row) {
+        const u = (getVal(row, 'URGENT') || '').toString().toLowerCase().trim();
+        return u === 'urgent' || u === 'true' || u === '1' || u === 'yes' || u === 'x';
+    }
     </script>
 </body>
 </html>
