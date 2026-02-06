@@ -1049,27 +1049,52 @@
             .dept-card { padding: 12px; border-radius: 8px; }
             
             /* Page containers: edge to edge */
-            .page { padding: 0; }
-            .page h2 { font-size: 16px; margin-bottom: 10px; padding: 0 8px; }
+            .page { padding: 0 8px; }
+            .page h2 { font-size: 16px; margin-bottom: 8px; }
+            .page-header { padding: 8px 0; flex-wrap: wrap; gap: 8px; }
+            .page-header h2 { font-size: 16px; }
+            .page-header p { font-size: 11px; }
+            
+            /* Stats grid: 2x2 on mobile */
+            .stats-grid { 
+                grid-template-columns: 1fr 1fr; 
+                gap: 8px; 
+                margin-bottom: 10px; 
+            }
+            .stat-card { padding: 10px; border-radius: 8px; }
+            .stat-card .value { font-size: 20px; }
+            .stat-card .label { font-size: 10px; }
+            .stat-card .sub { font-size: 9px; }
             
             /* Cards: reduce border radius, full width */
             .card, .section-card, .chart-container { 
                 border-radius: 8px; 
-                margin: 0 -8px 8px -8px;
-                padding: 10px;
+                margin: 0 0 8px 0;
+                padding: 8px;
             }
             
-            /* Toolbar: stack vertically */
+            /* Toolbar: compact horizontal scroll on mobile */
             .toolbar {
-                flex-direction: column; align-items: stretch; gap: 10px;
-                padding: 12px; margin-bottom: 12px;
+                flex-wrap: nowrap; overflow-x: auto; gap: 8px;
+                padding: 8px 10px; margin-bottom: 8px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
             }
+            .toolbar::-webkit-scrollbar { display: none; }
             .toolbar .category-filters { 
-                display: flex; flex-wrap: wrap; gap: 6px; 
-                justify-content: center;
+                display: flex; flex-wrap: nowrap; gap: 4px; 
             }
-            .toolbar .category-btn { padding: 8px 12px; font-size: 11px; flex: 1; min-width: 80px; text-align: center; }
-            .toolbar input[type="text"] { width: 100%; padding: 12px; font-size: 14px; }
+            .toolbar .category-btn, .toolbar .toolbar-btn { 
+                padding: 6px 10px; font-size: 10px; white-space: nowrap; 
+                flex-shrink: 0;
+            }
+            .toolbar input[type="text"] { 
+                min-width: 120px; max-width: 150px; 
+                padding: 8px 10px; font-size: 13px; 
+                flex-shrink: 0;
+            }
+            .toolbar-spacer { display: none; }
+            .toolbar-group { display: flex; gap: 4px; flex-shrink: 0; }
             
             /* Tables: horizontal scroll with touch */
             .scrollable-table {
@@ -1335,10 +1360,24 @@
             body.mobile-mode .mobile-cards-container { display: flex; }
             body.mobile-mode .mobile-summary-bar { display: block; }
             body.mobile-mode .mobile-filter-bar { display: flex; }
-            body.mobile-mode .scrollable-table { display: none; }
-            body.mobile-mode .toolbar { display: none; }
-            body.mobile-mode .chart-container { display: none; }
+            /* Tables stay visible but optimized for mobile scroll */
+            body.mobile-mode .scrollable-table { 
+                display: block; 
+                max-height: calc(100vh - 200px);
+                margin: 0;
+                border-radius: 0;
+            }
+            body.mobile-mode .chart-container { 
+                margin: 0 !important; 
+                border-radius: 0;
+            }
+            body.mobile-mode .chart-container .chart-header { padding: 8px 12px; }
             body.mobile-mode .ai-chat-fab { bottom: 70px; }
+            body.mobile-mode .main-content { padding-bottom: 70px !important; }
+            
+            /* Hide cards container if it has no content (fallback to table) */
+            body.mobile-mode .mobile-cards-container:empty { display: none; }
+            body.mobile-mode .mobile-cards-container:empty + .chart-container .scrollable-table { display: block; }
         }
     </style>
 </head>
