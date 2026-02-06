@@ -906,9 +906,12 @@
         .ai-chat-input-area textarea {
             flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px;
             padding: 10px 14px; color: var(--text-primary); font-size: 13px; outline: none;
-            transition: border-color 0.2s; resize: none; min-height: 40px; max-height: 80px;
+            transition: border-color 0.2s, max-height 0.2s; resize: vertical; min-height: 40px; max-height: 150px;
             line-height: 1.4; font-family: inherit; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg-card);
         }
+        .ai-chat-input-area textarea::-webkit-scrollbar { width: 6px; }
+        .ai-chat-input-area textarea::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
         .ai-chat-input-area textarea::placeholder { color: var(--text-secondary); }
         .ai-chat-input-area textarea:focus { border-color: #4285f4; }
         .ai-chat-input-area button.ai-send-btn {
@@ -2094,7 +2097,7 @@
         </div>
         <div class="ai-suggestions" id="aiSuggestions"></div>
         <div class="ai-chat-input-area" style="position:relative;">
-            <textarea id="aiChatInput" data-i18n-placeholder="ai.placeholder" placeholder="Ask about your data..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px';"></textarea>
+            <textarea id="aiChatInput" data-i18n-placeholder="ai.placeholder" placeholder="Ask about your data..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,150)+'px';"></textarea>
             <button class="ai-voice-mode-toggle" id="aiVoiceModeToggle" onclick="toggleVoiceMode()" title="Toggle auto-send">✏️</button>
             <button class="ai-voice-btn" id="aiVoiceBtn" onclick="toggleVoiceInput()" title="Voice input">🎤</button>
             <span class="ai-voice-status" id="aiVoiceStatus">Listening...</span>
@@ -10047,7 +10050,7 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                 input.value = displayText;
                 // Auto-resize textarea
                 input.style.height = 'auto';
-                input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+                input.style.height = Math.min(input.scrollHeight, 150) + 'px';
                 document.getElementById('aiVoiceStatus').textContent = currentLang === 'es' ? 'Escuchando...' : 'Listening...';
                 console.log('[Voice] Transcript:', displayText.substring(0, 50) + '...');
             };
