@@ -1695,7 +1695,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.12</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.13</div>
     </div>
 
     <div class="main-content">
@@ -5239,6 +5239,10 @@
             document.getElementById('ordersQueueBtnMolding').classList.toggle('active', ordersQueueFilters.categories.molding);
             document.getElementById('ordersQueueBtnSnapPad').classList.toggle('active', ordersQueueFilters.categories.snappad);
             updateOrdersQueuePage();
+            // Also update mobile cards if in mobile/tablet mode
+            if (document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait')) {
+                renderMobileOrderCards('orders-queue');
+            }
         }
         
         // ============================================================
@@ -11012,7 +11016,10 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         if (pageType === 'orders-queue') {
             filterFn = row => {
                 const status = getStatus(row);
-                return status === 'pending' || status === 'wip';
+                const cat = getCategory(row);
+                // Also check category filters (Roll Tech / Molding / Snap Pad buttons)
+                const catOk = typeof ordersQueueFilters !== 'undefined' ? ordersQueueFilters.categories[cat] : true;
+                return (status === 'pending' || status === 'wip') && catOk;
             };
         } else if (pageType === 'orders-staged') {
             filterFn = row => getStatus(row) === 'staged';
