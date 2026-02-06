@@ -1250,12 +1250,14 @@
             body { --sidebar-width: 240px; }
             
             /* Enable mobile mode for cards */
-            body.tablet-portrait .mobile-bottom-nav { display: block; }
-            body.tablet-portrait .mobile-cards-container { display: flex; }
-            body.tablet-portrait .mobile-summary-bar { display: block; }
-            body.tablet-portrait .scrollable-table { display: none; }
-            body.tablet-portrait .ai-chat-fab { bottom: 70px; }
-            body.tablet-portrait .main-content { padding-bottom: 70px; }
+            body.tablet-portrait .mobile-bottom-nav { display: block !important; }
+            body.tablet-portrait .mobile-cards-container { display: flex !important; flex-direction: column; gap: 12px; padding: 12px; }
+            body.tablet-portrait .mobile-summary-bar { display: block !important; }
+            body.tablet-portrait .scrollable-table { display: none !important; }
+            body.tablet-portrait .ai-chat-fab { bottom: 70px !important; }
+            body.tablet-portrait .main-content { padding-bottom: 70px !important; }
+            body.tablet-portrait .chart-container { display: block; }
+            body.tablet-portrait .toolbar { display: none; }
             
             /* Larger cards for iPad */
             body.tablet-portrait .mobile-order-card { padding: 18px; }
@@ -10864,50 +10866,75 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
     // Auto-enable mobile/tablet mode based on screen size and orientation
     function checkMobileMode() {
         const width = window.innerWidth;
-        const isPortrait = window.innerHeight > window.innerWidth;
+        const height = window.innerHeight;
+        const isPortrait = height > width;
         
         // iPhone: width <= 480px
         const isMobile = width <= 480;
         
         // iPad Portrait: 481-1024px in portrait orientation
-        const isTabletPortrait = width > 480 && width <= 1024 && isPortrait;
+        // Also trigger on width 768-834 which is common iPad portrait widths
+        const isTabletPortrait = (width > 480 && width <= 1024 && isPortrait) || 
+                                  (width >= 768 && width <= 834);
+        
+        console.log('[MobileMode] width:', width, 'height:', height, 'portrait:', isPortrait, 'mobile:', isMobile, 'tablet-portrait:', isTabletPortrait);
         
         document.body.classList.toggle('mobile-mode', isMobile);
         document.body.classList.toggle('tablet-portrait', isTabletPortrait);
         
-        // Render cards if in card mode
-        if ((isMobile || isTabletPortrait) && typeof renderMobileOrderCards === 'function') {
-            const currentPage = document.querySelector('.page.active')?.id || 'main';
-            setTimeout(() => {
-                if (currentPage === 'orders-queue') renderMobileOrderCards('orders-queue');
-                else if (currentPage === 'orders-staged' && typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
-                else if (currentPage === 'inventory' && typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
-            }, 100);
+        // Force show bottom nav and cards container for debugging
+        if (isMobile || isTabletPortrait) {
+            const bottomNav = document.getElementById('mobileBottomNav');
+            if (bottomNav) bottomNav.style.display = 'block';
         }
         
         return isMobile || isTabletPortrait;
     }
     
+    // Force render cards for current page
+    function forceRenderCards() {
+        console.log('[Cards] Force rendering...');
+        const pages = ['orders-queue', 'orders-staged', 'inventory'];
+        
+        // Render for orders-queue
+        if (typeof renderMobileOrderCards === 'function') {
+            renderMobileOrderCards('orders-queue');
+            console.log('[Cards] Rendered orders-queue');
+        }
+        
+        // Render for staged
+        if (typeof renderMobileStagedCards === 'function') {
+            renderMobileStagedCards();
+            console.log('[Cards] Rendered staged');
+        }
+        
+        // Render for inventory
+        if (typeof renderMobileInventoryCards === 'function') {
+            renderMobileInventoryCards();
+            console.log('[Cards] Rendered inventory');
+        }
+    }
+    
     // Initialize on load, resize, and orientation change
     window.addEventListener('load', () => {
         checkMobileMode();
-        // Render cards after data loads (give it time)
+        // Render ALL cards after data loads (give it time)
         setTimeout(() => {
-            if (document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait')) {
-                const currentPage = document.querySelector('.page:not([style*="display: none"])')?.id || 
-                                   document.querySelector('.nav-item.active')?.dataset?.page || 'main';
-                console.log('[Mobile] Initial render for page:', currentPage);
-                if (currentPage === 'orders-queue' || currentPage === 'main') {
-                    if (typeof renderMobileOrderCards === 'function') renderMobileOrderCards('orders-queue');
-                }
-                if (currentPage === 'orders-staged') {
-                    if (typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
-                }
-                if (currentPage === 'inventory') {
-                    if (typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
-                }
+            const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
+            console.log('[Mobile] Page loaded, card mode:', isCardMode);
+            if (isCardMode) {
+                forceRenderCards();
             }
-        }, 2000); // Wait for data to load
+        }, 2500); // Wait for data to load
+        
+        // Also try again after 5 seconds in case data was slow
+        setTimeout(() => {
+            const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
+            if (isCardMode) {
+                console.log('[Mobile] Retry render after 5s');
+                forceRenderCards();
+            }
+        }, 5000);
     });
     window.addEventListener('resize', checkMobileMode);
     window.addEventListener('orientationchange', () => {
