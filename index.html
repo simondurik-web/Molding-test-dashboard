@@ -10026,19 +10026,40 @@ ${salesUnlocked ? '✅ Sales & Finance UNLOCKED. You can answer questions about 
         }
         
         function toggleVoiceInput() {
+            console.log('[Voice] toggleVoiceInput called');
+            
+            // Check browser support first
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.log('[Voice] Not supported in this browser');
+                alert(currentLang === 'es' ? 'Entrada de voz no soportada en este navegador. Usa Chrome o Safari.' : 'Voice input not supported in this browser. Use Chrome or Safari.');
+                return;
+            }
+            
             if (!voiceRecognition) {
                 initVoiceRecognition();
-                if (!voiceRecognition) return;
+                if (!voiceRecognition) {
+                    console.log('[Voice] Failed to initialize');
+                    return;
+                }
             }
             
             // Update language based on current setting
             voiceRecognition.lang = currentLang === 'es' ? 'es-MX' : 'en-US';
+            console.log('[Voice] Language set to:', voiceRecognition.lang);
             
             if (isListening) {
+                console.log('[Voice] Stopping...');
                 voiceRecognition.stop();
             } else {
+                console.log('[Voice] Starting...');
                 document.getElementById('aiChatInput').value = '';
-                voiceRecognition.start();
+                try {
+                    voiceRecognition.start();
+                } catch (e) {
+                    console.error('[Voice] Start error:', e);
+                    alert(currentLang === 'es' ? 'Error al iniciar el micrófono: ' + e.message : 'Error starting microphone: ' + e.message);
+                }
             }
         }
         
