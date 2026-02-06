@@ -993,12 +993,12 @@
             /* Sidebar: slide-in overlay (not full screen) */
             .sidebar {
                 width: 280px; height: 100vh;
-                transform: translateX(-100%);
+                transform: translateX(0); /* Show by default when not collapsed */
                 z-index: 3000;
                 padding-top: 16px;
                 box-shadow: 4px 0 20px rgba(0,0,0,0.5);
             }
-            .sidebar.open { transform: translateX(0); }
+            .sidebar.collapsed { transform: translateX(-100%); } /* Hide when collapsed */
             .sidebar .nav-item { padding: 14px 20px; font-size: 14px; }
             .sidebar .nav-item i { font-size: 18px; min-width: 28px; }
             .sidebar .nav-section { padding: 10px 16px; font-size: 11px; }
@@ -1007,9 +1007,8 @@
             .sidebar .logo { padding: 12px 16px; }
             .sidebar .logo h1 { font-size: 18px; }
             
-            /* Sidebar overlay - darken background when open */
+            /* Sidebar overlay - managed via .active class */
             .sidebar-overlay { z-index: 2999; }
-            .sidebar-overlay.active { display: block; }
             
             /* Main content: TRUE full width, no margin */
             .main-content { 
@@ -4548,20 +4547,35 @@
             const tabBtn = document.getElementById('sidebarTabBtn');
             const main = document.querySelector('.main-content');
             const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 480;
+            
             const isCollapsed = sidebar.classList.toggle('collapsed');
-            sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
+            
+            if (isMobile) {
+                // On mobile: show overlay when sidebar is open (not collapsed)
+                if (overlay) overlay.classList.toggle('active', !isCollapsed);
+            } else {
+                // On desktop: no overlay needed
+                if (overlay) overlay.classList.remove('active');
+            }
+            
             main.classList.toggle('expanded', isCollapsed);
             tabBtn.classList.toggle('visible', isCollapsed);
             hideBtn.textContent = '✕ Hide';
             localStorage.setItem('sidebarCollapsed', isCollapsed);
         }
-        // Restore sidebar state
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            document.getElementById('mainSidebar').classList.add('collapsed');
-            document.getElementById('sidebarTabBtn').classList.add('visible');
-            document.querySelector('.main-content').classList.add('expanded');
-        }
+        // Restore sidebar state (or auto-collapse on mobile)
+        (function initSidebar() {
+            const isMobile = window.innerWidth <= 480;
+            const wasCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            
+            // On mobile, always start collapsed
+            if (isMobile || wasCollapsed) {
+                document.getElementById('mainSidebar').classList.add('collapsed');
+                document.getElementById('sidebarTabBtn').classList.add('visible');
+                document.querySelector('.main-content').classList.add('expanded');
+            }
+        })();
         
         function navigateTo(page) {
             // Check if trying to access sales pages without unlock
