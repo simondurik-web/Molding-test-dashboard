@@ -1512,24 +1512,57 @@
             body.mobile-mode #orders-staged .toolbar { display: none !important; }
             body.mobile-mode #orders-staged .stats-grid { display: none !important; }
             body.mobile-mode #orders-staged .page-header { padding-top: 50px; }
-            /* Tables stay visible but optimized for mobile scroll */
-            body.mobile-mode .scrollable-table { 
+            /* HIDE tables when cards are active - cards take priority */
+            body.mobile-mode .page.has-card-view .scrollable-table { display: none !important; }
+            body.mobile-mode .page.has-card-view .chart-container { display: none !important; }
+            /* Show tables only on pages without card views */
+            body.mobile-mode .page:not(.has-card-view) .scrollable-table { 
                 display: block; 
                 max-height: calc(100vh - 200px);
                 margin: 0;
                 border-radius: 0;
             }
-            body.mobile-mode .chart-container { 
-                margin: 0 !important; 
-                border-radius: 0;
-            }
             body.mobile-mode .chart-container .chart-header { padding: 8px 12px; }
             body.mobile-mode .ai-chat-fab { bottom: 70px; }
             body.mobile-mode .main-content { padding-bottom: 70px !important; }
-            
-            /* Hide cards container if it has no content (fallback to table) */
-            body.mobile-mode .mobile-cards-container:empty { display: none; }
-            body.mobile-mode .mobile-cards-container:empty + .chart-container .scrollable-table { display: block; }
+        }
+        
+        /* Rotate message for pages without card view */
+        .mobile-rotate-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            min-height: 50vh;
+        }
+        .mobile-rotate-message .rotate-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: rotateHint 2s ease-in-out infinite;
+        }
+        @keyframes rotateHint {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+        .mobile-rotate-message h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        .mobile-rotate-message p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 280px;
+        }
+        @media (max-width: 480px) {
+            body.mobile-mode .page:not(.has-card-view) .mobile-rotate-message { display: flex; }
+            body.mobile-mode .page:not(.has-card-view) .scrollable-table { display: none !important; }
+            body.mobile-mode .page:not(.has-card-view) .chart-container { display: none !important; }
+            body.mobile-mode .page:not(.has-card-view) .toolbar { display: none !important; }
+            body.mobile-mode .page:not(.has-card-view) .stats-grid { display: none !important; }
         }
     </style>
 </head>
@@ -1735,7 +1768,7 @@
         <div id="loadingState" class="loading"><div class="spinner"></div><p style="margin-top:18px;color:var(--text-secondary);" data-i18n="loading">Loading data from Google Sheets...</p></div>
 
         <!-- MAIN DASHBOARD -->
-        <div id="main" class="page">
+        <div id="main" class="page has-card-view">
             <div class="page-header">
                 <div><h2 data-i18n="main.title">Operations Dashboard</h2><p data-i18n="main.subtitle">Real-time overview of manufacturing operations</p></div>
                 <div class="last-updated"><span class="dot"></span><span id="lastUpdated">Loading...</span></div>
@@ -1864,7 +1897,7 @@
         </div>
 
         <!-- ORDERS QUEUE PAGE (Need to Package) -->
-        <div id="orders-queue" class="page">
+        <div id="orders-queue" class="page has-card-view">
             <div class="orders-queue-toolbar" style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:8px;flex-wrap:wrap;">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                     <button class="category-btn rolltech active" id="ordersQueueBtnRollTech" onclick="toggleOrdersQueueCategory('rolltech')" style="padding:4px 10px;font-size:11px;"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
@@ -1939,7 +1972,7 @@
             </div>
         </div>
         <!-- ORDERS STAGED PAGE -->
-        <div id="orders-staged" class="page">
+        <div id="orders-staged" class="page has-card-view">
             <div class="page-header">
                 <div><h2 data-i18n="ordersStaged.title">Staged Orders - Ready to Ship</h2></div>
                 <button class="toolbar-btn" onclick="navigateTo('main')">←  Back</button>
@@ -2014,7 +2047,7 @@
         </div>
 
         <!-- INVENTORY PAGE -->
-        <div id="inventory" class="page">
+        <div id="inventory" class="page has-card-view">
             <div class="page-header">
                 <div><h2 data-i18n="inv.title">Inventory Management</h2></div>
             </div>
@@ -2977,7 +3010,26 @@
                 // Voice input
                 'ai.voiceListening': 'Listening...',
                 'ai.voiceNotSupported': 'Voice input not supported in this browser',
-                'ai.voiceMicDenied': 'Microphone permission denied. Please allow microphone access.'
+                'ai.voiceMicDenied': 'Microphone permission denied. Please allow microphone access.',
+                // Mobile card view
+                'mobile.rotateTitle': 'Rotate for Full View',
+                'mobile.rotateDesc': 'This section is optimized for landscape viewing. Please rotate your device for the best experience.',
+                'mobile.quantity': 'Quantity',
+                'mobile.due': 'Due',
+                'mobile.tire': 'Tire',
+                'mobile.hub': 'Hub',
+                'mobile.daysOverdue': 'days overdue',
+                'mobile.days': 'days',
+                'mobile.tapPhotos': 'Tap for photos',
+                'mobile.orders': 'Orders',
+                'mobile.dueThisWeek': 'Due This Week',
+                'mobile.current': 'Current',
+                'mobile.minimum': 'Minimum',
+                'mobile.needed': 'Needed',
+                'mobile.inStock': 'In Stock',
+                'mobile.target': 'Target',
+                'mobile.toMake': 'To Make',
+                'mobile.ofMinimum': '% of minimum'
             },
             es: {
                 'logoSubtitle': 'Panel de Operaciones de Moldeo',
@@ -3253,7 +3305,26 @@
                 // Voice input
                 'ai.voiceListening': 'Escuchando...',
                 'ai.voiceNotSupported': 'Entrada de voz no soportada en este navegador',
-                'ai.voiceMicDenied': 'Permiso de micrófono denegado. Por favor permite el acceso al micrófono.'
+                'ai.voiceMicDenied': 'Permiso de micrófono denegado. Por favor permite el acceso al micrófono.',
+                // Mobile card view
+                'mobile.rotateTitle': 'Gira para Ver Completo',
+                'mobile.rotateDesc': 'Esta sección está optimizada para vista horizontal. Por favor gira tu dispositivo para mejor experiencia.',
+                'mobile.quantity': 'Cantidad',
+                'mobile.due': 'Vence',
+                'mobile.tire': 'Llanta',
+                'mobile.hub': 'Centro',
+                'mobile.daysOverdue': 'días de retraso',
+                'mobile.days': 'días',
+                'mobile.tapPhotos': 'Toca para fotos',
+                'mobile.orders': 'Órdenes',
+                'mobile.dueThisWeek': 'Vencen Esta Semana',
+                'mobile.current': 'Actual',
+                'mobile.minimum': 'Mínimo',
+                'mobile.needed': 'Necesario',
+                'mobile.inStock': 'En Stock',
+                'mobile.target': 'Objetivo',
+                'mobile.toMake': 'Por Hacer',
+                'mobile.ofMinimum': '% del mínimo'
             }
         };
         
@@ -10993,9 +11064,38 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         }
     }
     
+    // Inject rotate message into pages without card views
+    function injectRotateMessages() {
+        const rotateHTML = `
+            <div class="mobile-rotate-message">
+                <div class="rotate-icon">📱↻</div>
+                <h3 data-i18n="mobile.rotateTitle">Rotate for Full View</h3>
+                <p data-i18n="mobile.rotateDesc">This section is optimized for landscape viewing. Please rotate your device for the best experience.</p>
+            </div>
+        `;
+        
+        document.querySelectorAll('.page:not(.has-card-view)').forEach(page => {
+            // Only add if not already present
+            if (!page.querySelector('.mobile-rotate-message')) {
+                const pageHeader = page.querySelector('.page-header');
+                if (pageHeader) {
+                    pageHeader.insertAdjacentHTML('afterend', rotateHTML);
+                } else {
+                    page.insertAdjacentHTML('afterbegin', rotateHTML);
+                }
+            }
+        });
+        
+        // Apply translations if available
+        if (typeof applyTranslations === 'function') {
+            applyTranslations();
+        }
+    }
+    
     // Initialize on load, resize, and orientation change
     window.addEventListener('load', () => {
         checkMobileMode();
+        injectRotateMessages();
         // Render ALL cards after data loads (give it time)
         setTimeout(() => {
             const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
@@ -11288,24 +11388,24 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                     </div>
                     <div class="mobile-card-body">
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">In Stock</span>
+                            <span class="mobile-card-label">${t('mobile.inStock')}</span>
                             <span class="mobile-card-value large ${isLow ? 'danger' : 'success'}">${qty}</span>
                         </div>
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">Minimum</span>
+                            <span class="mobile-card-label">${t('mobile.minimum')}</span>
                             <span class="mobile-card-value">${min}</span>
                         </div>
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">Target</span>
+                            <span class="mobile-card-label">${t('mobile.target')}</span>
                             <span class="mobile-card-value">${target}</span>
                         </div>
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">To Make</span>
+                            <span class="mobile-card-label">${t('mobile.toMake')}</span>
                             <span class="mobile-card-value ${item.partsToBeMade > 0 ? 'warning' : ''}">${toMake}</span>
                         </div>
                     </div>
                     <div class="mobile-card-footer">
-                        <span class="mobile-card-date">${pct}% of minimum</span>
+                        <span class="mobile-card-date">${pct}${t('mobile.ofMinimum')}</span>
                         <div style="width:60px;height:6px;background:var(--bg-dark);border-radius:3px;overflow:hidden;">
                             <div style="width:${Math.min(pct, 100)}%;height:100%;background:${borderColor};"></div>
                         </div>
@@ -11407,9 +11507,9 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const urgentCount = orders.filter(r => isUrgent(r)).length;
             const dueWeekCount = orders.filter(r => { const d = parseNumber(getVal(r, 'DAYS_UNTIL')); return d >= 0 && d <= 7; }).length;
             statsContainer.innerHTML = `
-                <div class="mobile-summary-stat"><span class="stat-value">${orders.length}</span><span class="stat-label">Orders</span></div>
-                <div class="mobile-summary-stat"><span class="stat-value" style="color:var(--danger)">${urgentCount}</span><span class="stat-label">Urgent</span></div>
-                <div class="mobile-summary-stat"><span class="stat-value">${dueWeekCount}</span><span class="stat-label">Due This Week</span></div>
+                <div class="mobile-summary-stat"><span class="stat-value">${orders.length}</span><span class="stat-label">${t('mobile.orders')}</span></div>
+                <div class="mobile-summary-stat"><span class="stat-value" style="color:var(--danger)">${urgentCount}</span><span class="stat-label">${t('stats.urgent')}</span></div>
+                <div class="mobile-summary-stat"><span class="stat-value">${dueWeekCount}</span><span class="stat-label">${t('mobile.dueThisWeek')}</span></div>
             `;
         }
         
@@ -11435,7 +11535,7 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             let badgeText = status.toUpperCase();
             if (urgent) { badgeClass = 'mobile-card-badge urgent'; badgeText = 'URGENT'; }
             
-            let daysText = days >= 0 ? `${days} days` : `${Math.abs(days)} days overdue`;
+            let daysText = days >= 0 ? `${days} ${t('mobile.days')}` : `${Math.abs(days)} ${t('mobile.daysOverdue')}`;
             let daysClass = days < 0 ? 'overdue' : '';
             
             // Use showMobilePhotos on mobile, showPalletPictures on desktop
@@ -11452,25 +11552,25 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                     </div>
                     <div class="mobile-card-body">
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">Quantity</span>
+                            <span class="mobile-card-label">${t('mobile.quantity')}</span>
                             <span class="mobile-card-value large">${qty}</span>
                         </div>
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">Due</span>
+                            <span class="mobile-card-label">${t('mobile.due')}</span>
                             <span class="mobile-card-value ${days < 0 ? 'danger' : ''}">${daysText}</span>
                         </div>
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">Tire</span>
+                            <span class="mobile-card-label">${t('mobile.tire')}</span>
                             <span class="mobile-card-value">${tire}</span>
                         </div>
                         <div class="mobile-card-field">
-                            <span class="mobile-card-label">Hub</span>
+                            <span class="mobile-card-label">${t('mobile.hub')}</span>
                             <span class="mobile-card-value">${hub}</span>
                         </div>
                     </div>
                     <div class="mobile-card-footer">
                         <span class="mobile-card-date ${daysClass}">📅 ${dueDate}</span>
-                        <span style="color:var(--text-secondary);font-size:11px;">Tap for photos →</span>
+                        <span style="color:var(--text-secondary);font-size:11px;">${t('mobile.tapPhotos')} →</span>
                     </div>
                 </div>
             `;
