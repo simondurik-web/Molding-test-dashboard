@@ -1844,7 +1844,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.5</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.6</div>
     </div>
 
     <div class="main-content">
@@ -5153,6 +5153,16 @@
             }
             document.querySelector('.sidebar').classList.remove('open');
             document.querySelector('.sidebar-overlay').classList.remove('active');
+            
+            // Render mobile cards if in mobile/tablet mode
+            const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
+            if (isCardMode) {
+                setTimeout(() => {
+                    if (page === 'orders-queue' && typeof renderMobileOrderCards === 'function') renderMobileOrderCards('orders-queue');
+                    else if (page === 'orders-staged' && typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
+                    else if (page === 'inventory' && typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
+                }, 100);
+            }
         }
         
         // Old mobile toggleSidebar replaced by new unified version above
