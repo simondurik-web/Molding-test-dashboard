@@ -1271,8 +1271,8 @@
             /* Charts: shorter in landscape */
             .chart-container { height: 180px; }
             
-            /* Tables: more height available */
-            .scrollable-table { max-height: calc(100vh - 180px); }
+            /* Tables: force reasonable height in landscape */
+            .scrollable-table { max-height: calc(100vh - 80px) !important; min-height: 200px !important; }
             
             /* Phil Assistant: not full screen in landscape */
             .ai-chat-panel {
@@ -1294,7 +1294,7 @@
             .quick-stats { grid-template-columns: repeat(4, 1fr); }
             .dept-grid { display: none; } /* Hide dept cards in very short landscape */
             .chart-container { height: 150px; }
-            .scrollable-table { max-height: calc(100vh - 120px); }
+            .scrollable-table { max-height: calc(100vh - 60px) !important; min-height: 200px !important; }
             .mobile-header { display: none !important; } /* More space for content */
             .main-content { padding-top: 8px !important; }
         }
@@ -2028,9 +2028,11 @@
             
             <!-- Mobile Filter Chips -->
             <div class="mobile-filter-bar">
-                <span class="mobile-filter-chip active" onclick="mobileFilterOrders('all')">All</span>
+                <span class="mobile-filter-chip active" onclick="mobileFilterOrders('all')">All Active</span>
                 <span class="mobile-filter-chip" onclick="mobileFilterOrders('urgent')">🔴 Urgent</span>
                 <span class="mobile-filter-chip" onclick="mobileFilterOrders('due-week')">📅 Due This Week</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('staged')">📦 Staged</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterOrders('shipped')">🚚 Shipped</span>
                 <span class="mobile-filter-chip" onclick="mobileFilterOrders('rolltech')">🔵 Roll Tech</span>
                 <span class="mobile-filter-chip" onclick="mobileFilterOrders('molding')">🟡 Molding</span>
                 <span class="mobile-filter-chip" onclick="mobileFilterOrders('snappad')">🟣 Snap Pad</span>
@@ -11137,9 +11139,11 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         document.body.classList.toggle('mobile-mode', isMobile);
         document.body.classList.toggle('tablet-portrait', isTabletPortrait);
         
-        // Force show bottom nav and cards container for debugging
+        // Auto-collapse sidebar when entering portrait/mobile mode
         if (isMobile || isTabletPortrait) {
+            const sidebar = document.querySelector('.sidebar');
             const bottomNav = document.getElementById('mobileBottomNav');
+            if (sidebar) sidebar.classList.add('collapsed');
             if (bottomNav) bottomNav.style.display = 'block';
         }
         
@@ -11646,7 +11650,14 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         let orders = [];
         let filterFn = () => true;
         
-        if (pageType === 'orders-queue') {
+        // Check if filter is for a specific status
+        const statusFilters = ['staged', 'shipped'];
+        const isStatusFilter = statusFilters.includes(mobileFilterState);
+        
+        if (isStatusFilter) {
+            // Show orders with the selected status (ignore pageType)
+            filterFn = row => getStatus(row) === mobileFilterState;
+        } else if (pageType === 'orders-queue') {
             filterFn = row => {
                 const status = getStatus(row);
                 return status === 'pending' || status === 'wip';
@@ -11659,8 +11670,8 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         
         orders = allData.filter(filterFn);
         
-        // Apply mobile filter
-        if (mobileFilterState !== 'all') {
+        // Apply mobile filter (skip if already filtering by status)
+        if (mobileFilterState !== 'all' && !isStatusFilter) {
             orders = orders.filter(row => {
                 const cat = getCategory(row);
                 const urgent = isUrgent(row);
