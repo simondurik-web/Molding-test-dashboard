@@ -1344,6 +1344,14 @@
         /* iPad Landscape: Show tables (optimized for touch) */
         @media (min-width: 1025px) and (max-width: 1400px),
                (min-width: 481px) and (max-width: 1024px) and (orientation: landscape) {
+            /* HIDE mobile bottom nav in landscape - use sidebar instead */
+            .mobile-bottom-nav { display: none !important; }
+            .mobile-cards-container { display: none !important; }
+            .mobile-filter-bar { display: none !important; }
+            .mobile-search-bar { display: none !important; }
+            .mobile-inv-controls { display: none !important; }
+            .mobile-summary-bar { display: none !important; }
+            
             /* Touch-friendly tables */
             .data-table th, .data-table td { 
                 padding: 14px 12px; 
@@ -1836,7 +1844,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.16</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.5</div>
     </div>
 
     <div class="main-content">
