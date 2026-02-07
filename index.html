@@ -259,12 +259,18 @@
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; padding: 16px; }
+            .main-content { margin-left: 0; padding: 16px; padding-top: 60px; }
             .mobile-header { display: flex; }
             .dept-grid { grid-template-columns: 1fr; }
             .quick-stats { grid-template-columns: 1fr 1fr; }
             .toolbar { flex-direction: column; align-items: stretch; }
             .toolbar-spacer { display: none; }
+            /* Fix chart sizing on mobile */
+            .chart-wrapper { height: 220px; }
+            .grid-2 { gap: 12px; }
+            .chart-container { padding: 14px; margin-bottom: 12px; }
+            /* Hide sidebar-tab on mobile (use mobile-header menu instead) */
+            .sidebar-tab { display: none !important; }
         }
         .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
         .tab { padding: 10px 20px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
@@ -11370,6 +11376,20 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                     case 'snappad': return cat === 'snappad';
                     default: return true;
                 }
+            });
+        }
+        
+        // Apply mobile search filter
+        if (mobileSearchTerm) {
+            orders = orders.filter(row => {
+                const searchStr = [
+                    getVal(row, 'LINE'),
+                    getVal(row, 'CUSTOMER'),
+                    getVal(row, 'PART'),
+                    getVal(row, 'HUB'),
+                    getVal(row, 'TIRE')
+                ].join(' ').toLowerCase();
+                return searchStr.includes(mobileSearchTerm);
             });
         }
         
