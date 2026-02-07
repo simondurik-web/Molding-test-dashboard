@@ -1844,7 +1844,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.8</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.9</div>
     </div>
 
     <div class="main-content">
@@ -11589,16 +11589,13 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             });
         }
         
-        // Sort: low stock first, then by part number
-        items.sort((a, b) => {
-            const aLow = a.fusionQty < a.minimum ? 0 : 1;
-            const bLow = b.fusionQty < b.minimum ? 0 : 1;
-            if (aLow !== bLow) return aLow - bLow;
-            return (a.partNumber || '').localeCompare(b.partNumber || '');
-        });
+        // Sort alphabetically by part number (default)
+        items.sort((a, b) => (a.partNumber || '').localeCompare(b.partNumber || ''));
         
-        console.log('[Inventory Cards] After filter/search:', items.length, 'items');
-        container.innerHTML = items.slice(0, 50).map(item => {
+        // For filtered views (low/needed), show 50 max; for "all", show more to ensure all items accessible
+        const displayLimit = (mobileInvFilterState === 'all') ? 500 : 50;
+        console.log('[Inventory Cards] After filter/search:', items.length, 'items, showing:', Math.min(items.length, displayLimit));
+        container.innerHTML = items.slice(0, displayLimit).map(item => {
             const partNum = item.partNumber || '-';
             const product = item.product || '-';
             const qty = formatNumber(item.fusionQty || 0);
