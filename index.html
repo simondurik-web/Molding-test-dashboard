@@ -1233,6 +1233,21 @@
            LANDSCAPE MODE (Mobile)
            ============================================================ */
         @media (max-width: 900px) and (orientation: landscape) {
+            /* HIDE mobile bottom nav in landscape - use sidebar instead */
+            .mobile-bottom-nav { display: none !important; }
+            .mobile-cards-container { display: none !important; }
+            .mobile-filter-bar { display: none !important; }
+            .mobile-search-bar { display: none !important; }
+            .mobile-inv-controls { display: none !important; }
+            .mobile-summary-bar { display: none !important; }
+            
+            /* Show regular table view */
+            .scrollable-table { display: block !important; }
+            .chart-container { display: block !important; }
+            .toolbar { display: flex !important; }
+            .stats-grid { display: grid !important; }
+            .page-header { display: flex !important; }
+            
             /* Sidebar: narrower in landscape */
             .sidebar { width: 220px; }
             
@@ -10208,7 +10223,12 @@
         function buildAiSystemInstruction() {
             return `You are **Phil**, an AI assistant embedded in the Molding Operations Dashboard for Entech Industries (Roll Tech division) in Elkhart, Indiana. You help production staff with orders, inventory, and shipping questions.
 
-**LANGUAGE:** Respond in the same language the user writes in. Spanish → Spanish. English → English.
+**LANGUAGE RULE (CRITICAL):** 
+- ALWAYS detect the language of the user's message
+- If the user writes in ENGLISH → respond ONLY in English
+- If the user writes in SPANISH → respond ONLY in Spanish
+- NEVER mix languages
+- Table headers and labels MUST match the user's language (English: "Part", "In Stock" / Spanish: "Parte", "Cantidad en Stock")
 
 ---
 
@@ -11482,8 +11502,21 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const chipFilter = chip.getAttribute('onclick')?.match(/mobileFilterInventory\('([^']+)'\)/)?.[1];
             chip.classList.toggle('active', chipFilter === filter);
         });
+        
+        // Update count display
+        let count = inventoryData.length;
+        if (filter === 'low') {
+            count = inventoryData.filter(i => i.fusionQty < i.minimum && i.minimum > 0).length;
+        } else if (filter === 'needed') {
+            count = inventoryData.filter(i => i.partsToBeMade > 0).length;
+        }
+        const searchInput = document.getElementById('mobileInvSearchInput');
+        if (searchInput) {
+            searchInput.placeholder = `🔍 ${count} items (${filter})...`;
+        }
+        
         renderMobileInventoryCards();
-        console.log('[Inventory Filter] Cards rendered');
+        console.log('[Inventory Filter] Cards rendered, count:', count);
     }
     
     // Render INVENTORY cards
