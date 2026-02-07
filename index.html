@@ -1439,34 +1439,7 @@
             display: none; padding: 12px; background: var(--bg-dark);
             border-bottom: 1px solid var(--border);
         }
-        .mobile-lang-toggle {
-            display: none;
-            justify-content: flex-end;
-            padding: 8px 12px;
-            background: var(--bg-dark);
-            border-bottom: 1px solid var(--border);
-        }
-        .mobile-lang-btn {
-            padding: 6px 12px;
-            border: 1px solid var(--border);
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .mobile-lang-btn:first-child { border-radius: 6px 0 0 6px; }
-        .mobile-lang-btn:last-child { border-radius: 0 6px 6px 0; border-left: none; }
-        .mobile-lang-btn.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-        @media (max-width: 480px) {
-            body.mobile-mode .mobile-lang-toggle { display: flex; }
-        }
-        body.tablet-portrait .mobile-lang-toggle { display: flex !important; }
+        /* Old mobile-lang-toggle removed - now in bottom nav */
         .mobile-summary-stats {
             display: flex; justify-content: space-around; text-align: center;
         }
@@ -1955,12 +1928,6 @@
                 <p><strong id="ordersQueueMissingCount">0</strong> <span data-i18n="prod.missingMsg">orders have missing components.</span></p>
             </div>
             <div style="display:none;"><span id="ordersQueueLastUpdated">-</span></div>
-            
-            <!-- Mobile Language Toggle -->
-            <div class="mobile-lang-toggle" id="mobileLangToggle">
-                <button class="mobile-lang-btn active" id="mobileLangEN" onclick="setLanguage('en')">EN</button>
-                <button class="mobile-lang-btn" id="mobileLangES" onclick="setLanguage('es')">ES</button>
-            </div>
             
             <!-- Mobile Summary Bar -->
             <div class="mobile-summary-bar">
@@ -3369,11 +3336,8 @@
             currentLang = lang;
             document.getElementById('langEN').classList.toggle('active', lang === 'en');
             document.getElementById('langES').classList.toggle('active', lang === 'es');
-            // Sync mobile language toggle
-            const mobileLangEN = document.getElementById('mobileLangEN');
-            const mobileLangES = document.getElementById('mobileLangES');
-            if (mobileLangEN) mobileLangEN.classList.toggle('active', lang === 'en');
-            if (mobileLangES) mobileLangES.classList.toggle('active', lang === 'es');
+            // Sync mobile language button
+            if (typeof updateMobileLangButton === 'function') updateMobileLangButton();
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (translations[lang][key]) el.textContent = translations[lang][key];
@@ -3424,6 +3388,8 @@
             try { localStorage.setItem('dashboardTheme', theme); } catch(e) {}
             // Update Chart.js colors for theme
             updateChartsForTheme();
+            // Sync mobile theme button
+            if (typeof updateMobileThemeButton === 'function') updateMobileThemeButton();
         }
         
         function loadSavedTheme() {
@@ -11030,11 +10996,15 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
 <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav">
         <div class="mobile-bottom-nav-inner">
-            <a class="mobile-nav-item active" data-page="main" onclick="mobileNavTo('main')">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">Home</span>
+            <a class="mobile-nav-item" onclick="toggleMobileTheme()" id="mobileThemeBtn">
+                <span class="nav-icon" id="mobileThemeIcon">🌙</span>
+                <span class="nav-label" id="mobileThemeLabel">Dark</span>
             </a>
-            <a class="mobile-nav-item" data-page="orders-queue" onclick="mobileNavTo('orders-queue')">
+            <a class="mobile-nav-item" onclick="toggleMobileLang()" id="mobileLangBtn">
+                <span class="nav-icon">🌐</span>
+                <span class="nav-label" id="mobileLangLabel">EN</span>
+            </a>
+            <a class="mobile-nav-item active" data-page="orders-queue" onclick="mobileNavTo('orders-queue')">
                 <span class="nav-icon">📋</span>
                 <span class="nav-label">Orders</span>
             </a>
@@ -11140,8 +11110,18 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
     
     // Initialize on load, resize, and orientation change
     window.addEventListener('load', () => {
-        checkMobileMode();
+        const isMobileMode = checkMobileMode();
         injectRotateMessages();
+        
+        // On mobile, default to Orders page instead of Home
+        if (isMobileMode) {
+            setTimeout(() => {
+                mobileNavTo('orders-queue');
+                updateMobileThemeButton();
+                updateMobileLangButton();
+            }, 100);
+        }
+        
         // Render ALL cards after data loads (give it time)
         setTimeout(() => {
             const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
@@ -11188,6 +11168,32 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         if (['orders-queue', 'orders-staged', 'orders-shipped'].includes(page)) {
             renderMobileOrderCards(page);
         }
+    }
+    
+    // Mobile theme toggle
+    function toggleMobileTheme() {
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+        updateMobileThemeButton();
+    }
+    
+    function updateMobileThemeButton() {
+        const icon = document.getElementById('mobileThemeIcon');
+        const label = document.getElementById('mobileThemeLabel');
+        if (icon) icon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+        if (label) label.textContent = currentTheme === 'dark' ? 'Dark' : 'Light';
+    }
+    
+    // Mobile language toggle
+    function toggleMobileLang() {
+        const newLang = currentLang === 'en' ? 'es' : 'en';
+        setLanguage(newLang);
+        updateMobileLangButton();
+    }
+    
+    function updateMobileLangButton() {
+        const label = document.getElementById('mobileLangLabel');
+        if (label) label.textContent = currentLang.toUpperCase();
     }
     
     // Render order cards for mobile view
