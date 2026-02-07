@@ -1844,7 +1844,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.7</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.8</div>
     </div>
 
     <div class="main-content">
@@ -11776,6 +11776,17 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const dueDate = getVal(row, 'REQUESTED_DATE') || '-';
             const tire = getVal(row, 'TIRE') || '-';
             const hub = getVal(row, 'HUB') || '-';
+            const hubMold = getVal(row, 'HUB_MOLD') || '-';
+            const cat = getCategory(row);
+            const isRollTech = cat === 'rolltech';
+            
+            // Tire/Hub stock colors (green if have, red if don't) - only for Roll Tech
+            const tireHasStock = hasTire(row);
+            const hubHasStock = hasHub(row);
+            const tireColor = isRollTech ? (tireHasStock ? '#48bb78' : '#fc8181') : 'inherit';
+            const hubColor = isRollTech ? (hubHasStock ? '#48bb78' : '#fc8181') : 'inherit';
+            const tireFontWeight = isRollTech && !tireHasStock ? 'bold' : 'normal';
+            const hubFontWeight = isRollTech && !hubHasStock ? 'bold' : 'normal';
             
             let cardClass = 'mobile-order-card';
             if (urgent) cardClass += ' urgent';
@@ -11790,6 +11801,13 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             
             // Use showMobilePhotos on mobile, showPalletPictures on desktop
             const clickFn = isCardMode ? `showMobilePhotos('${line}')` : `showPalletPictures('${line}')`;
+            
+            // Only show Hub Mold row for Roll Tech orders
+            const hubMoldRow = isRollTech ? `
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">${t('col.hubMold') || 'Hub Mold'}</span>
+                            <span class="mobile-card-value">${hubMold}</span>
+                        </div>` : '';
             
             return `
                 <div class="${cardClass}" onclick="${clickFn}">
@@ -11811,12 +11829,12 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                         </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">${t('mobile.tire')}</span>
-                            <span class="mobile-card-value">${tire}</span>
+                            <span class="mobile-card-value" style="color:${tireColor};font-weight:${tireFontWeight};">${tire}</span>
                         </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">${t('mobile.hub')}</span>
-                            <span class="mobile-card-value">${hub}</span>
-                        </div>
+                            <span class="mobile-card-value" style="color:${hubColor};font-weight:${hubFontWeight};">${hub}</span>
+                        </div>${hubMoldRow}
                     </div>
                     <div class="mobile-card-footer">
                         <span class="mobile-card-date ${daysClass}">📅 ${dueDate}</span>
