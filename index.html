@@ -1869,7 +1869,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.10</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.11</div>
     </div>
 
     <div class="main-content">
@@ -2105,6 +2105,16 @@
                 <div class="stat-card financial-data"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value positive" id="ordersStagedRevenue">-</div></div>
                 <div class="stat-card financial-data"><div class="label" data-i18n="stats.avgOrderValue">Avg Order Value</div><div class="value" id="ordersStagedAvgValue">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.customers">Customers</div><div class="value" id="ordersStagedCustomers">-</div></div>
+            </div>
+            <!-- Mobile Search & Filter for Staged -->
+            <div class="mobile-search-bar mobile-staged-controls">
+                <input type="text" id="mobileStagedSearchInput" placeholder="🔍 Search staged orders..." oninput="mobileSearchStaged(this.value)">
+            </div>
+            <div class="mobile-filter-bar mobile-staged-controls">
+                <span class="mobile-filter-chip active" onclick="mobileFilterStaged('all')">All</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterStaged('rolltech')">🔵 Roll Tech</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterStaged('molding')">🟡 Molding</span>
+                <span class="mobile-filter-chip" onclick="mobileFilterStaged('snappad')">🟣 Snap Pad</span>
             </div>
             <!-- Mobile Cards Container for Staged -->
             <div class="mobile-cards-container" id="mobileStagedCardsContainer"></div>
@@ -11558,13 +11568,58 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         return u === 'urgent' || u === 'true' || u === '1' || u === 'yes' || u === 'x';
     }
     
+    // Mobile staged filter/search state
+    let mobileStagedFilterState = 'all';
+    let mobileStagedSearchTerm = '';
+    
+    function mobileSearchStaged(searchText) {
+        mobileStagedSearchTerm = (searchText || '').toLowerCase().trim();
+        renderMobileStagedCards();
+    }
+    
+    function mobileFilterStaged(filter) {
+        mobileStagedFilterState = filter;
+        // Update chip active states
+        document.querySelectorAll('.mobile-staged-controls .mobile-filter-chip').forEach(chip => {
+            const chipFilter = chip.getAttribute('onclick')?.match(/mobileFilterStaged\('([^']+)'\)/)?.[1];
+            chip.classList.toggle('active', chipFilter === filter);
+        });
+        renderMobileStagedCards();
+    }
+    
     // Render STAGED order cards
     function renderMobileStagedCards() {
         const container = document.getElementById('mobileStagedCardsContainer');
         const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
         if (!container || !isCardMode) return;
         
-        const orders = allData.filter(row => getStatus(row) === 'staged');
+        let orders = allData.filter(row => getStatus(row) === 'staged');
+        
+        // Apply category filter
+        if (mobileStagedFilterState !== 'all') {
+            orders = orders.filter(row => {
+                const cat = (getVal(row, 'CATEGORY') || '').toLowerCase();
+                if (mobileStagedFilterState === 'rolltech') return cat.includes('roll') || cat.includes('tech');
+                if (mobileStagedFilterState === 'molding') return cat.includes('molding') || cat.includes('mold');
+                if (mobileStagedFilterState === 'snappad') return cat.includes('snap') || cat.includes('pad');
+                return true;
+            });
+        }
+        
+        // Apply search filter
+        if (mobileStagedSearchTerm) {
+            orders = orders.filter(row => {
+                const searchStr = [
+                    getVal(row, 'CUSTOMER'),
+                    getVal(row, 'LINE'),
+                    getVal(row, 'PART'),
+                    getVal(row, 'IF_NUM'),
+                    getVal(row, 'HUB'),
+                    getVal(row, 'TIRE')
+                ].join(' ').toLowerCase();
+                return searchStr.includes(mobileStagedSearchTerm);
+            });
+        }
         
         container.innerHTML = orders.slice(0, 50).map(row => {
             const line = getVal(row, 'LINE') || '-';
