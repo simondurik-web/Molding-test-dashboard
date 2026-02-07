@@ -862,12 +862,39 @@
         @media (max-width: 480px) {
             .ai-chat-panel {
                 top: 0; left: 0; right: 0; bottom: 0;
-                width: 100%; max-width: 100%; height: 100%; max-height: 100%;
+                width: 100%; max-width: 100%; height: 100vh; max-height: 100vh;
                 border-radius: 0; border: none;
+                /* Handle iOS keyboard */
+                height: 100dvh; max-height: 100dvh;
             }
-            .ai-chat-header { padding: 16px; }
+            .ai-chat-panel.open {
+                position: fixed;
+            }
+            .ai-chat-header { 
+                padding: 16px; 
+                position: sticky; top: 0; 
+                background: var(--bg-card);
+                z-index: 10;
+            }
             .ai-chat-header-actions .close-btn {
                 font-size: 24px; padding: 10px 18px; min-width: 50px;
+            }
+            .ai-chat-messages {
+                flex: 1;
+                padding-bottom: 100px; /* Space for input */
+            }
+            .ai-chat-input-area {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--bg-card);
+                border-top: 1px solid var(--border);
+                padding: 12px;
+                z-index: 10;
+            }
+            .ai-chat-input-area textarea {
+                font-size: 16px !important; /* Prevent iOS zoom */
             }
         }
 
@@ -1583,7 +1610,24 @@
             body.mobile-mode #main.page.active .dept-grid,
             body.mobile-mode #main.page.active .grid-2,
             body.mobile-mode #main.page.active .page-header { display: none !important; }
+            
+            /* Hide inventory toolbar on mobile (use mobile controls instead) */
+            body.mobile-mode #inventory .toolbar { display: none !important; }
+            body.mobile-mode #inventory .page-header { display: none !important; }
+            body.mobile-mode .mobile-inv-controls { display: block !important; }
         }
+        
+        /* Mobile inventory controls */
+        .mobile-inv-controls {
+            display: none;
+            padding: 10px;
+            background: var(--bg-dark);
+        }
+        .mobile-inv-controls .mobile-search-bar { margin-bottom: 10px; }
+        .mobile-inv-controls .mobile-filter-bar { justify-content: flex-start; }
+        body.tablet-portrait .mobile-inv-controls { display: block !important; }
+        body.tablet-portrait #inventory .toolbar { display: none !important; }
+        body.tablet-portrait #inventory .page-header { display: none !important; }
     </style>
 </head>
 <body>
@@ -2088,6 +2132,17 @@
                 <div class="stat-card"><div class="label" data-i18n="stats.lowStock">Low Stock</div><div class="value" style="color:var(--danger);" id="invStatLow">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.needsProduction">Needs Production</div><div class="value" style="color:var(--warning);" id="invStatNeeded">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.adequateStock">Adequate Stock</div><div class="value" style="color:var(--success);" id="invStatOk">-</div></div>
+            </div>
+            <!-- Mobile Search and Filters for Inventory -->
+            <div class="mobile-inv-controls">
+                <div class="mobile-search-bar">
+                    <input type="text" id="mobileInvSearchInput" placeholder="🔍 Search inventory..." oninput="mobileSearchInventory(this.value)">
+                </div>
+                <div class="mobile-filter-bar">
+                    <span class="mobile-filter-chip active" onclick="mobileFilterInventory('all')">All</span>
+                    <span class="mobile-filter-chip" onclick="mobileFilterInventory('low')">⚠️ Low Stock</span>
+                    <span class="mobile-filter-chip" onclick="mobileFilterInventory('needed')">🔧 Needs Production</span>
+                </div>
             </div>
             <!-- Mobile Cards Container for Inventory -->
             <div class="mobile-cards-container" id="mobileInventoryCardsContainer"></div>
@@ -11414,14 +11469,51 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         }).join('');
     }
     
+    // Mobile inventory filter/search state
+    let mobileInvFilterState = 'all';
+    let mobileInvSearchTerm = '';
+    
+    function mobileSearchInventory(searchText) {
+        mobileInvSearchTerm = (searchText || '').toLowerCase().trim();
+        renderMobileInventoryCards();
+    }
+    
+    function mobileFilterInventory(filter) {
+        mobileInvFilterState = filter;
+        // Update chip active states
+        document.querySelectorAll('.mobile-inv-controls .mobile-filter-chip').forEach(chip => {
+            const chipFilter = chip.getAttribute('onclick')?.match(/mobileFilterInventory\('([^']+)'\)/)?.[1];
+            chip.classList.toggle('active', chipFilter === filter);
+        });
+        renderMobileInventoryCards();
+    }
+    
     // Render INVENTORY cards
     function renderMobileInventoryCards() {
         const container = document.getElementById('mobileInventoryCardsContainer');
         const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
         if (!container || !isCardMode) return;
         
+        // Filter items based on mobile filter
+        let items = [...inventoryData];
+        
+        // Apply filter
+        if (mobileInvFilterState === 'low') {
+            items = items.filter(item => item.fusionQty < item.minimum && item.minimum > 0);
+        } else if (mobileInvFilterState === 'needed') {
+            items = items.filter(item => item.partsToBeMade > 0);
+        }
+        
+        // Apply search
+        if (mobileInvSearchTerm) {
+            items = items.filter(item => {
+                const searchStr = [item.partNumber, item.product].join(' ').toLowerCase();
+                return searchStr.includes(mobileInvSearchTerm);
+            });
+        }
+        
         // Sort: low stock first, then by part number
-        const items = [...inventoryData].sort((a, b) => {
+        items.sort((a, b) => {
             const aLow = a.fusionQty < a.minimum ? 0 : 1;
             const bLow = b.fusionQty < b.minimum ? 0 : 1;
             if (aLow !== bLow) return aLow - bLow;
