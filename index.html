@@ -11145,6 +11145,11 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const bottomNav = document.getElementById('mobileBottomNav');
             if (sidebar) sidebar.classList.add('collapsed');
             if (bottomNav) bottomNav.style.display = 'block';
+            
+            // Force render cards after mode change (with delay for data)
+            setTimeout(() => {
+                if (typeof forceRenderCards === 'function') forceRenderCards();
+            }, 500);
         }
         
         return isMobile || isTabletPortrait;
