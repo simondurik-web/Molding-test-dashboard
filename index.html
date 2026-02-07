@@ -1260,13 +1260,18 @@
             body.tablet-portrait .mobile-summary-bar { display: block !important; }
             body.tablet-portrait .scrollable-table { display: none !important; }
             body.tablet-portrait .ai-chat-fab { bottom: 70px !important; }
-            body.tablet-portrait .main-content { padding-bottom: 70px !important; }
-            body.tablet-portrait .chart-container { display: block; }
+            body.tablet-portrait .main-content { padding-bottom: 70px !important; padding-top: 50px !important; }
+            body.tablet-portrait .chart-container { display: block; max-height: 300px; overflow: hidden; }
+            body.tablet-portrait #main canvas { max-width: 200px !important; max-height: 200px !important; }
             body.tablet-portrait .toolbar { display: none; }
             body.tablet-portrait .mobile-filter-bar { display: flex !important; }
+            body.tablet-portrait .mobile-search-bar { display: block !important; }
             body.tablet-portrait .orders-queue-toolbar { display: none !important; }
             body.tablet-portrait .ai-chat-fab { display: none !important; }
             body.tablet-portrait .menu-toggle { display: none !important; }
+            body.tablet-portrait #orders-staged .toolbar { display: none !important; }
+            body.tablet-portrait #orders-staged .stats-grid { display: none !important; }
+            body.tablet-portrait #orders-staged .page-header { padding-top: 50px; }
             
             /* Larger cards for iPad */
             body.tablet-portrait .mobile-order-card { padding: 18px; }
@@ -1447,6 +1452,18 @@
         }
         .mobile-filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
         
+        /* Mobile search bar */
+        .mobile-search-bar {
+            display: none; padding: 10px 12px; border-bottom: 1px solid var(--border);
+        }
+        .mobile-search-bar input {
+            width: 100%; padding: 10px 14px; border-radius: 8px;
+            background: var(--bg-dark); border: 1px solid var(--border);
+            color: white; font-size: 14px;
+        }
+        .mobile-search-bar input::placeholder { color: var(--text-secondary); }
+        .mobile-search-bar input:focus { outline: none; border-color: var(--accent); }
+        
         /* Mobile photo modal */
         .mobile-photo-modal {
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -1482,9 +1499,13 @@
             body.mobile-mode .mobile-cards-container { display: flex; }
             body.mobile-mode .mobile-summary-bar { display: block; }
             body.mobile-mode .mobile-filter-bar { display: flex; }
+            body.mobile-mode .mobile-search-bar { display: block; }
             body.mobile-mode .orders-queue-toolbar { display: none !important; }
             body.mobile-mode .ai-chat-fab { display: none !important; }
             body.mobile-mode .menu-toggle { display: none !important; }
+            body.mobile-mode #orders-staged .toolbar { display: none !important; }
+            body.mobile-mode #orders-staged .stats-grid { display: none !important; }
+            body.mobile-mode #orders-staged .page-header { padding-top: 50px; }
             /* Tables stay visible but optimized for mobile scroll */
             body.mobile-mode .scrollable-table { 
                 display: block; 
@@ -1701,7 +1722,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.15</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.27.16</div>
     </div>
 
     <div class="main-content">
@@ -1884,6 +1905,11 @@
                         <div class="stat-label">Due This Week</div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Mobile Search Bar -->
+            <div class="mobile-search-bar">
+                <input type="text" id="mobileSearchInput" placeholder="🔍 Search orders..." oninput="mobileSearchOrders(this.value)">
             </div>
             
             <!-- Mobile Filter Chips -->
@@ -11054,6 +11080,24 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             });
         }
         
+        // Apply mobile search filter
+        if (typeof mobileSearchTerm !== 'undefined' && mobileSearchTerm) {
+            orders = orders.filter(row => {
+                const customer = (getVal(row, 'CUSTOMER') || '').toLowerCase();
+                const part = (getVal(row, 'PART') || '').toLowerCase();
+                const line = (getVal(row, 'LINE') || '').toLowerCase();
+                const ifNum = (getVal(row, 'IF_NUM') || '').toLowerCase();
+                const tire = (getVal(row, 'TIRE') || '').toLowerCase();
+                const hub = (getVal(row, 'HUB') || '').toLowerCase();
+                return customer.includes(mobileSearchTerm) || 
+                       part.includes(mobileSearchTerm) || 
+                       line.includes(mobileSearchTerm) ||
+                       ifNum.includes(mobileSearchTerm) ||
+                       tire.includes(mobileSearchTerm) ||
+                       hub.includes(mobileSearchTerm);
+            });
+        }
+        
         // Sort by urgency then days until
         orders.sort((a, b) => {
             const aUrgent = isUrgent(a) ? 0 : 1;
@@ -11267,6 +11311,13 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
     
     // Mobile filter state
     let mobileFilterState = 'all';
+    let mobileSearchTerm = '';
+    
+    // Mobile search function
+    function mobileSearchOrders(searchText) {
+        mobileSearchTerm = (searchText || '').toLowerCase().trim();
+        renderMobileOrderCards('orders-queue');
+    }
     
     // Mobile filter function for order cards
     function mobileFilterOrders(filter) {
