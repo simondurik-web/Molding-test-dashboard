@@ -1427,6 +1427,31 @@
         .mobile-nav-item .nav-icon { font-size: 20px; margin-bottom: 2px; }
         .mobile-nav-item .nav-label { font-size: 10px; font-weight: 600; }
         
+        /* QR Share Modal */
+        .qr-modal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .qr-modal-content {
+            background: var(--bg-card); border-radius: 16px;
+            padding: 20px; max-width: 320px; width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+        .qr-modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+        }
+        .qr-modal-header h3 { margin: 0; font-size: 18px; color: var(--text); }
+        .qr-close-btn {
+            background: none; border: none; font-size: 28px; cursor: pointer;
+            color: var(--text-muted); padding: 0; line-height: 1;
+        }
+        .qr-close-btn:hover { color: var(--danger); }
+        .qr-modal-body { padding: 10px 0; }
+        
         /* Order Cards */
         .mobile-cards-container {
             display: none; flex-direction: column; gap: 10px;
@@ -1844,7 +1869,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.9</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.10</div>
     </div>
 
     <div class="main-content">
@@ -11103,9 +11128,28 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             loadDashboard();
         });
     </script>
+<!-- QR Code Share Modal -->
+    <div id="qrShareModal" class="qr-modal" style="display:none;">
+        <div class="qr-modal-content">
+            <div class="qr-modal-header">
+                <h3>📱 Share Dashboard</h3>
+                <button class="qr-close-btn" onclick="closeQrModal()">&times;</button>
+            </div>
+            <div class="qr-modal-body">
+                <p style="margin-bottom:15px;color:var(--text-muted);font-size:14px;">Scan to open on another device:</p>
+                <img id="qrCodeImage" src="" alt="QR Code" style="width:200px;height:200px;border-radius:8px;background:white;padding:10px;">
+                <p id="qrUrlDisplay" style="margin-top:15px;font-size:12px;color:var(--text-muted);word-break:break-all;max-width:280px;"></p>
+            </div>
+        </div>
+    </div>
+
 <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav">
         <div class="mobile-bottom-nav-inner">
+            <a class="mobile-nav-item" onclick="showQrModal()" id="mobileShareBtn">
+                <span class="nav-icon">📤</span>
+                <span class="nav-label">Share</span>
+            </a>
             <a class="mobile-nav-item" onclick="toggleMobileTheme()" id="mobileThemeBtn">
                 <span class="nav-icon" id="mobileThemeIcon">🌙</span>
                 <span class="nav-label" id="mobileThemeLabel">Dark</span>
@@ -11288,6 +11332,33 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             renderMobileOrderCards(page);
         }
     }
+    
+    // QR Code Share functions
+    function showQrModal() {
+        const modal = document.getElementById('qrShareModal');
+        const qrImg = document.getElementById('qrCodeImage');
+        const urlDisplay = document.getElementById('qrUrlDisplay');
+        
+        // Use current page URL (automatically correct for test vs production)
+        const dashboardUrl = window.location.href.split('?')[0].split('#')[0];
+        
+        // Generate QR code via free API
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(dashboardUrl)}`;
+        qrImg.src = qrApiUrl;
+        urlDisplay.textContent = dashboardUrl;
+        
+        modal.style.display = 'flex';
+    }
+    
+    function closeQrModal() {
+        document.getElementById('qrShareModal').style.display = 'none';
+    }
+    
+    // Close modal on backdrop click
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('qrShareModal');
+        if (e.target === modal) closeQrModal();
+    });
     
     // Mobile theme toggle
     function toggleMobileTheme() {
