@@ -1269,11 +1269,14 @@
             .dept-card { padding: 12px; }
             
             /* Charts: shorter in landscape, but tables need auto height */
-            .chart-container { height: 180px; overflow: hidden; }
-            .chart-container:has(.scrollable-table) { height: auto; overflow: visible; }
+            .chart-container .chart-wrapper { max-height: 180px; overflow: hidden; }
+            .chart-container .chart-wrapper.large { max-height: 200px; }
             
-            /* Drilldown sections: ensure they clear properly */
-            .drilldown-section { clear: both; position: relative; z-index: 1; }
+            /* Tables should not be height-restricted */
+            .chart-container:has(.scrollable-table) .chart-wrapper { max-height: none; overflow: visible; }
+            
+            /* Drilldown sections: ensure they clear properly and don't overlap */
+            .drilldown-section { clear: both; position: relative; z-index: 10; margin-top: 20px; }
             
             /* Tables: force reasonable height in landscape */
             .scrollable-table { max-height: calc(100vh - 80px) !important; min-height: 200px !important; }
@@ -1873,7 +1876,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.18</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.19</div>
     </div>
 
     <div class="main-content">
