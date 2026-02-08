@@ -1869,7 +1869,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.11</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.12</div>
     </div>
 
     <div class="main-content">
@@ -3593,6 +3593,7 @@
         const QUOTES_REGISTRY_GID = '1279128282';  // Quotes Registry
         const STAGED_RECORDS_GID = '1519623398';  // Staged records dashboard
         const SHIPPING_RECORDS_GID = '1752263458';  // Shipping records dashboard
+        const FULFILLMENT_LINE_DATA_GID = '1307932521';  // Fulfillment Line Data Import (source for PO #)
         
         const COL = {
             CATEGORY: 'Category',
@@ -3682,6 +3683,7 @@
         let allData = [];
         let allRawData = []; // Stores ALL columns A-AX for All Data page
         let allRawHeaders = []; // Column headers from spreadsheet
+        let poLookupMap = {}; // PO # lookup by IF # (loaded from Fulfillment Line Data Import)
         let inventoryData = [];
         let palletData = []; // Stores pallet pictures data
         let bomFinalData = [], bomSubData = [], bomIndividualData = [];
@@ -4706,9 +4708,57 @@
             });
         }
         
+        // Load PO # data from source sheet (Fulfillment Line Data Import)
+        // This fixes the ARRAYFORMULA issue where gviz API can't read spilled values
+        async function loadPOData() {
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${FULFILLMENT_LINE_DATA_GID}`;
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+                const headers = json.table.cols.map(c => (c.label || '').trim());
+                
+                // Find column indices for IF # and PO #
+                const ifNumCol = headers.findIndex(h => h.toLowerCase() === 'ifnumber' || h.toLowerCase() === 'if #' || h.toLowerCase() === 'if#');
+                const poNumCol = headers.findIndex(h => h.toLowerCase() === 'customerpo' || h.toLowerCase() === 'po #' || h.toLowerCase() === 'po#');
+                
+                if (ifNumCol === -1 || poNumCol === -1) {
+                    console.warn('PO Data: Could not find IF # or PO # columns. Headers:', headers);
+                    return;
+                }
+                
+                // Build lookup map
+                poLookupMap = {};
+                json.table.rows.forEach(r => {
+                    const ifCell = r.c && r.c[ifNumCol];
+                    const poCell = r.c && r.c[poNumCol];
+                    const ifNum = ifCell ? (ifCell.v || '') : '';
+                    const poNum = poCell ? (poCell.f || poCell.v || '') : '';
+                    if (ifNum && poNum) {
+                        poLookupMap[ifNum] = String(poNum);
+                    }
+                });
+                console.log(`[PO Data] Loaded ${Object.keys(poLookupMap).length} PO # entries from source sheet`);
+            } catch (e) {
+                console.warn('PO Data load failed:', e);
+            }
+        }
+        
         async function loadDashboard() {
             try {
+                // Load PO data from source sheet first (fixes ARRAYFORMULA issue)
+                await loadPOData();
+                
                 const raw = await fetchSheetData(MAIN_DATA_GID, true); // Pass true to capture headers
+                
+                // Merge PO # from source sheet into main data
+                raw.forEach(r => {
+                    const ifNum = r['IF #'] || r['IF#'] || '';
+                    if (ifNum && poLookupMap[ifNum]) {
+                        r['PO #'] = poLookupMap[ifNum];
+                    }
+                });
+                
                 allRawData = raw; // Store ALL raw data for All Data page
                 allData = raw.filter(r => {
                     const cat = getCategory(r);
