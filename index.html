@@ -4630,7 +4630,8 @@
                 fetchPalletData().catch(e => console.warn('Pallet data load failed:', e));
                 
                 const now = new Date();
-                document.getElementById('lastUpdated').textContent = `Updated: ${now.toLocaleTimeString()}`;
+                const lastUpdatedEl = document.getElementById('lastUpdated');
+                if (lastUpdatedEl) lastUpdatedEl.textContent = `Updated: ${now.toLocaleTimeString()}`;
                 document.getElementById('dataInfo').innerHTML = `<strong>Data Loaded</strong>${allData.length} orders<br>${now.toLocaleTimeString()}`;
                 
                 document.getElementById('loadingState').style.display = 'none';
