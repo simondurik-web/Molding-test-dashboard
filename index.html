@@ -11918,6 +11918,8 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const dueDate = getVal(row, 'REQUESTED_DATE') || '-';
             const tire = getVal(row, 'TIRE') || '-';
             const hub = getVal(row, 'HUB') || '-';
+            const ifNum = getVal(row, 'IF_NUM') || '-';
+            const poNum = getVal(row, 'PO_NUM') || '-';
             const tireInStock = hasTire(row);
             const hubInStock = hasHub(row);
             const isRollTech = getCategory(row) === 'rolltech';
@@ -11953,6 +11955,14 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">${t('mobile.due')}</span>
                             <span class="mobile-card-value ${days < 0 ? 'danger' : ''}">${daysText}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">IF #</span>
+                            <span class="mobile-card-value">${ifNum}</span>
+                        </div>
+                        <div class="mobile-card-field">
+                            <span class="mobile-card-label">PO #</span>
+                            <span class="mobile-card-value">${poNum}</span>
                         </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">${t('mobile.tire')}</span>
