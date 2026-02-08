@@ -11584,6 +11584,9 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const dueDate = getVal(row, 'REQUESTED_DATE') || '-';
             const tire = getVal(row, 'TIRE') || '-';
             const hub = getVal(row, 'HUB') || '-';
+            const tireInStock = hasTire(row);
+            const hubInStock = hasHub(row);
+            const isRollTech = getCategory(row) === 'rolltech';
             
             let cardClass = 'mobile-order-card';
             if (urgent) cardClass += ' urgent';
@@ -11599,6 +11602,10 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             // Use showMobilePhotos on mobile/tablet, showPalletPictures on desktop
             const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
             const clickFn = isCardMode ? `showMobilePhotos('${line}')` : `showPalletPictures('${line}')`;
+            
+            // Tire/Hub color: green if in stock, red if not (Roll Tech only)
+            const tireStyle = isRollTech ? `color:${tireInStock ? '#48bb78' : '#fc8181'};${!tireInStock ? 'font-weight:bold;' : ''}` : '';
+            const hubStyle = isRollTech ? `color:${hubInStock ? '#48bb78' : '#fc8181'};${!hubInStock ? 'font-weight:bold;' : ''}` : '';
             
             return `
                 <div class="${cardClass}" onclick="${clickFn}">
@@ -11620,11 +11627,11 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                         </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">Tire</span>
-                            <span class="mobile-card-value">${tire}</span>
+                            <span class="mobile-card-value" style="${tireStyle}">${tire}</span>
                         </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">Hub</span>
-                            <span class="mobile-card-value">${hub}</span>
+                            <span class="mobile-card-value" style="${hubStyle}">${hub}</span>
                         </div>
                     </div>
                     <div class="mobile-card-footer">
@@ -11911,6 +11918,9 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const dueDate = getVal(row, 'REQUESTED_DATE') || '-';
             const tire = getVal(row, 'TIRE') || '-';
             const hub = getVal(row, 'HUB') || '-';
+            const tireInStock = hasTire(row);
+            const hubInStock = hasHub(row);
+            const isRollTech = getCategory(row) === 'rolltech';
             
             let cardClass = 'mobile-order-card';
             if (urgent) cardClass += ' urgent';
@@ -11946,11 +11956,11 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                         </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">${t('mobile.tire')}</span>
-                            <span class="mobile-card-value">${tire}</span>
+                            <span class="mobile-card-value" style="color:${isRollTech ? (tireInStock ? '#48bb78' : '#fc8181') : 'inherit'};${isRollTech && !tireInStock ? 'font-weight:bold;' : ''}">${tire}</span>
                         </div>
                         <div class="mobile-card-field">
                             <span class="mobile-card-label">${t('mobile.hub')}</span>
-                            <span class="mobile-card-value">${hub}</span>
+                            <span class="mobile-card-value" style="color:${isRollTech ? (hubInStock ? '#48bb78' : '#fc8181') : 'inherit'};${isRollTech && !hubInStock ? 'font-weight:bold;' : ''}">${hub}</span>
                         </div>
                     </div>
                     <div class="mobile-card-footer">
