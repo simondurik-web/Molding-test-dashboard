@@ -1268,8 +1268,12 @@
             .dept-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .dept-card { padding: 12px; }
             
-            /* Charts: shorter in landscape */
-            .chart-container { height: 180px; }
+            /* Charts: shorter in landscape, but tables need auto height */
+            .chart-container { height: 180px; overflow: hidden; }
+            .chart-container:has(.scrollable-table) { height: auto; overflow: visible; }
+            
+            /* Drilldown sections: ensure they clear properly */
+            .drilldown-section { clear: both; position: relative; z-index: 1; }
             
             /* Tables: force reasonable height in landscape */
             .scrollable-table { max-height: calc(100vh - 80px) !important; min-height: 200px !important; }
@@ -1869,7 +1873,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.17</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.18</div>
     </div>
 
     <div class="main-content">
