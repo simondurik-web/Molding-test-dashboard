@@ -5384,10 +5384,71 @@
         function filterOrdersDataTable() { updateOrdersDataPage(); }
         
         function exportOrdersDataToCSV() {
-            const data = allData.filter(r => ordersDataFilters.categories[getCategory(r)] && ordersDataFilters.statuses[getStatus(r)]);
-            const headers = ['Line','IF #','PO #','Priority','Days Until','Customer','Part','Qty','Tire','Hub','Bearings','Status'];
-            const rows = data.map(r => [getVal(r,'LINE'),getVal(r,'IF_NUM'),getVal(r,'PO_NUM'),getVal(r,'PRIORITY'),getVal(r,'DAYS_UNTIL'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'BEARINGS'),getStatus(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_data.csv');
+            let data = allData.filter(r => ordersDataFilters.categories[getCategory(r)] && ordersDataFilters.statuses[getStatus(r)]);
+            
+            // Apply column filters
+            data = data.filter(r => {
+                const status = getStatus(r);
+                const isRollTech = getCategory(r) === 'rolltech';
+                if (!passesColumnFilter('ordersData', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'poNum', getVal(r, 'PO_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
+                if (!passesColumnFilter('ordersData', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersData', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersData', 'tire', isRollTech ? (getVal(r, 'TIRE') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'hub', isRollTech ? (getVal(r, 'HUB') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'bearings', isRollTech ? (getVal(r, 'BEARINGS') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersData', 'status', status)) return false;
+                return true;
+            });
+            
+            // Apply sort
+            data.sort((a, b) => {
+                let va, vb;
+                switch(ordersDataSort.field) {
+                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'poNum': va = getVal(a, 'PO_NUM') || ''; vb = getVal(b, 'PO_NUM') || ''; break;
+                    case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
+                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
+                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
+                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
+                    case 'status': va = getStatus(a); vb = getStatus(b); break;
+                    default: va = a[ordersDataSort.field]; vb = b[ordersDataSort.field];
+                }
+                if (typeof va === 'string') return ordersDataSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                return ordersDataSort.asc ? va - vb : vb - va;
+            });
+            
+            // Apply search
+            const search = (document.getElementById('ordersDataSearch').value || '').toLowerCase();
+            if (search) {
+                data = data.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
+            }
+            
+            // Build CSV with visible columns only
+            const allCols = [
+                { key: 'line', header: 'Line', getValue: r => getVal(r, 'LINE') },
+                { key: 'ifNum', header: 'IF #', getValue: r => getVal(r, 'IF_NUM') },
+                { key: 'poNum', header: 'PO #', getValue: r => getVal(r, 'PO_NUM') },
+                { key: 'priority', header: 'Priority', getValue: r => getVal(r, 'PRIORITY') },
+                { key: 'daysUntil', header: 'Days Until', getValue: r => getVal(r, 'DAYS_UNTIL') },
+                { key: 'customer', header: 'Customer', getValue: r => getVal(r, 'CUSTOMER') },
+                { key: 'part', header: 'Part', getValue: r => getVal(r, 'PART') },
+                { key: 'qty', header: 'Qty', getValue: r => getVal(r, 'QTY') },
+                { key: 'tire', header: 'Tire', getValue: r => getVal(r, 'TIRE') },
+                { key: 'hub', header: 'Hub', getValue: r => getVal(r, 'HUB') },
+                { key: 'bearings', header: 'Bearings', getValue: r => getVal(r, 'BEARINGS') },
+                { key: 'status', header: 'Status', getValue: r => getStatus(r) }
+            ];
+            const visibleCols = allCols.filter(c => !isColumnHidden('ordersData', c.key));
+            const headers = visibleCols.map(c => c.header);
+            const rows = data.map(r => visibleCols.map(c => `"${(c.getValue(r) || '').toString().replace(/"/g, '""')}"`).join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'orders_data.csv');
         }
 
         // ============================================================
@@ -6886,14 +6947,84 @@
         function filterOrdersShippedTable() { updateOrdersShippedPage(); }
         
         function exportOrdersShippedToCSV() {
-            const data = allData.filter(r => ordersShippedFilters.categories[getCategory(r)] && getStatus(r) === 'shipped');
-            const headers = ['Line','IF #','PO #','Shipped Date','Days Late','Customer','Part','Qty','Revenue','P/L'];
-            const rows = data.map(r => {
-                const _s = parseDate(r[COL.SHIPPED_DATE]), _r = parseDate(r[COL.REQUESTED_DATE]);
-                const _dl = (_s && _r) ? Math.round((_s - _r) / (1000 * 60 * 60 * 24)) : '';
-                return [getVal(r,'LINE'),getVal(r,'IF_NUM'),getVal(r,'PO_NUM'),r[COL.SHIPPED_DATE],_dl,getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),r[COL.REVENUE],getPLValue(r)].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',');
+            // Get the same filtered data as the table
+            let data = allData.filter(r => ordersShippedFilters.categories[getCategory(r)] && getStatus(r) === 'shipped');
+
+            // Apply column filters (same as renderOrdersShippedTable)
+            data = data.filter(r => {
+                const pl = getPLValue(r);
+                if (!passesColumnFilter('ordersShipped', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'poNum', getVal(r, 'PO_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'shippedDate', r[COL.SHIPPED_DATE] || '-')) return false;
+                const _shippedD = parseDate(r[COL.SHIPPED_DATE]), _requestedD = parseDate(r[COL.REQUESTED_DATE]);
+                const _daysLate = (_shippedD && _requestedD) ? Math.round((_shippedD - _requestedD) / (1000 * 60 * 60 * 24)) : null;
+                const _daysLateStr = _daysLate !== null ? (_daysLate > 0 ? '+' + _daysLate : String(_daysLate)) : '-';
+                if (!passesColumnFilter('ordersShipped', 'daysLate', _daysLateStr)) return false;
+                if (!passesColumnFilter('ordersShipped', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersShipped', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (salesUnlocked) {
+                    if (!passesColumnFilter('ordersShipped', 'revenue', formatCurrency(parseNumber(r[COL.REVENUE])))) return false;
+                    if (!passesColumnFilter('ordersShipped', 'pl', formatCurrency(pl))) return false;
+                }
+                return true;
             });
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_shipped.csv');
+
+            // Apply sort (same as table)
+            data.sort((a, b) => {
+                let va, vb;
+                switch(ordersShippedSort.field) {
+                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                    case 'daysLate': {
+                        const shipA = parseDate(a[COL.SHIPPED_DATE]), reqA = parseDate(a[COL.REQUESTED_DATE]);
+                        const shipB = parseDate(b[COL.SHIPPED_DATE]), reqB = parseDate(b[COL.REQUESTED_DATE]);
+                        va = (shipA && reqA) ? (shipA - reqA) : 0;
+                        vb = (shipB && reqB) ? (shipB - reqB) : 0;
+                        break;
+                    }
+                    default: va = getVal(a, ordersShippedSort.field) || ''; vb = getVal(b, ordersShippedSort.field) || '';
+                }
+                if (typeof va === 'string') return ordersShippedSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                return ordersShippedSort.asc ? va - vb : vb - va;
+            });
+
+            // Apply search
+            const search = (document.getElementById('ordersShippedSearch').value || '').toLowerCase();
+            if (search) {
+                data = data.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
+            }
+
+            // Define all possible columns
+            const allCols = [
+                { key: 'line', header: 'Line', getValue: r => getVal(r, 'LINE') },
+                { key: 'ifNum', header: 'IF #', getValue: r => getVal(r, 'IF_NUM') },
+                { key: 'poNum', header: 'PO #', getValue: r => getVal(r, 'PO_NUM') },
+                { key: 'shippedDate', header: 'Shipped Date', getValue: r => r[COL.SHIPPED_DATE] },
+                { key: 'daysLate', header: 'Days Late', getValue: r => {
+                    const s = parseDate(r[COL.SHIPPED_DATE]), req = parseDate(r[COL.REQUESTED_DATE]);
+                    return (s && req) ? Math.round((s - req) / (1000 * 60 * 60 * 24)) : '';
+                }},
+                { key: 'customer', header: 'Customer', getValue: r => getVal(r, 'CUSTOMER') },
+                { key: 'part', header: 'Part', getValue: r => getVal(r, 'PART') },
+                { key: 'qty', header: 'Qty', getValue: r => getVal(r, 'QTY') },
+                { key: 'revenue', header: 'Revenue', getValue: r => r[COL.REVENUE], requiresSales: true },
+                { key: 'pl', header: 'P/L', getValue: r => getPLValue(r), requiresSales: true }
+            ];
+
+            // Filter to visible columns only
+            const visibleCols = allCols.filter(c => {
+                if (c.requiresSales && !salesUnlocked) return false;
+                return !isColumnHidden('ordersShipped', c.key);
+            });
+
+            const headers = visibleCols.map(c => c.header);
+            const rows = data.map(r => visibleCols.map(c => {
+                const v = c.getValue(r);
+                return '"' + ((v || '').toString().replace(/"/g, '""')) + '"';
+            }).join(','));
+
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'orders_shipped.csv');
         }
 
         // ============================================================
@@ -8647,7 +8778,71 @@
             updateSalesDatesPage();
         }
         
-        function exportDatesCSV() { downloadCSV('Month,Status,Orders,Quantity,Revenue,P/L,Margin', 'dates_pl.csv'); }
+        function exportDatesCSV() {
+            const data = getFilteredDatesData();
+            const monthStats = {};
+            
+            data.forEach(r => {
+                const dateStr = getAttributionDate(r);
+                if (!dateStr) return;
+                const month = getMonthKey(dateStr);
+                const status = getStatus(r);
+                if (!monthStats[month]) monthStats[month] = { orders: 0, shipped: 0, qty: 0, revenue: 0, shippedPL: 0, forecastPL: 0 };
+                monthStats[month].orders++;
+                monthStats[month].qty += parseNumber(getVal(r, 'QTY'));
+                monthStats[month].revenue += parseNumber(r[COL.REVENUE]);
+                if (status === 'shipped') monthStats[month].shipped++;
+                if (!hasMissingCostData(r)) {
+                    const pl = getPLValue(r);
+                    if (status === 'shipped') monthStats[month].shippedPL += pl;
+                    else monthStats[month].forecastPL += pl;
+                }
+            });
+            
+            let monthsArray = Object.entries(monthStats).map(([month, stats]) => {
+                const totalPL = stats.shippedPL + stats.forecastPL;
+                const rowMargin = stats.revenue > 0 ? (totalPL / stats.revenue * 100) : 0;
+                return {
+                    month, monthLabel: formatMonthLabel(month), statusText: `${stats.shipped}/${stats.orders} Shipped`,
+                    orders: stats.orders, qty: stats.qty, revenue: stats.revenue, pl: totalPL, margin: rowMargin
+                };
+            });
+            
+            // Apply column filters
+            monthsArray = monthsArray.filter(m => {
+                if (!passesColumnFilter('dates', 'month', m.monthLabel)) return false;
+                if (!passesColumnFilter('dates', 'status', m.statusText)) return false;
+                if (!passesColumnFilter('dates', 'orders', String(m.orders))) return false;
+                if (!passesColumnFilter('dates', 'qty', String(m.qty))) return false;
+                if (!passesColumnFilter('dates', 'revenue', formatCurrency(m.revenue))) return false;
+                if (!passesColumnFilter('dates', 'pl', m.pl >= 0 ? 'Positive' : 'Negative')) return false;
+                let marginCat = m.margin < 0 ? 'Negative' : m.margin < 10 ? 'Low (0-10%)' : m.margin < 20 ? 'Medium (10-20%)' : 'High (>20%)';
+                if (!passesColumnFilter('dates', 'margin', marginCat)) return false;
+                return true;
+            });
+            
+            // Apply sort
+            monthsArray.sort((a, b) => {
+                const field = datesSort.field;
+                if (field === 'month') return datesSort.asc ? a.month.localeCompare(b.month) : b.month.localeCompare(a.month);
+                return datesSort.asc ? a[field] - b[field] : b[field] - a[field];
+            });
+            
+            // Build CSV with visible columns only
+            const allCols = [
+                { key: 'month', header: 'Month', getValue: m => m.monthLabel },
+                { key: 'status', header: 'Status', getValue: m => m.statusText },
+                { key: 'orders', header: 'Orders', getValue: m => m.orders },
+                { key: 'qty', header: 'Quantity', getValue: m => m.qty },
+                { key: 'revenue', header: 'Revenue', getValue: m => m.revenue },
+                { key: 'pl', header: 'P/L', getValue: m => m.pl },
+                { key: 'margin', header: 'Margin %', getValue: m => m.margin.toFixed(1) }
+            ];
+            const visibleCols = allCols.filter(c => !isColumnHidden('dates', c.key));
+            const headers = visibleCols.map(c => c.header);
+            const rows = monthsArray.map(m => visibleCols.map(c => `"${(c.getValue(m) || '').toString().replace(/"/g, '""')}"`).join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'dates_pl.csv');
+        }
         
         // Dates Drilldown Functions
         function showDatesCustomerDrilldown(month) {
