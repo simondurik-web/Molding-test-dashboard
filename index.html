@@ -1869,7 +1869,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.12</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.28.13</div>
     </div>
 
     <div class="main-content">
@@ -3593,7 +3593,9 @@
         const QUOTES_REGISTRY_GID = '1279128282';  // Quotes Registry
         const STAGED_RECORDS_GID = '1519623398';  // Staged records dashboard
         const SHIPPING_RECORDS_GID = '1752263458';  // Shipping records dashboard
-        const FULFILLMENT_LINE_DATA_GID = '1307932521';  // Fulfillment Line Data Import (source for PO #)
+        // PO # Source: External "Fulfillment Line Data Import" spreadsheet
+        const PO_SOURCE_SHEET_ID = '1bQGG8wcnyJpYUQwksvy6oRB1ZCu5VvGzNFwnRWflDhg';
+        const PO_SOURCE_GID = '992200772';  // Fulfillment Line Data Import tab
         
         const COL = {
             CATEGORY: 'Category',
@@ -4708,11 +4710,11 @@
             });
         }
         
-        // Load PO # data from source sheet (Fulfillment Line Data Import)
-        // This fixes the ARRAYFORMULA issue where gviz API can't read spilled values
+        // Load PO # data from source sheet (external Fulfillment Line Data Import spreadsheet)
+        // This fixes the ARRAYFORMULA/IMPORTRANGE issue where gviz API can't read spilled values
         async function loadPOData() {
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${FULFILLMENT_LINE_DATA_GID}`;
+                const url = `https://docs.google.com/spreadsheets/d/${PO_SOURCE_SHEET_ID}/gviz/tq?tqx=out:json&gid=${PO_SOURCE_GID}`;
                 const res = await fetch(url);
                 const text = await res.text();
                 const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
