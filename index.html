@@ -2520,6 +2520,28 @@
                     <table class="data-table"><thead><tr id="datesTableHeader"></tr></thead><tbody id="datesTableBody"></tbody></table>
                 </div>
             </div>
+            <!-- Dates Monthly Orders Drilldown (Level 1a - shows first) -->
+            <div class="drilldown-section" id="datesMonthlyOrdersDrilldown">
+                <div class="drilldown-header">
+                    <div>
+                        <div class="breadcrumb">Months › <span id="datesMonthlyOrdersMonth">-</span></div>
+                        <h3 data-i18n="drilldown.monthlyOrders">Monthly Orders</h3>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="toolbar-btn clear-all-filters-btn" id="datesMonthlyOrdersClearFiltersBtn" onclick="clearAllTableFilters('datesMonthlyOrders')" style="display:none;">🗑 Clear Filters</button>
+                        <button class="toolbar-btn columns-btn" onclick="openColumnToggle('datesMonthlyOrders')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
+                        <button class="toolbar-btn" onclick="exportDatesMonthlyOrdersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                        <button class="close-btn" onclick="closeDatesMonthlyOrdersDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
+                    </div>
+                </div>
+                <div class="summary-row" id="datesMonthlyOrdersSummary"></div>
+                <div class="scrollable-table">
+                    <table class="data-table">
+                        <thead><tr id="datesMonthlyOrdersHeader"></tr></thead>
+                        <tbody id="datesMonthlyOrdersBody"></tbody>
+                    </table>
+                </div>
+            </div>
             <!-- Dates Customer Drilldown (Level 1) -->
             <div class="drilldown-section" id="datesCustomerDrilldown">
                 <div class="drilldown-header">
@@ -2527,12 +2549,17 @@
                         <div class="breadcrumb">Months › <span id="datesCustomerDrilldownMonth">-</span></div>
                         <h3 data-i18n="drilldown.customerBreakdown">Customer Breakdown</h3>
                     </div>
-                    <button class="close-btn" onclick="closeDatesCustomerDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="toolbar-btn clear-all-filters-btn" id="datesCustomerClearFiltersBtn" onclick="clearAllTableFilters('datesCustomer')" style="display:none;">🗑 Clear Filters</button>
+                        <button class="toolbar-btn columns-btn" onclick="openColumnToggle('datesCustomer')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
+                        <button class="toolbar-btn" onclick="exportDatesCustomerCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                        <button class="close-btn" onclick="closeDatesCustomerDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
+                    </div>
                 </div>
                 <div class="summary-row" id="datesCustomerSummary"></div>
                 <div class="scrollable-table">
                     <table class="data-table">
-                        <thead><tr><th>Customer</th><th>Orders</th><th>Quantity</th><th>Revenue</th><th>P/L</th><th>Margin</th></tr></thead>
+                        <thead><tr id="datesCustomerHeader"></tr></thead>
                         <tbody id="datesCustomerDrilldownBody"></tbody>
                     </table>
                 </div>
@@ -3079,6 +3106,7 @@
                 'customers.title': 'P/L by Customer',
                 'dates.title': 'P/L by Date',
                 'drilldown.customerBreakdown': 'Customer Breakdown',
+                'drilldown.monthlyOrders': 'Monthly Orders',
                 'drilldown.productBreakdown': 'Product Breakdown',
                 'drilldown.ordersHistory': 'Orders & Price History',
                 // Batch 4: Inventory + BOM + All Data
@@ -3375,6 +3403,7 @@
                 'customers.title': 'P/L por Cliente',
                 'dates.title': 'P/L por Fecha',
                 'drilldown.customerBreakdown': 'Desglose por Cliente',
+                'drilldown.monthlyOrders': 'Pedidos del Mes',
                 'drilldown.productBreakdown': 'Desglose por Producto',
                 'drilldown.ordersHistory': 'Historial de Órdenes y Precios',
                 // Batch 4: Inventory + BOM + All Data
@@ -3981,6 +4010,8 @@
                 case 'shippingRecords': sortShippingRecordsTable(columnKey); break;
                 case 'stagedRecords': sortStagedRecordsTable(columnKey); break;
                 case 'prodMake': sortProdMakeTable(columnKey); break;
+                case 'datesMonthlyOrders': sortDatesMonthlyOrdersTable(columnKey); break;
+                case 'datesCustomer': sortDatesCustomerTable(columnKey); break;
             }
         }
         
@@ -4121,6 +4152,8 @@
                 case 'shippingRecords': renderShippingRecordsTable(); break;
                 case 'stagedRecords': renderStagedRecordsTable(); break;
                 case 'prodMake': renderProdMakeTable(); break;
+                case 'datesMonthlyOrders': renderDatesMonthlyOrdersTable(); break;
+                case 'datesCustomer': renderDatesCustomerTable(); break;
             }
         }
         
@@ -4273,6 +4306,36 @@
                 { key: 'month', labelEn: 'Month', labelEs: 'Mes' },
                 { key: 'orders', labelEn: 'Orders', labelEs: 'Órdenes' },
                 { key: 'units', labelEn: 'Units', labelEs: 'Unidades' },
+                { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
+                { key: 'pl', labelEn: 'P/L', labelEs: 'G/P' },
+                { key: 'margin', labelEn: 'Margin', labelEs: 'Margen' }
+            ],
+            datesMonthlyOrders: [
+                { key: 'category', labelEn: 'Category', labelEs: 'Categoría' },
+                { key: 'dateOfRequest', labelEn: 'Date of Request', labelEs: 'Fecha de Solicitud' },
+                { key: 'ifNum', labelEn: 'IF #', labelEs: 'IF #' },
+                { key: 'fusionStatus', labelEn: 'IF Status in Fusion', labelEs: 'Estado en Fusion' },
+                { key: 'internalStatus', labelEn: 'Internal Status', labelEs: 'Estado Interno' },
+                { key: 'poNum', labelEn: 'PO #', labelEs: 'PO #' },
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'part', labelEn: 'Part #', labelEs: 'Parte #' },
+                { key: 'qty', labelEn: 'Order Qty', labelEs: 'Cant. Orden' },
+                { key: 'requestedDate', labelEn: 'Requested Date', labelEs: 'Fecha Solicitada' },
+                { key: 'unitPrice', labelEn: 'Unit Price', labelEs: 'Precio Unitario' },
+                { key: 'contribution', labelEn: 'Contribution Level', labelEs: 'Nivel de Contribución' },
+                { key: 'variableCost', labelEn: 'Variable Cost', labelEs: 'Costo Variable' },
+                { key: 'totalCost', labelEn: 'Total Cost', labelEs: 'Costo Total' },
+                { key: 'salesTarget', labelEn: 'Sales Target (20%)', labelEs: 'Objetivo de Venta (20%)' },
+                { key: 'profitPerPart', labelEn: 'Profit/Part', labelEs: 'Ganancia/Parte' },
+                { key: 'pl', labelEn: 'P/L', labelEs: 'G/P' },
+                { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
+                { key: 'shippedDate', labelEn: 'Shipped Date', labelEs: 'Fecha de Envío' },
+                { key: 'shippingCost', labelEn: 'Shipping Cost', labelEs: 'Costo de Envío' }
+            ],
+            datesCustomer: [
+                { key: 'customer', labelEn: 'Customer', labelEs: 'Cliente' },
+                { key: 'orders', labelEn: 'Orders', labelEs: 'Órdenes' },
+                { key: 'quantity', labelEn: 'Quantity', labelEs: 'Cantidad' },
                 { key: 'revenue', labelEn: 'Revenue', labelEs: 'Ingresos' },
                 { key: 'pl', labelEn: 'P/L', labelEs: 'G/P' },
                 { key: 'margin', labelEn: 'Margin', labelEs: 'Margen' }
@@ -4512,6 +4575,10 @@
                     return getUniqueStagedRecordsColumnValues(columnKey);
                 case 'prodMake':
                     return getUniqueProdMakeColumnValues(columnKey);
+                case 'datesMonthlyOrders':
+                    return getUniqueDatesMonthlyOrdersColumnValues(columnKey);
+                case 'datesCustomer':
+                    return getUniqueDatesCustomerColumnValues(columnKey);
             }
             return Array.from(values).sort();
         }
@@ -9109,44 +9176,37 @@
             currentDrilldownMonth = month;
             const data = getFilteredDatesData().filter(r => getMonthKey(getAttributionDate(r)) === month);
             
-            const custStats = {};
-            data.forEach(r => {
-                const c = getVal(r, 'CUSTOMER') || 'Unknown';
-                if (!custStats[c]) custStats[c] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
-                custStats[c].orders++;
-                custStats[c].qty += parseNumber(getVal(r, 'QTY'));
-                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
-                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
-            });
-            
             const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
             const totalRev = data.reduce((s, r) => s + parseNumber(r[COL.REVENUE]), 0);
             const totalPL = data.filter(r => !hasMissingCostData(r)).reduce((s, r) => s + getPLValue(r), 0);
+            const monthLabel = formatMonthLabel(month);
             
-            document.getElementById('datesCustomerDrilldownMonth').textContent = formatMonthLabel(month);
+            // --- Monthly Orders (new, shows first) ---
+            datesMonthlyOrdersData = data;
+            document.getElementById('datesMonthlyOrdersMonth').textContent = monthLabel;
+            document.getElementById('datesMonthlyOrdersSummary').innerHTML = `
+                <div class="summary-item"><div class="label">Orders</div><div class="value">${data.length}</div></div>
+                <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
+                <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
+                <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
+            `;
+            renderDatesMonthlyOrdersTable();
+            document.getElementById('datesMonthlyOrdersDrilldown').classList.add('active');
+
+            // --- Customer Breakdown (existing, shows below) ---
+            datesCustomerData = data;
+            document.getElementById('datesCustomerDrilldownMonth').textContent = monthLabel;
             document.getElementById('datesCustomerSummary').innerHTML = `
                 <div class="summary-item"><div class="label">Orders</div><div class="value">${data.length}</div></div>
                 <div class="summary-item"><div class="label">Total Qty</div><div class="value">${formatNumber(totalQty)}</div></div>
                 <div class="summary-item"><div class="label">Revenue</div><div class="value">${formatCurrency(totalRev)}</div></div>
                 <div class="summary-item"><div class="label">P/L</div><div class="value ${totalPL >= 0 ? 'positive' : 'negative'}">${formatCurrency(totalPL)}</div></div>
             `;
-            
-            const sorted = Object.entries(custStats).sort((a,b) => b[1].pl - a[1].pl);
-            document.getElementById('datesCustomerDrilldownBody').innerHTML = sorted.map(([customer, stats]) => {
-                const margin = stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0;
-                return `<tr class="clickable" onclick="showDatesOrdersDrilldown('${currentDrilldownMonth}', '${customer.replace(/'/g, "\\'")}')">
-                    <td><strong>${customer}</strong></td>
-                    <td>${formatNumber(stats.orders)}</td>
-                    <td>${formatNumber(stats.qty)}</td>
-                    <td>${formatCurrency(stats.revenue)}</td>
-                    <td class="${stats.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(stats.pl)}</td>
-                    <td class="${margin >= 0 ? 'positive' : 'negative'}">${margin.toFixed(1)}%</td>
-                </tr>`;
-            }).join('');
+            renderDatesCustomerTable();
             
             document.getElementById('datesCustomerDrilldown').classList.add('active');
             document.getElementById('datesOrdersDrilldown').classList.remove('active');
-            document.getElementById('datesCustomerDrilldown').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('datesMonthlyOrdersDrilldown').scrollIntoView({ behavior: 'smooth' });
         }
         
         function showDatesOrdersDrilldown(month, customer) {
@@ -9202,12 +9262,288 @@
         function closeDatesCustomerDrilldown() {
             document.getElementById('datesCustomerDrilldown').classList.remove('active');
             document.getElementById('datesOrdersDrilldown').classList.remove('active');
+            document.getElementById('datesMonthlyOrdersDrilldown').classList.remove('active');
             currentDrilldownMonth = null;
         }
         
         function closeDatesOrdersDrilldown() { document.getElementById('datesOrdersDrilldown').classList.remove('active'); }
         function backToDatesCustomers() { document.getElementById('datesOrdersDrilldown').classList.remove('active'); }
-        function closeAllDatesDrilldowns() { closeDatesCustomerDrilldown(); }
+        function closeAllDatesDrilldowns() { closeDatesCustomerDrilldown(); closeDatesMonthlyOrdersDrilldown(); }
+        function closeDatesMonthlyOrdersDrilldown() { document.getElementById('datesMonthlyOrdersDrilldown').classList.remove('active'); }
+
+        // ============================================================
+        // DATES MONTHLY ORDERS DRILLDOWN — state & helpers
+        // ============================================================
+        let datesMonthlyOrdersSort = { field: 'requestedDate', asc: false };
+        let datesMonthlyOrdersData = []; // cached filtered data for current month
+        let datesCustomerSort = { field: 'revenue', asc: false };
+        let datesCustomerData = []; // cached for customer breakdown
+
+        function sortDatesMonthlyOrdersTable(columnKey) {
+            if (datesMonthlyOrdersSort.field === columnKey) datesMonthlyOrdersSort.asc = !datesMonthlyOrdersSort.asc;
+            else { datesMonthlyOrdersSort.field = columnKey; datesMonthlyOrdersSort.asc = false; }
+            renderDatesMonthlyOrdersTable();
+        }
+        function sortDatesCustomerTable(columnKey) {
+            if (datesCustomerSort.field === columnKey) datesCustomerSort.asc = !datesCustomerSort.asc;
+            else { datesCustomerSort.field = columnKey; datesCustomerSort.asc = false; }
+            renderDatesCustomerTable();
+        }
+
+        function getDatesMonthlyOrderRow(r) {
+            const unitPrice = getUnitPrice(r);
+            const profitPart = getProfitPerPart(r);
+            const pl = hasMissingCostData(r) ? 0 : getPLValue(r);
+            const revenue = parseNumber(r[COL.REVENUE]);
+            const qty = parseNumber(getVal(r, 'QTY'));
+            const variableCost = parseNumber(r[COL.VARIABLE_COST]);
+            const totalCost = parseNumber(r[COL.TOTAL_COST]);
+            const salesTarget = unitPrice > 0 ? unitPrice * 1.2 : 0;
+            const margin = revenue > 0 ? (pl / revenue * 100) : 0;
+            const shippingCost = parseNumber(r['Shipping Cost'] || r['shippingCost'] || r['Freight Cost'] || 0);
+            return {
+                category: getCategory(r) || '-',
+                dateOfRequest: r[COL.REQUEST_DATE] || '-',
+                ifNum: getVal(r, 'IF_NUM') || '-',
+                fusionStatus: getVal(r, 'FUSION_STATUS') || '-',
+                internalStatus: getVal(r, 'STATUS') || '-',
+                poNum: getVal(r, 'PO_NUM') || '-',
+                customer: getVal(r, 'CUSTOMER') || '-',
+                part: getVal(r, 'PART') || '-',
+                qty: qty,
+                requestedDate: r[COL.REQUESTED_DATE] || '-',
+                unitPrice: unitPrice,
+                contribution: margin,
+                variableCost: variableCost,
+                totalCost: totalCost,
+                salesTarget: salesTarget,
+                profitPerPart: profitPart,
+                pl: pl,
+                revenue: revenue,
+                shippedDate: r[COL.SHIPPED_DATE] || '-',
+                shippingCost: shippingCost,
+                _raw: r
+            };
+        }
+
+        function renderDatesMonthlyOrdersTable() {
+            initTableFilters('datesMonthlyOrders');
+            const isEs = currentLang === 'es';
+            const colDefs = tableColumnDefs['datesMonthlyOrders'];
+
+            // Build headers
+            const headerRow = document.getElementById('datesMonthlyOrdersHeader');
+            headerRow.innerHTML = colDefs.filter(c => !isColumnHidden('datesMonthlyOrders', c.key)).map(c => 
+                createFilterHeader('datesMonthlyOrders', c.key, isEs ? c.labelEs : c.labelEn, true)
+            ).join('');
+
+            // Filter
+            let rows = datesMonthlyOrdersData.map(r => getDatesMonthlyOrderRow(r));
+            rows = rows.filter(row => {
+                for (const c of colDefs) {
+                    if (isColumnHidden('datesMonthlyOrders', c.key)) continue;
+                    const val = formatMonthlyOrderCell(c.key, row);
+                    if (!passesColumnFilter('datesMonthlyOrders', c.key, val)) return false;
+                }
+                return true;
+            });
+
+            // Sort
+            const sf = datesMonthlyOrdersSort.field;
+            const asc = datesMonthlyOrdersSort.asc;
+            rows.sort((a, b) => {
+                let va = a[sf], vb = b[sf];
+                if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va;
+                va = String(va || ''); vb = String(vb || '');
+                return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+            });
+
+            // Render
+            const tbody = document.getElementById('datesMonthlyOrdersBody');
+            tbody.innerHTML = rows.map(row => {
+                const cells = colDefs.filter(c => !isColumnHidden('datesMonthlyOrders', c.key)).map(c => {
+                    const val = row[c.key];
+                    if (['unitPrice','variableCost','totalCost','salesTarget','profitPerPart','pl','revenue','shippingCost'].includes(c.key)) {
+                        const cls = (c.key === 'pl' || c.key === 'profitPerPart') ? (val >= 0 ? 'positive' : 'negative') : '';
+                        return `<td class="${cls}">${formatCurrency(val)}</td>`;
+                    }
+                    if (c.key === 'contribution') {
+                        return `<td>${getContributionBadge(val)}</td>`;
+                    }
+                    if (c.key === 'qty') return `<td>${formatNumber(val)}</td>`;
+                    return `<td>${val}</td>`;
+                }).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+        }
+
+        function formatMonthlyOrderCell(key, row) {
+            const val = row[key];
+            if (['unitPrice','variableCost','totalCost','salesTarget','profitPerPart','pl','revenue','shippingCost'].includes(key)) return formatCurrency(val);
+            if (key === 'contribution') return val >= 20 ? 'High (>20%)' : val >= 10 ? 'Medium (10-20%)' : val >= 0 ? 'Low (0-10%)' : 'Negative';
+            if (key === 'qty') return String(val);
+            return String(val || '-');
+        }
+
+        function getUniqueDatesMonthlyOrdersColumnValues(columnKey) {
+            const values = new Set();
+            datesMonthlyOrdersData.forEach(r => {
+                const row = getDatesMonthlyOrderRow(r);
+                values.add(formatMonthlyOrderCell(columnKey, row));
+            });
+            return Array.from(values).sort();
+        }
+
+        function renderDatesCustomerTable() {
+            initTableFilters('datesCustomer');
+            const isEs = currentLang === 'es';
+            const colDefs = tableColumnDefs['datesCustomer'];
+
+            // Build headers
+            const headerRow = document.getElementById('datesCustomerHeader');
+            headerRow.innerHTML = colDefs.filter(c => !isColumnHidden('datesCustomer', c.key)).map(c =>
+                createFilterHeader('datesCustomer', c.key, isEs ? c.labelEs : c.labelEn, true)
+            ).join('');
+
+            // Aggregate data by customer
+            const custStats = {};
+            datesCustomerData.forEach(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (!custStats[c]) custStats[c] = { customer: c, orders: 0, quantity: 0, revenue: 0, pl: 0 };
+                custStats[c].orders++;
+                custStats[c].quantity += parseNumber(getVal(r, 'QTY'));
+                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
+            });
+
+            let rows = Object.values(custStats).map(s => {
+                s.margin = s.revenue > 0 ? (s.pl / s.revenue * 100) : 0;
+                return s;
+            });
+
+            // Filter
+            rows = rows.filter(row => {
+                for (const c of colDefs) {
+                    if (isColumnHidden('datesCustomer', c.key)) continue;
+                    const val = formatDatesCustomerCell(c.key, row);
+                    if (!passesColumnFilter('datesCustomer', c.key, val)) return false;
+                }
+                return true;
+            });
+
+            // Sort
+            const sf = datesCustomerSort.field;
+            const asc = datesCustomerSort.asc;
+            rows.sort((a, b) => {
+                let va = a[sf], vb = b[sf];
+                if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va;
+                va = String(va || ''); vb = String(vb || '');
+                return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+            });
+
+            // Render
+            const tbody = document.getElementById('datesCustomerDrilldownBody');
+            tbody.innerHTML = rows.map(row => {
+                const cells = colDefs.filter(c => !isColumnHidden('datesCustomer', c.key)).map(c => {
+                    if (c.key === 'customer') return `<td><strong>${row.customer}</strong></td>`;
+                    if (c.key === 'orders') return `<td>${formatNumber(row.orders)}</td>`;
+                    if (c.key === 'quantity') return `<td>${formatNumber(row.quantity)}</td>`;
+                    if (c.key === 'revenue') return `<td>${formatCurrency(row.revenue)}</td>`;
+                    if (c.key === 'pl') return `<td class="${row.pl >= 0 ? 'positive' : 'negative'}">${formatCurrency(row.pl)}</td>`;
+                    if (c.key === 'margin') return `<td class="${row.margin >= 0 ? 'positive' : 'negative'}">${row.margin.toFixed(1)}%</td>`;
+                    return `<td>-</td>`;
+                }).join('');
+                return `<tr class="clickable" onclick="showDatesOrdersDrilldown('${currentDrilldownMonth}', '${row.customer.replace(/'/g, "\\'")}')">${cells}</tr>`;
+            }).join('');
+        }
+
+        function formatDatesCustomerCell(key, row) {
+            if (key === 'revenue') return formatCurrency(row.revenue);
+            if (key === 'pl') return formatCurrency(row.pl);
+            if (key === 'margin') return row.margin.toFixed(1) + '%';
+            if (key === 'orders' || key === 'quantity') return String(row[key]);
+            return String(row[key] || '-');
+        }
+
+        function getUniqueDatesCustomerColumnValues(columnKey) {
+            const custStats = {};
+            datesCustomerData.forEach(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (!custStats[c]) custStats[c] = { customer: c, orders: 0, quantity: 0, revenue: 0, pl: 0 };
+                custStats[c].orders++;
+                custStats[c].quantity += parseNumber(getVal(r, 'QTY'));
+                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
+            });
+            const values = new Set();
+            Object.values(custStats).forEach(row => {
+                row.margin = row.revenue > 0 ? (row.pl / row.revenue * 100) : 0;
+                values.add(formatDatesCustomerCell(columnKey, row));
+            });
+            return Array.from(values).sort();
+        }
+
+        // Export functions for each drilldown section
+        function exportDatesMonthlyOrdersCSV() {
+            const colDefs = tableColumnDefs['datesMonthlyOrders'];
+            const visibleCols = colDefs.filter(c => !isColumnHidden('datesMonthlyOrders', c.key));
+            let rows = datesMonthlyOrdersData.map(r => getDatesMonthlyOrderRow(r));
+            // Apply filters
+            rows = rows.filter(row => {
+                for (const c of colDefs) {
+                    if (isColumnHidden('datesMonthlyOrders', c.key)) continue;
+                    if (!passesColumnFilter('datesMonthlyOrders', c.key, formatMonthlyOrderCell(c.key, row))) return false;
+                }
+                return true;
+            });
+            // Sort
+            const sf = datesMonthlyOrdersSort.field, asc = datesMonthlyOrdersSort.asc;
+            rows.sort((a, b) => {
+                let va = a[sf], vb = b[sf];
+                if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va;
+                return String(va||'').localeCompare(String(vb||'')) * (asc ? 1 : -1);
+            });
+            const headers = visibleCols.map(c => currentLang === 'es' ? c.labelEs : c.labelEn);
+            const csvRows = rows.map(row => visibleCols.map(c => {
+                const val = ['unitPrice','variableCost','totalCost','salesTarget','profitPerPart','pl','revenue','shippingCost'].includes(c.key) ? row[c.key] : (c.key === 'contribution' ? row[c.key].toFixed(1) + '%' : row[c.key]);
+                return '"' + String(val || '').replace(/"/g, '""') + '"';
+            }).join(','));
+            downloadCSV([headers.join(','), ...csvRows].join('\n'), `monthly_orders_${currentDrilldownMonth || 'export'}.csv`);
+        }
+
+        function exportDatesCustomerCSV() {
+            const colDefs = tableColumnDefs['datesCustomer'];
+            const visibleCols = colDefs.filter(c => !isColumnHidden('datesCustomer', c.key));
+            const custStats = {};
+            datesCustomerData.forEach(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (!custStats[c]) custStats[c] = { customer: c, orders: 0, quantity: 0, revenue: 0, pl: 0 };
+                custStats[c].orders++;
+                custStats[c].quantity += parseNumber(getVal(r, 'QTY'));
+                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
+            });
+            let rows = Object.values(custStats).map(s => { s.margin = s.revenue > 0 ? (s.pl / s.revenue * 100) : 0; return s; });
+            rows = rows.filter(row => {
+                for (const c of colDefs) {
+                    if (isColumnHidden('datesCustomer', c.key)) continue;
+                    if (!passesColumnFilter('datesCustomer', c.key, formatDatesCustomerCell(c.key, row))) return false;
+                }
+                return true;
+            });
+            rows.sort((a, b) => {
+                const sf = datesCustomerSort.field, asc = datesCustomerSort.asc;
+                let va = a[sf], vb = b[sf];
+                if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va;
+                return String(va||'').localeCompare(String(vb||'')) * (asc ? 1 : -1);
+            });
+            const headers = visibleCols.map(c => currentLang === 'es' ? c.labelEs : c.labelEn);
+            const csvRows = rows.map(row => visibleCols.map(c => {
+                const val = c.key === 'margin' ? row.margin.toFixed(1) + '%' : row[c.key];
+                return '"' + String(val || '').replace(/"/g, '""') + '"';
+            }).join(','));
+            downloadCSV([headers.join(','), ...csvRows].join('\n'), `customer_breakdown_${currentDrilldownMonth || 'export'}.csv`);
+        }
 
         // ============================================================
         // ============================================================
