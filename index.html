@@ -3922,6 +3922,13 @@
             return 'other';
         };
         
+        const formatCategoryDisplay = cat => {
+            if (cat === 'rolltech') return 'Roll Tech';
+            if (cat === 'molding') return 'Molding';
+            if (cat === 'snappad') return 'Snap Pad';
+            return cat || '-';
+        };
+
         // UPDATED: Uses FUSION_STATUS (Col G) as fallback when STATUS (Col H) is empty
         const isCancelledOrClosed = row => {
             const s1 = (getVal(row, 'STATUS') || '').toLowerCase();
@@ -9314,7 +9321,7 @@
             const margin = revenue > 0 ? (pl / revenue * 100) : 0;
             const shippingCost = parseNumber(r['Shipping Cost'] || r['shippingCost'] || r['Freight Cost'] || 0);
             return {
-                category: getCategory(r) || '-',
+                category: formatCategoryDisplay(getCategory(r)),
                 dateOfRequest: r[COL.REQUEST_DATE] || '-',
                 ifNum: getVal(r, 'IF_NUM') || '-',
                 fusionStatus: getVal(r, 'FUSION_STATUS') || '-',
