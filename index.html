@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Molding Operations Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <style>
         /* DARK THEME (Default) */
         :root {
@@ -183,6 +184,11 @@
         .toolbar-btn { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: white; font-size: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
         .toolbar-btn:hover { border-color: var(--accent); background: rgba(49,130,206,0.2); }
         .toolbar-btn.active { background: var(--accent); border-color: var(--accent); }
+        .export-dropdown { position: relative; display: inline-block; }
+        .export-dropdown-content { display: none; position: absolute; right: 0; top: 100%; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; min-width: 140px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow: hidden; margin-top: 4px; }
+        .export-dropdown-content a { color: white; padding: 10px 14px; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; transition: background 0.15s; }
+        .export-dropdown-content a:hover { background: rgba(49,130,206,0.3); }
+        .export-dropdown.open .export-dropdown-content { display: block; }
         .toolbar-spacer { flex: 1; }
         .category-filters { display: flex; gap: 8px; }
         .category-btn { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; border: 2px solid; display: flex; align-items: center; gap: 6px; }
@@ -662,6 +668,9 @@
         html.light-theme .toolbar-btn:hover {
             background: rgba(49,130,206,0.1);
         }
+        html.light-theme .export-dropdown-content { background: #fff; border-color: #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        html.light-theme .export-dropdown-content a { color: #2d3748; }
+        html.light-theme .export-dropdown-content a:hover { background: rgba(49,130,206,0.1); }
         
         /* Search Box */
         html.light-theme .search-box {
@@ -1881,7 +1890,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.29.1</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.30.0</div>
     </div>
 
     <div class="main-content">
@@ -1955,7 +1964,7 @@
                 <button class="toolbar-btn columns-btn" id="ordersDataColumnsBtn" onclick="openColumnToggle('ordersData')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersDataSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersDataTable()">
-                <button class="toolbar-btn" onclick="exportOrdersDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportOrdersDataToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportOrdersDataToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.totalOrders">Total Orders</div><div class="value" id="ordersDataTotalOrders">-</div><div class="sub" id="ordersDataTotalUnits">-</div></div>
@@ -1988,7 +1997,7 @@
                     <input type="text" class="search-box" id="prodMakeSearch" placeholder="Search part #, mold type..." oninput="filterProdMakeTable()" style="width:180px;padding:4px 8px;font-size:12px;">
                     <button class="toolbar-btn clear-all-filters-btn" id="prodMakeClearFiltersBtn" onclick="clearAllTableFilters('prodMake')" style="padding:4px 8px;font-size:11px;">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                     <button class="toolbar-btn columns-btn" id="prodMakeColumnsBtn" onclick="openColumnToggle('prodMake')" style="padding:4px 8px;font-size:11px;">⚙️ <span data-i18n="ui.columns">Columns</span></button>
-                    <button class="toolbar-btn" onclick="exportProdMakeToCSV()" style="padding:4px 8px;font-size:11px;">📥 CSV</button>
+                    <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)" style="padding:4px 8px;font-size:11px;">📥 ▾</button><div class="export-dropdown-content"><a onclick="exportProdMakeToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportProdMakeExcel();closeExportDropdowns()">📊 Excel</a></div></div>
                     <button class="toolbar-btn" onclick="navigateTo('main')" style="padding:4px 8px;font-size:11px;">← Back</button>
                 </div>
             </div>
@@ -2038,7 +2047,7 @@
                     <button class="toolbar-btn clear-all-filters-btn" id="ordersQueueClearFiltersBtn" onclick="clearAllTableFilters('ordersQueue')" style="padding:4px 8px;font-size:11px;">🗑 <span data-i18n="filter.clearFilters">Clear</span></button>
                     <button class="toolbar-btn columns-btn" id="ordersQueueColumnsBtn" onclick="openColumnToggle('ordersQueue')" style="padding:4px 8px;font-size:11px;">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                     <input type="text" class="search-box" id="ordersQueueSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersQueueTable()" style="width:140px;padding:4px 8px;font-size:12px;">
-                    <button class="toolbar-btn" onclick="exportOrdersQueueToCSV()" style="padding:4px 8px;font-size:11px;">📥</button>
+                    <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)" style="padding:4px 8px;font-size:11px;">📥 ▾</button><div class="export-dropdown-content"><a onclick="exportOrdersQueueToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportOrdersQueueExcel();closeExportDropdowns()">📊 Excel</a></div></div>
                     <button class="toolbar-btn" onclick="navigateTo('main')" style="padding:4px 8px;font-size:11px;">← Back</button>
                 </div>
             </div>
@@ -2110,7 +2119,7 @@
                 <button class="toolbar-btn columns-btn" id="ordersStagedColumnsBtn" onclick="openColumnToggle('ordersStaged')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersStagedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersStagedTable()">
-                <button class="toolbar-btn" onclick="exportOrdersStagedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportOrdersStagedToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportOrdersStagedToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.stagedOrders">Staged Orders</div><div class="value" id="ordersStagedTotalOrders">-</div><div class="sub" id="ordersStagedTotalUnits">-</div></div>
@@ -2162,7 +2171,7 @@
                 <button class="toolbar-btn columns-btn" id="ordersShippedColumnsBtn" onclick="openColumnToggle('ordersShipped')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="ordersShippedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersShippedTable()">
-                <button class="toolbar-btn" onclick="exportOrdersShippedToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportOrdersShippedToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportOrdersShippedToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.shippedOrders">Shipped Orders</div><div class="value" id="ordersShippedTotalOrders">-</div><div class="sub" id="ordersShippedTotalUnits">-</div></div>
@@ -2193,7 +2202,7 @@
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <button class="toolbar-btn columns-btn" id="inventoryColumnsBtn" onclick="openColumnToggle('inventory')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportInvCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportInvCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportInvExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.totalItems">Total Items</div><div class="value" id="invStatTotal">-</div><div class="sub" id="invStatTypes">-</div></div>
@@ -2305,7 +2314,7 @@
                     <button class="category-btn snappad active" id="salesBtnSnapPad" onclick="toggleSalesCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
                 </div>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportSalesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportSalesCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportSalesExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.totalRevenue">Total Revenue</div><div class="value" id="salesStatRevenue">-</div><div class="sub" id="salesStatOrderCount">-</div></div>
@@ -2344,7 +2353,7 @@
                 <button class="toolbar-btn columns-btn" id="partsColumnsBtn" onclick="openColumnToggle('parts')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="partsSearch" data-i18n-placeholder="ui.search" placeholder="Search parts..." oninput="filterPartsTable()">
-                <button class="toolbar-btn" onclick="exportPartsCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportPartsCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportPartsExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h3 data-i18n="chart.allPartsPL">All Parts P/L Analysis</h3></div>
@@ -2424,7 +2433,7 @@
                 <button class="toolbar-btn columns-btn" id="customersColumnsBtn" onclick="openColumnToggle('customers')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="customersSearch" data-i18n-placeholder="ui.search" placeholder="Search customers..." oninput="filterCustomersTable()">
-                <button class="toolbar-btn" onclick="exportCustomersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportCustomersCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportCustomersExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="chart-container">
                 <div class="chart-header"><h3 data-i18n="chart.customerPLDist">Customer P/L Distribution (Top 10)</h3></div>
@@ -2502,7 +2511,7 @@
                 <button class="toolbar-btn clear-all-filters-btn" id="datesClearFiltersBtn" onclick="clearAllTableFilters('dates')">🗑 Clear Filters</button>
                 <button class="toolbar-btn columns-btn" id="datesColumnsBtn" onclick="openColumnToggle('dates')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
-                <button class="toolbar-btn" onclick="exportDatesCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportDatesCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportDatesExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="stats-grid">
                 <div class="stat-card"><div class="label" data-i18n="stats.orders">Orders</div><div class="value" id="datesStatOrders">-</div><div class="sub" id="datesStatUnits">-</div></div>
@@ -2530,7 +2539,7 @@
                     <div style="display:flex;gap:8px;align-items:center;">
                         <button class="toolbar-btn clear-all-filters-btn" id="datesMonthlyOrdersClearFiltersBtn" onclick="clearAllTableFilters('datesMonthlyOrders')" style="display:none;">🗑 Clear Filters</button>
                         <button class="toolbar-btn columns-btn" onclick="openColumnToggle('datesMonthlyOrders')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
-                        <button class="toolbar-btn" onclick="exportDatesMonthlyOrdersCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                        <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportDatesMonthlyOrdersCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportDatesMonthlyOrdersExcel();closeExportDropdowns()">📊 Excel</a></div></div>
                         <button class="close-btn" onclick="closeDatesMonthlyOrdersDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                     </div>
                 </div>
@@ -2552,7 +2561,7 @@
                     <div style="display:flex;gap:8px;align-items:center;">
                         <button class="toolbar-btn clear-all-filters-btn" id="datesCustomerClearFiltersBtn" onclick="clearAllTableFilters('datesCustomer')" style="display:none;">🗑 Clear Filters</button>
                         <button class="toolbar-btn columns-btn" onclick="openColumnToggle('datesCustomer')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
-                        <button class="toolbar-btn" onclick="exportDatesCustomerCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                        <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportDatesCustomerCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportDatesCustomerExcel();closeExportDropdowns()">📊 Excel</a></div></div>
                         <button class="close-btn" onclick="closeDatesCustomerDrilldown()">✕ <span data-i18n="ui.close">Close</span></button>
                     </div>
                 </div>
@@ -2636,7 +2645,7 @@
                 <button class="toolbar-btn columns-btn" id="allDataColumnsBtn" onclick="openColumnToggle('allData')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="allDataGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterAllDataTable()">
-                <button class="toolbar-btn" onclick="exportAllDataToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportAllDataToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportAllDataToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="chart-container" style="padding:10px;">
                 <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
@@ -2670,7 +2679,7 @@
                 <button class="toolbar-btn columns-btn" id="fpRefColumnsBtn" onclick="openColumnToggle('fpRef')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="fpRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterFpRefTable()">
-                <button class="toolbar-btn" onclick="exportFpRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportFpRefToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportFpRefToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="chart-container" style="padding:10px;">
                 <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
@@ -2704,7 +2713,7 @@
                 <button class="toolbar-btn columns-btn" id="custRefColumnsBtn" onclick="openColumnToggle('custRef')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="custRefGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterCustRefTable()">
-                <button class="toolbar-btn" onclick="exportCustRefToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportCustRefToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportCustRefToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="chart-container" style="padding:10px;">
                 <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
@@ -2738,7 +2747,7 @@
                 <button class="toolbar-btn columns-btn" id="quotesColumnsBtn" onclick="openColumnToggle('quotes')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
                 <div class="toolbar-spacer"></div>
                 <input type="text" class="search-box" id="quotesGlobalSearch" data-i18n-placeholder="ui.globalSearch" placeholder="Global search..." oninput="filterQuotesTable()">
-                <button class="toolbar-btn" onclick="exportQuotesToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportQuotesToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportQuotesToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
             <div class="chart-container" style="padding:10px;">
                 <div class="scrollable-table" style="max-height:calc(100vh - 280px);">
@@ -2775,7 +2784,7 @@
                 <div><h2 data-i18n="palletRecords.title">Pallet Records</h2><p data-i18n="palletRecords.subtitle">Pallet photos and dimension records</p></div>
                 <div style="display:flex;gap:10px;align-items:center;">
                     <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
-                    <button class="toolbar-btn" onclick="exportPalletRecordsToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                    <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportPalletRecordsToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportPalletRecordsToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
                 </div>
             </div>
             <div class="toolbar">
@@ -2809,7 +2818,7 @@
                 <div><h2 data-i18n="shippingRecords.title">Shipping Records</h2><p data-i18n="shippingRecords.subtitle">Shipment photos and carrier information</p></div>
                 <div style="display:flex;gap:10px;align-items:center;">
                     <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
-                    <button class="toolbar-btn" onclick="exportShippingRecordsToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                    <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportShippingRecordsToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportShippingRecordsToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
                 </div>
             </div>
             <div class="toolbar">
@@ -2843,7 +2852,7 @@
                 <div><h2 data-i18n="stagedRecords.title">Staged Records</h2><p data-i18n="stagedRecords.subtitle">Staging confirmation and pallet information</p></div>
                 <div style="display:flex;gap:10px;align-items:center;">
                     <button class="toolbar-btn" onclick="navigateTo('main')">← <span data-i18n="btn.backToDashboard">Back</span></button>
-                    <button class="toolbar-btn" onclick="exportStagedRecordsToCSV()">📥 <span data-i18n="ui.export">Export</span></button>
+                    <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportStagedRecordsToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportStagedRecordsToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
                 </div>
             </div>
             <div class="toolbar">
@@ -7382,6 +7391,419 @@
             a.download = filename;
             a.click();
         }
+
+        // ============================================================
+        // EXPORT DROPDOWN + EXCEL EXPORT ENGINE
+        // ============================================================
+        function toggleExportDropdown(btn) {
+            const dd = btn.closest('.export-dropdown');
+            const wasOpen = dd.classList.contains('open');
+            closeExportDropdowns();
+            if (!wasOpen) dd.classList.add('open');
+        }
+        function closeExportDropdowns() {
+            document.querySelectorAll('.export-dropdown.open').forEach(d => d.classList.remove('open'));
+        }
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.export-dropdown')) closeExportDropdowns();
+        });
+
+        // Column type detection for generic Excel formatting
+        const EXCEL_COL_TYPE_MAP = {
+            // Currency columns
+            unitPrice: 'currency', variableCost: 'currency', totalCost: 'currency', salesTarget: 'currency',
+            profitPerPart: 'currency', pl: 'currency', revenue: 'currency', shippingCost: 'currency',
+            totalRevenue: 'currency', totalPL: 'currency', price: 'currency', cost: 'currency',
+            // Percentage columns
+            contribution: 'percent', margin: 'percent',
+            // Date columns
+            dateOfRequest: 'date', requestedDate: 'date', shippedDate: 'date', timestamp: 'date', date: 'date',
+            // Integer columns
+            qty: 'integer', orders: 'integer', quantity: 'integer', orderQty: 'integer', count: 'integer'
+        };
+
+        function detectColType(key, headerText) {
+            if (EXCEL_COL_TYPE_MAP[key]) return EXCEL_COL_TYPE_MAP[key];
+            const h = (headerText || '').toLowerCase();
+            if (h.includes('price') || h.includes('cost') || h.includes('revenue') || h.includes('p/l') || h.includes('profit') || h.includes('sales target')) return 'currency';
+            if (h.includes('margin') || h.includes('contribution') || h.includes('%')) return 'percent';
+            if (h.includes('date') || h.includes('fecha')) return 'date';
+            if (h.includes('qty') || h.includes('quantity') || h.includes('orders') || h.includes('cant')) return 'integer';
+            return 'text';
+        }
+
+        // Generic Excel export — smart formatting, no fancy design
+        async function genericExcelExport(headers, rows, colKeys, filename, colTypes) {
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet('Data');
+
+            // Header row
+            const headerRow = ws.addRow(headers);
+            headerRow.height = 28;
+            headerRow.eachCell((cell, colNum) => {
+                cell.font = { name: 'Aptos', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = {
+                    bottom: { style: 'medium', color: { argb: 'FF0D1B3E' } },
+                    left: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                    right: { style: 'thin', color: { argb: 'FFD6DCE4' } }
+                };
+            });
+
+            // Data rows
+            rows.forEach((row, ri) => {
+                const dataRow = ws.addRow(row.map((val, ci) => {
+                    const t = colTypes[ci];
+                    if (t === 'currency' || t === 'integer') { const n = parseFloat(String(val).replace(/[$,%]/g, '')); return isNaN(n) ? val : n; }
+                    if (t === 'percent') { const n = parseFloat(String(val).replace('%', '')); return isNaN(n) ? val : n / 100; }
+                    return val;
+                }));
+                dataRow.height = 22;
+                const bgColor = ri % 2 === 0 ? 'FFF2F6FC' : 'FFFFFFFF';
+                dataRow.eachCell((cell, colNum) => {
+                    const t = colTypes[colNum - 1];
+                    cell.font = { name: 'Aptos', size: 10, color: { argb: 'FF2D2D2D' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                        bottom: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                        left: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                        right: { style: 'thin', color: { argb: 'FFD6DCE4' } }
+                    };
+                    if (t === 'currency') { cell.numFmt = '$#,##0.00'; cell.alignment = { horizontal: 'right', vertical: 'middle' }; }
+                    else if (t === 'percent') { cell.numFmt = '0.0%'; cell.alignment = { horizontal: 'center', vertical: 'middle' }; }
+                    else if (t === 'integer') { cell.numFmt = '#,##0'; cell.alignment = { horizontal: 'center', vertical: 'middle' }; }
+                    else if (t === 'date') { cell.alignment = { horizontal: 'center', vertical: 'middle' }; }
+                    else { cell.alignment = { horizontal: 'left', vertical: 'middle' }; }
+
+                    // P/L color coding for currency cols that are profit-related
+                    if ((t === 'currency') && ['pl','profitPerPart','totalPL'].includes(colKeys[colNum-1])) {
+                        const v = typeof cell.value === 'number' ? cell.value : 0;
+                        if (v > 0) cell.font = { ...cell.font, color: { argb: 'FF1A7A2E' }, bold: true };
+                        else if (v < 0) cell.font = { ...cell.font, color: { argb: 'FFCC0000' }, bold: true };
+                    }
+                    if (t === 'percent' && ['contribution','margin'].includes(colKeys[colNum-1])) {
+                        const v = typeof cell.value === 'number' ? cell.value : 0;
+                        if (v > 0) cell.font = { ...cell.font, color: { argb: 'FF1A7A2E' } };
+                        else if (v < 0) cell.font = { ...cell.font, color: { argb: 'FFCC0000' } };
+                    }
+                });
+            });
+
+            // Auto column widths
+            ws.columns.forEach((col, i) => {
+                let maxLen = String(headers[i] || '').length;
+                rows.forEach(r => { const l = String(r[i] || '').length; if (l > maxLen) maxLen = l; });
+                col.width = Math.min(Math.max(maxLen + 4, 10), 35);
+            });
+
+            // Freeze header
+            ws.views = [{ state: 'frozen', ySplit: 1 }];
+
+            const buf = await wb.xlsx.writeBuffer();
+            const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+        }
+
+        // Helper to extract visible table data for generic export
+        function getTableExportData(tableId, getRowFn, dataArr, sortState, formatCellFn) {
+            const colDefs = tableColumnDefs[tableId];
+            if (!colDefs || colDefs === 'dynamic') return null;
+            const visibleCols = colDefs.filter(c => !isColumnHidden(tableId, c.key));
+            let rows = dataArr.map(r => typeof getRowFn === 'function' ? getRowFn(r) : r);
+            rows = rows.filter(row => {
+                for (const c of colDefs) {
+                    if (isColumnHidden(tableId, c.key)) continue;
+                    const formatted = typeof formatCellFn === 'function' ? formatCellFn(c.key, row) : String(row[c.key] || '');
+                    if (!passesColumnFilter(tableId, c.key, formatted)) return false;
+                }
+                return true;
+            });
+            if (sortState && sortState.field) {
+                const sf = sortState.field, asc = sortState.asc;
+                rows.sort((a, b) => {
+                    let va = a[sf], vb = b[sf];
+                    if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va;
+                    return String(va||'').localeCompare(String(vb||'')) * (asc ? 1 : -1);
+                });
+            }
+            const isEs = currentLang === 'es';
+            const headers = visibleCols.map(c => isEs ? c.labelEs : c.labelEn);
+            const colKeys = visibleCols.map(c => c.key);
+            const colTypes = visibleCols.map(c => detectColType(c.key, isEs ? c.labelEs : c.labelEn));
+            const exportRows = rows.map(row => visibleCols.map(c => {
+                const t = detectColType(c.key, isEs ? c.labelEs : c.labelEn);
+                const v = row[c.key];
+                if (t === 'currency') return typeof v === 'number' ? v : v;
+                if (t === 'percent') return typeof v === 'number' ? v : v;
+                if (t === 'integer') return typeof v === 'number' ? v : v;
+                return v == null ? '' : v;
+            }));
+            return { headers, colKeys, colTypes, exportRows };
+        }
+
+        // ============================================================
+        // MONTHLY ORDERS — SPECIALIZED EXCEL TEMPLATE (Simon's design)
+        // ============================================================
+        async function exportDatesMonthlyOrdersExcel() {
+            const wb = new ExcelJS.Workbook();
+            const ws = wb.addWorksheet('Monthly Orders');
+            const colDefs = tableColumnDefs['datesMonthlyOrders'];
+            const visibleCols = colDefs.filter(c => !isColumnHidden('datesMonthlyOrders', c.key));
+            const isEs = currentLang === 'es';
+
+            // Prepare data (same filtering/sorting as CSV export)
+            let rows = datesMonthlyOrdersData.map(r => getDatesMonthlyOrderRow(r));
+            rows = rows.filter(row => {
+                for (const c of colDefs) {
+                    if (isColumnHidden('datesMonthlyOrders', c.key)) continue;
+                    if (!passesColumnFilter('datesMonthlyOrders', c.key, formatMonthlyOrderCell(c.key, row))) return false;
+                }
+                return true;
+            });
+            const sf = datesMonthlyOrdersSort.field, asc = datesMonthlyOrdersSort.asc;
+            rows.sort((a, b) => {
+                let va = a[sf], vb = b[sf];
+                if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va;
+                return String(va||'').localeCompare(String(vb||'')) * (asc ? 1 : -1);
+            });
+
+            const headers = visibleCols.map(c => isEs ? c.labelEs : c.labelEn);
+
+            // Column type and alignment map per key
+            const colSpec = {
+                category:       { type: 'text', align: 'center', width: 85/7 },
+                dateOfRequest:  { type: 'date', align: 'center', width: 105/7 },
+                ifNum:          { type: 'text', align: 'center', width: 95/7 },
+                fusionStatus:   { type: 'text', align: 'center', width: 115/7 },
+                internalStatus: { type: 'text', align: 'center', width: 110/7 },
+                poNum:          { type: 'text', align: 'left', width: 155/7 },
+                customer:       { type: 'text', align: 'left', width: 210/7 },
+                part:           { type: 'text', align: 'center', width: 130/7 },
+                qty:            { type: 'integer', align: 'center', width: 80/7 },
+                requestedDate:  { type: 'date', align: 'center', width: 105/7 },
+                unitPrice:      { type: 'currency', align: 'right', width: 85/7 },
+                contribution:   { type: 'percent', align: 'center', width: 105/7 },
+                variableCost:   { type: 'currency', align: 'right', width: 95/7 },
+                totalCost:      { type: 'currency', align: 'right', width: 85/7 },
+                salesTarget:    { type: 'currency', align: 'right', width: 105/7 },
+                profitPerPart:  { type: 'currency', align: 'right', width: 90/7 },
+                pl:             { type: 'currency', align: 'right', width: 100/7 },
+                revenue:        { type: 'currency', align: 'right', width: 100/7 },
+                shippedDate:    { type: 'date', align: 'center', width: 100/7 },
+                shippingCost:   { type: 'currency', align: 'right', width: 100/7 }
+            };
+
+            // Set column widths
+            ws.columns = visibleCols.map(c => ({ width: (colSpec[c.key] || { width: 14 }).width }));
+
+            // === HEADER ROW ===
+            const headerRow = ws.addRow(headers);
+            headerRow.height = 32;
+            headerRow.eachCell((cell) => {
+                cell.font = { name: 'Aptos', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = {
+                    bottom: { style: 'medium', color: { argb: 'FF0D1B3E' } },
+                    left: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                    right: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                    top: { style: 'medium', color: { argb: 'FF1F3864' } }
+                };
+            });
+
+            // === DATA ROWS ===
+            const numDataRows = rows.length;
+            rows.forEach((row, ri) => {
+                const vals = visibleCols.map(c => {
+                    const spec = colSpec[c.key] || { type: 'text' };
+                    const v = row[c.key];
+                    if (spec.type === 'currency') return typeof v === 'number' ? v : (parseFloat(String(v).replace(/[$,]/g,'')) || 0);
+                    if (spec.type === 'percent') return typeof v === 'number' ? v / 100 : 0;
+                    if (spec.type === 'integer') return typeof v === 'number' ? v : (parseInt(v) || 0);
+                    return v == null || v === '-' ? '' : v;
+                });
+                const dataRow = ws.addRow(vals);
+                dataRow.height = 22;
+                const bgArgb = ri % 2 === 0 ? 'FFF2F6FC' : 'FFFFFFFF';
+                dataRow.eachCell((cell, colNum) => {
+                    const key = visibleCols[colNum - 1].key;
+                    const spec = colSpec[key] || { type: 'text', align: 'left' };
+                    cell.font = { name: 'Aptos', size: 10, color: { argb: 'FF2D2D2D' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+                    cell.alignment = { horizontal: spec.align, vertical: 'middle' };
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                        bottom: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                        left: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                        right: { style: 'thin', color: { argb: 'FFD6DCE4' } }
+                    };
+                    if (spec.type === 'currency') cell.numFmt = '$#,##0.00';
+                    else if (spec.type === 'percent') cell.numFmt = '0.0%';
+                    else if (spec.type === 'integer') cell.numFmt = '#,##0';
+
+                    // P/L color coding (columns: pl, profitPerPart, contribution)
+                    if (['pl', 'profitPerPart'].includes(key)) {
+                        const v = typeof cell.value === 'number' ? cell.value : 0;
+                        if (v > 0) cell.font = { name: 'Aptos', size: 10, bold: true, color: { argb: 'FF1A7A2E' } };
+                        else if (v < 0) cell.font = { name: 'Aptos', size: 10, bold: true, color: { argb: 'FFCC0000' } };
+                    }
+                    if (key === 'contribution') {
+                        const v = typeof cell.value === 'number' ? cell.value : 0;
+                        if (v > 0) cell.font = { name: 'Aptos', size: 10, color: { argb: 'FF1A7A2E' } };
+                        else if (v < 0) cell.font = { name: 'Aptos', size: 10, color: { argb: 'FFCC0000' } };
+                    }
+                });
+            });
+
+            // === TOTALS ROW ===
+            const totalsVals = visibleCols.map(c => {
+                const spec = colSpec[c.key] || { type: 'text' };
+                if (c.key === 'category') return 'TOTALS';
+                if (c.key === 'qty') return rows.reduce((s, r) => s + (r.qty || 0), 0);
+                if (c.key === 'contribution') { const revs = rows.map(r => r.revenue || 0); const pls = rows.map(r => r.pl || 0); const tr = revs.reduce((a,b)=>a+b,0); return tr > 0 ? pls.reduce((a,b)=>a+b,0)/tr : 0; }
+                if (c.key === 'pl') return rows.reduce((s, r) => s + (r.pl || 0), 0);
+                if (c.key === 'revenue') return rows.reduce((s, r) => s + (r.revenue || 0), 0);
+                return '';
+            });
+            const totRow = ws.addRow(totalsVals);
+            totRow.height = 32;
+            totRow.eachCell((cell, colNum) => {
+                const key = visibleCols[colNum - 1].key;
+                const spec = colSpec[key] || { type: 'text', align: 'center' };
+                cell.font = { name: 'Aptos', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+                cell.alignment = { horizontal: key === 'category' ? 'center' : (spec.align || 'right'), vertical: 'middle' };
+                cell.border = {
+                    top: { style: 'medium', color: { argb: 'FF0D1B3E' } },
+                    bottom: { style: 'medium', color: { argb: 'FF0D1B3E' } },
+                    left: { style: 'thin', color: { argb: 'FFD6DCE4' } },
+                    right: { style: 'thin', color: { argb: 'FFD6DCE4' } }
+                };
+                if (spec.type === 'currency') cell.numFmt = '$#,##0.00';
+                else if (spec.type === 'percent') cell.numFmt = '0.0%';
+                else if (spec.type === 'integer') cell.numFmt = '#,##0';
+                // Special colors for totals
+                if (key === 'pl') { const v = typeof cell.value === 'number' ? cell.value : 0; cell.font = { name: 'Aptos', size: 11, bold: true, color: { argb: v >= 0 ? 'FF4ADE80' : 'FFFF6B6B' } }; }
+                if (key === 'qty') cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                if (key === 'contribution') cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+
+            // === CONDITIONAL FORMATTING (3-color scales + data bars) ===
+            const plColIdx = visibleCols.findIndex(c => c.key === 'pl');
+            const contribColIdx = visibleCols.findIndex(c => c.key === 'contribution');
+            const revenueColIdx = visibleCols.findIndex(c => c.key === 'revenue');
+            const qtyColIdx = visibleCols.findIndex(c => c.key === 'qty');
+
+            // ExcelJS conditional formatting for 3-color scales
+            function colLetter(idx) { let s = ''; let n = idx + 1; while (n > 0) { n--; s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26); } return s; }
+            const lastDataRow = numDataRows + 1; // +1 for header
+
+            if (plColIdx >= 0) {
+                const col = colLetter(plColIdx);
+                ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'num', value: 0 }, { type: 'max' }], color: [{ argb: 'FFF4CCCC' }, { argb: 'FFFFFFFF' }, { argb: 'FFD9EAD3' }], priority: 1 }] });
+            }
+            if (contribColIdx >= 0) {
+                const col = colLetter(contribColIdx);
+                ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'num', value: 0 }, { type: 'max' }], color: [{ argb: 'FFF4CCCC' }, { argb: 'FFFFFFFF' }, { argb: 'FFD9EAD3' }], priority: 2 }] });
+            }
+            if (revenueColIdx >= 0) {
+                const col = colLetter(revenueColIdx);
+                ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'dataBar', cfvo: [{ type: 'min' }, { type: 'max' }], color: { argb: 'FF4472C4' }, priority: 3 }] });
+            }
+            if (qtyColIdx >= 0) {
+                const col = colLetter(qtyColIdx);
+                ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'dataBar', cfvo: [{ type: 'min' }, { type: 'max' }], color: { argb: 'FF8FAADC' }, priority: 4 }] });
+            }
+
+            // Outside border for entire table
+            const lastCol = colLetter(visibleCols.length - 1);
+            const lastRow = numDataRows + 2; // header + data + totals
+
+            // Freeze header row
+            ws.views = [{ state: 'frozen', ySplit: 1 }];
+
+            // Download
+            const buf = await wb.xlsx.writeBuffer();
+            const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `monthly_orders_${currentDrilldownMonth || 'export'}.xlsx`; a.click();
+        }
+
+        // ============================================================
+        // GENERIC EXCEL EXPORT WRAPPERS (all other tables)
+        // ============================================================
+        function exportDatesCustomerExcel() {
+            const colDefs = tableColumnDefs['datesCustomer'];
+            const visibleCols = colDefs.filter(c => !isColumnHidden('datesCustomer', c.key));
+            const custStats = {};
+            datesCustomerData.forEach(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (!custStats[c]) custStats[c] = { customer: c, orders: 0, quantity: 0, revenue: 0, pl: 0 };
+                custStats[c].orders++;
+                custStats[c].quantity += parseNumber(getVal(r, 'QTY'));
+                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
+            });
+            let rows = Object.values(custStats).map(s => { s.margin = s.revenue > 0 ? (s.pl / s.revenue * 100) : 0; return s; });
+            rows = rows.filter(row => { for (const c of colDefs) { if (isColumnHidden('datesCustomer', c.key)) continue; if (!passesColumnFilter('datesCustomer', c.key, formatDatesCustomerCell(c.key, row))) return false; } return true; });
+            rows.sort((a, b) => { const sf = datesCustomerSort.field, asc = datesCustomerSort.asc; let va = a[sf], vb = b[sf]; if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va; return String(va||'').localeCompare(String(vb||'')) * (asc ? 1 : -1); });
+            const isEs = currentLang === 'es';
+            const headers = visibleCols.map(c => isEs ? c.labelEs : c.labelEn);
+            const colKeys = visibleCols.map(c => c.key);
+            const colTypes = visibleCols.map(c => detectColType(c.key, isEs ? c.labelEs : c.labelEn));
+            const exportRows = rows.map(row => visibleCols.map(c => row[c.key]));
+            genericExcelExport(headers, exportRows, colKeys, `customer_breakdown_${currentDrilldownMonth || 'export'}.xlsx`, colTypes);
+        }
+
+        // Helper: build generic Excel from DOM table (for tables without structured data)
+        function exportFromDOMTable(tableBodyId, tableHeaderId, filename) {
+            const headerEl = document.getElementById(tableHeaderId);
+            const bodyEl = document.getElementById(tableBodyId);
+            if (!headerEl || !bodyEl) return;
+            const headers = []; const colKeys = [];
+            headerEl.querySelectorAll('th').forEach((th, i) => { headers.push(th.textContent.replace(/[↑↓▲▼⬆⬇]/g,'').trim()); colKeys.push('col' + i); });
+            const rows = [];
+            bodyEl.querySelectorAll('tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    let v = td.textContent.trim();
+                    const n = parseFloat(v.replace(/[$,%]/g, ''));
+                    if (!isNaN(n) && v.match(/^[\$\-\d,\.%]+$/)) row.push(v); else row.push(v);
+                });
+                if (row.length) rows.push(row);
+            });
+            const colTypes = headers.map((h, i) => detectColType(colKeys[i], h));
+            genericExcelExport(headers, rows, colKeys, filename, colTypes);
+        }
+
+        // Wrapper functions for each table's Excel export
+        function exportOrdersDataExcel() { exportFromDOMTable('ordersDataTableBody', 'ordersDataTableHeader', 'orders_data.xlsx'); }
+        function exportProdMakeExcel() { exportFromDOMTable('prodMakeTableBody', 'prodMakeTableHeader', 'need_to_make.xlsx'); }
+        function exportOrdersQueueExcel() { exportFromDOMTable('ordersQueueTableBody', 'ordersQueueTableHeader', 'orders_queue.xlsx'); }
+        function exportOrdersStagedExcel() { exportFromDOMTable('ordersStagedTableBody', 'ordersStagedTableHeader', 'orders_staged.xlsx'); }
+        function exportOrdersShippedExcel() { exportFromDOMTable('ordersShippedTableBody', 'ordersShippedTableHeader', 'orders_shipped.xlsx'); }
+        function exportInvExcel() { exportFromDOMTable('invTableBody', 'invTableHeader', 'inventory.xlsx'); }
+        function exportSalesExcel() {
+            const data = getFilteredSalesData();
+            const headers = ['Part', 'Customer', 'Qty', 'Revenue', 'P/L'];
+            const colKeys = ['part', 'customer', 'qty', 'revenue', 'pl'];
+            const colTypes = ['text', 'text', 'integer', 'currency', 'currency'];
+            const rows = data.map(r => [getVal(r,'PART'), getVal(r,'CUSTOMER'), parseNumber(getVal(r,'QTY')), parseNumber(r[COL.REVENUE]), hasMissingCostData(r) ? 0 : getPLValue(r)]);
+            genericExcelExport(headers, rows, colKeys, `sales_${new Date().toISOString().split('T')[0]}.xlsx`, colTypes);
+        }
+        function exportPartsExcel() { exportFromDOMTable('partsTableBody', 'partsTableHeader', 'parts_pl.xlsx'); }
+        function exportCustomersExcel() { exportFromDOMTable('customersTableBody', 'customersTableHeader', 'customers_pl.xlsx'); }
+        function exportDatesExcel() { exportFromDOMTable('datesTableBody', 'datesTableHeader', 'dates_pl.xlsx'); }
+        function exportAllDataExcel() { exportFromDOMTable('allDataTableBody', 'allDataTableHeader', `all_data_${new Date().toISOString().split('T')[0]}.xlsx`); }
+        function exportFpRefExcel() { exportFromDOMTable('fpRefTableBody', 'fpRefTableHeader', `fp_reference_${new Date().toISOString().split('T')[0]}.xlsx`); }
+        function exportCustRefExcel() { exportFromDOMTable('custRefTableBody', 'custRefTableHeader', `customer_reference_${new Date().toISOString().split('T')[0]}.xlsx`); }
+        function exportQuotesExcel() { exportFromDOMTable('quotesTableBody', 'quotesTableHeader', `quotes_registry_${new Date().toISOString().split('T')[0]}.xlsx`); }
+        function exportPalletRecordsExcel() { exportFromDOMTable('palletRecordsTableBody', 'palletRecordsTableHeader', `pallet_records_${new Date().toISOString().split('T')[0]}.xlsx`); }
+        function exportShippingRecordsExcel() { exportFromDOMTable('shippingRecordsTableBody', 'shippingRecordsTableHeader', `shipping_records_${new Date().toISOString().split('T')[0]}.xlsx`); }
+        function exportStagedRecordsExcel() { exportFromDOMTable('stagedRecordsTableBody', 'stagedRecordsTableHeader', `staged_records_${new Date().toISOString().split('T')[0]}.xlsx`); }
 
         // ============================================================
         // INVENTORY PAGE
