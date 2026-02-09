@@ -1881,7 +1881,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.29.0</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.29.1</div>
     </div>
 
     <div class="main-content">
@@ -3923,6 +3923,12 @@
         };
         
         // UPDATED: Uses FUSION_STATUS (Col G) as fallback when STATUS (Col H) is empty
+        const isCancelledOrClosed = row => {
+            const s1 = (getVal(row, 'STATUS') || '').toLowerCase();
+            const s2 = (getVal(row, 'FUSION_STATUS') || '').toLowerCase();
+            return s1.includes('cancel') || s1.includes('closed') || s2.includes('cancel') || s2.includes('closed');
+        };
+
         const getStatus = row => {
             // Check Work order Internal Status first (Column H)
             let status = (getVal(row, 'STATUS') || '').toLowerCase();
@@ -3932,6 +3938,8 @@
                 status = (getVal(row, 'FUSION_STATUS') || '').toLowerCase();
             }
             
+            if (status.includes('cancel')) return 'cancelled';
+            if (status.includes('closed')) return 'closed';
             if (status.includes('pending') || status.includes('approved')) return 'pending';
             if (status.includes('staged')) return 'staged';
             if (status.includes('work in progress') || status.includes('wip')) return 'wip';
@@ -8132,6 +8140,7 @@
         
         function getFilteredSalesData() {
             return allData.filter(r => {
+                if (isCancelledOrClosed(r)) return false;
                 if (!salesFilters.categories[getCategory(r)]) return false;
                 if (salesFilters.fromDate || salesFilters.toDate) {
                     const dateStr = getAttributionDate(r);
@@ -8318,6 +8327,7 @@
         
         function getFilteredPartsData() {
             return allData.filter(r => {
+                if (isCancelledOrClosed(r)) return false;
                 if (!partsFilters.categories[getCategory(r)]) return false;
                 if (partsFilters.fromDate || partsFilters.toDate) {
                     const dateStr = getAttributionDate(r);
@@ -8665,6 +8675,7 @@
         
         function getFilteredCustomersData() {
             return allData.filter(r => {
+                if (isCancelledOrClosed(r)) return false;
                 if (!customersFilters.categories[getCategory(r)]) return false;
                 if (customersFilters.fromDate || customersFilters.toDate) {
                     const dateStr = getAttributionDate(r);
@@ -8950,6 +8961,7 @@
         
         function getFilteredDatesData() {
             return allData.filter(r => {
+                if (isCancelledOrClosed(r)) return false;
                 if (!datesFilters.categories[getCategory(r)]) return false;
                 if (datesFilters.fromDate || datesFilters.toDate) {
                     const dateStr = getAttributionDate(r);
