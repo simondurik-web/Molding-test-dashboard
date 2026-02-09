@@ -1890,7 +1890,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.30.1</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.30.2</div>
     </div>
 
     <div class="main-content">
@@ -7659,14 +7659,22 @@
                 });
             });
 
-            // === TOTALS ROW ===
-            const totalsVals = visibleCols.map(c => {
-                const spec = colSpec[c.key] || { type: 'text' };
+            // === BLANK SEPARATOR (prevents totals from being sorted/filtered with data) ===
+            const sepRow = ws.addRow([]);
+            sepRow.height = 6;
+
+            // === TOTALS ROW (uses SUBTOTAL formulas — auto-updates when filtering) ===
+            function colLtr(idx) { let s = ''; let n = idx + 1; while (n > 0) { n--; s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26); } return s; }
+            const totalsRowNum = numDataRows + 3; // header(1) + data + separator
+            const dataStart = 2, dataEnd = numDataRows + 1;
+            const totalsVals = visibleCols.map((c, ci) => {
+                const col = colLtr(ci);
                 if (c.key === 'category') return 'TOTALS';
-                if (c.key === 'qty') return rows.reduce((s, r) => s + (r.qty || 0), 0);
-                if (c.key === 'contribution') { const revs = rows.map(r => r.revenue || 0); const pls = rows.map(r => r.pl || 0); const tr = revs.reduce((a,b)=>a+b,0); return tr > 0 ? pls.reduce((a,b)=>a+b,0)/tr : 0; }
-                if (c.key === 'pl') return rows.reduce((s, r) => s + (r.pl || 0), 0);
-                if (c.key === 'revenue') return rows.reduce((s, r) => s + (r.revenue || 0), 0);
+                // SUBTOTAL(109,...) = SUM of visible cells only; SUBTOTAL(101,...) = AVERAGE of visible
+                if (c.key === 'qty') return { formula: `SUBTOTAL(109,${col}${dataStart}:${col}${dataEnd})` };
+                if (c.key === 'contribution') return { formula: `SUBTOTAL(101,${col}${dataStart}:${col}${dataEnd})` };
+                if (c.key === 'pl') return { formula: `SUBTOTAL(109,${col}${dataStart}:${col}${dataEnd})` };
+                if (c.key === 'revenue') return { formula: `SUBTOTAL(109,${col}${dataStart}:${col}${dataEnd})` };
                 return '';
             });
             const totRow = ws.addRow(totalsVals);
@@ -7699,28 +7707,27 @@
             const qtyColIdx = visibleCols.findIndex(c => c.key === 'qty');
 
             // ExcelJS conditional formatting for 3-color scales
-            function colLetter(idx) { let s = ''; let n = idx + 1; while (n > 0) { n--; s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26); } return s; }
             const lastDataRow = numDataRows + 1; // +1 for header
 
             if (plColIdx >= 0) {
-                const col = colLetter(plColIdx);
+                const col = colLtr(plColIdx);
                 ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'num', value: 0 }, { type: 'max' }], color: [{ argb: 'FFF4CCCC' }, { argb: 'FFFFFFFF' }, { argb: 'FFD9EAD3' }], priority: 1 }] });
             }
             if (contribColIdx >= 0) {
-                const col = colLetter(contribColIdx);
+                const col = colLtr(contribColIdx);
                 ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'colorScale', cfvo: [{ type: 'min' }, { type: 'num', value: 0 }, { type: 'max' }], color: [{ argb: 'FFF4CCCC' }, { argb: 'FFFFFFFF' }, { argb: 'FFD9EAD3' }], priority: 2 }] });
             }
             if (revenueColIdx >= 0) {
-                const col = colLetter(revenueColIdx);
+                const col = colLtr(revenueColIdx);
                 ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'dataBar', cfvo: [{ type: 'min' }, { type: 'max' }], color: { argb: 'FF4472C4' }, priority: 3 }] });
             }
             if (qtyColIdx >= 0) {
-                const col = colLetter(qtyColIdx);
+                const col = colLtr(qtyColIdx);
                 ws.addConditionalFormatting({ ref: `${col}2:${col}${lastDataRow}`, rules: [{ type: 'dataBar', cfvo: [{ type: 'min' }, { type: 'max' }], color: { argb: 'FF8FAADC' }, priority: 4 }] });
             }
 
             // Outside border for entire table
-            const lastCol = colLetter(visibleCols.length - 1);
+            const lastCol = colLtr(visibleCols.length - 1);
             const lastRow = numDataRows + 2; // header + data + totals
 
             // Freeze header row + auto filter (data rows only, excludes totals)
