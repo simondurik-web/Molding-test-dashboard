@@ -1890,7 +1890,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.30.0</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.30.1</div>
     </div>
 
     <div class="main-content">
@@ -7498,8 +7498,9 @@
                 col.width = Math.min(Math.max(maxLen + 4, 10), 35);
             });
 
-            // Freeze header
+            // Freeze header + auto filter
             ws.views = [{ state: 'frozen', ySplit: 1 }];
+            ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: rows.length + 1, column: headers.length } };
 
             const buf = await wb.xlsx.writeBuffer();
             const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -7722,8 +7723,9 @@
             const lastCol = colLetter(visibleCols.length - 1);
             const lastRow = numDataRows + 2; // header + data + totals
 
-            // Freeze header row
+            // Freeze header row + auto filter (data rows only, excludes totals)
             ws.views = [{ state: 'frozen', ySplit: 1 }];
+            ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: numDataRows + 1, column: visibleCols.length } };
 
             // Download
             const buf = await wb.xlsx.writeBuffer();
