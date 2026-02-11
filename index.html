@@ -322,6 +322,44 @@
         .summary-item .value { font-size: 18px; font-weight: 700; }
         @media (max-width: 768px) { .bom-grid { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } }
         
+        /* Material Requirements Styles */
+        .mat-req-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .mat-req-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+        .mat-req-card .label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .mat-req-card .value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+        .mat-req-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .mat-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .mat-badge-shortage { background: rgba(248,113,113,0.15); color: #f87171; }
+        .mat-badge-low { background: rgba(251,146,60,0.15); color: #fb923c; }
+        .mat-badge-ok { background: rgba(74,222,128,0.15); color: #4ade80; }
+        .mat-surplus { color: var(--success); font-weight: 600; }
+        .mat-shortage-num { color: var(--danger); font-weight: 600; }
+        .mat-coverage-cell { display: flex; align-items: center; gap: 8px; }
+        .mat-bar-bg { width: 80px; height: 6px; background: var(--bg-dark); border-radius: 3px; }
+        .mat-bar { height: 6px; border-radius: 3px; }
+        .mat-bar-green { background: #4ade80; }
+        .mat-bar-yellow { background: #fbbf24; }
+        .mat-bar-red { background: #f87171; }
+        .mat-req-row { cursor: pointer; }
+        .mat-req-row:hover { background: var(--bg-hover) !important; }
+        .mat-detail-row td { padding: 0 !important; }
+        .mat-detail-content { padding: 12px 20px; background: var(--bg-dark); border-radius: 8px; margin: 4px 8px 8px; }
+        .mat-detail-table { width: 100%; font-size: 12px; margin-top: 8px; }
+        .mat-detail-table th { font-size: 10px; text-transform: uppercase; color: var(--text-secondary); padding: 4px 8px; text-align: left; letter-spacing: 0.5px; }
+        .mat-detail-table td { padding: 4px 8px; border-bottom: 1px solid var(--border); }
+        .mat-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .mat-section h3 { font-size: 14px; margin-bottom: 12px; color: var(--text-primary); }
+        .mat-section table { width: 100%; }
+        .mat-section th { font-size: 10px; text-transform: uppercase; color: var(--text-secondary); padding: 6px 10px; text-align: left; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .mat-section td { padding: 6px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .mat-section .num { text-align: right; font-variant-numeric: tabular-nums; }
+        @media (max-width: 768px) {
+            .mat-req-summary { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .mat-req-card { padding: 10px; }
+            .mat-req-card .value { font-size: 1.1rem; }
+            .mat-section { overflow-x: auto; }
+        }
+        
         /* Column Filter System Styles */
         .filter-th { position: relative; }
         .filter-th-content { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -1847,6 +1885,7 @@
             <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">🚚</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
             <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
             <div class="nav-item sub-item" data-page="inventory-history" onclick="navigateTo('inventory-history')"><span class="icon">📈</span> <span data-i18n="nav.inventoryHistory">Inventory History</span></div>
+            <div class="nav-item sub-item" data-page="material-requirements" onclick="navigateTo('material-requirements')"><span class="icon">📦</span> <span data-i18n="nav.materialReq">Material Requirements</span></div>
             <div class="nav-item sub-item" data-page="drawings-library" onclick="navigateTo('drawings-library')"><span class="icon">📐</span> <span data-i18n="nav.drawingsLibrary">Drawings</span></div>
             <div class="nav-item" data-page="pallet-records" onclick="navigateTo('pallet-records')"><span class="icon">📷</span> <span data-i18n="nav.palletRecords">Pallet Records</span></div>
             <div class="nav-item" data-page="shipping-records" onclick="navigateTo('shipping-records')"><span class="icon">🚛</span> <span data-i18n="nav.shippingRecords">Shipping Records</span></div>
@@ -2201,6 +2240,7 @@
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <button class="toolbar-btn columns-btn" id="inventoryColumnsBtn" onclick="openColumnToggle('inventory')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
+                <button class="toolbar-btn" onclick="navigateTo('material-requirements')" style="background:var(--accent);color:white;">📦 <span data-i18n="nav.materialReq">Material Requirements</span></button>
                 <div class="toolbar-spacer"></div>
                 <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportInvCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportInvExcel();closeExportDropdowns()">📊 Excel</a></div></div>
             </div>
@@ -2759,6 +2799,85 @@
             </div>
         </div>
 
+        <!-- MATERIAL REQUIREMENTS PAGE -->
+        <div id="material-requirements" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 data-i18n="matReq.title">📦 Material Requirements</h2>
+                    <p data-i18n="matReq.subtitle">Raw material demand vs. inventory for open orders</p>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span style="color:var(--text-secondary);font-size:12px;" id="matReqTimestamp">-</span>
+                    <button class="toolbar-btn" onclick="updateMaterialRequirementsPage()">🔄 <span data-i18n="btn.refresh">Refresh</span></button>
+                    <button class="toolbar-btn" onclick="exportMaterialRequirementsCSV()">📥 CSV</button>
+                    <button class="toolbar-btn" onclick="navigateTo('inventory')">← <span data-i18n="btn.back">Back</span></button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="mat-req-summary">
+                <div class="mat-req-card"><div class="label" data-i18n="matReq.openOrders">Open Orders</div><div class="value" id="matReqOrderCount">-</div></div>
+                <div class="mat-req-card"><div class="label" data-i18n="matReq.hubsNeeded">Hubs Needed</div><div class="value" id="matReqHubCount">-</div></div>
+                <div class="mat-req-card"><div class="label" data-i18n="matReq.tiresNeeded">Tires Needed</div><div class="value" id="matReqTireCount">-</div></div>
+                <div class="mat-req-card"><div class="label" data-i18n="matReq.shortages">Shortages</div><div class="value" id="matReqShortageCount">-</div></div>
+                <div class="mat-req-card"><div class="label" data-i18n="matReq.urethaneNeeded">Urethane Needed</div><div class="value" id="matReqUrethane" style="font-size:1.1rem;">-</div></div>
+                <div class="mat-req-card"><div class="label" data-i18n="matReq.crumbRubber">Crumb Rubber Needed</div><div class="value" id="matReqCrumbRubber" style="font-size:1.1rem;">-</div></div>
+            </div>
+
+            <!-- Material Status Table -->
+            <div class="mat-section">
+                <h3 data-i18n="matReq.materialStatus">📊 Material Inventory vs. Demand</h3>
+                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;" data-i18n="matReq.clickRow">Click any row to see demand breakdown by component</p>
+                <div class="scrollable-table" style="max-height:400px;">
+                    <table class="data-table">
+                        <thead><tr>
+                            <th data-i18n="matReq.material">Material</th>
+                            <th class="num" data-i18n="matReq.onHand">On Hand</th>
+                            <th class="num" data-i18n="matReq.needed">Needed</th>
+                            <th class="num" data-i18n="matReq.surplusShortage">Surplus / Shortage</th>
+                            <th data-i18n="matReq.coverage">Coverage</th>
+                            <th data-i18n="matReq.status">Status</th>
+                        </tr></thead>
+                        <tbody id="matReqTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hub Breakdown -->
+            <div class="mat-section">
+                <h3 data-i18n="matReq.hubBreakdown">🔧 Hub Production Breakdown</h3>
+                <div class="scrollable-table" style="max-height:350px;">
+                    <table class="data-table">
+                        <thead><tr>
+                            <th data-i18n="matReq.hubPart">Hub Part</th>
+                            <th data-i18n="matReq.type">Type</th>
+                            <th class="num" data-i18n="matReq.qtyNeeded">Qty Needed</th>
+                            <th class="num" data-i18n="matReq.weightEa">Wt/ea (lbs)</th>
+                            <th data-i18n="matReq.materials">Materials</th>
+                        </tr></thead>
+                        <tbody id="matReqHubBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tire Breakdown -->
+            <div class="mat-section">
+                <h3 data-i18n="matReq.tireBreakdown">🛞 Tire Production Breakdown</h3>
+                <div class="scrollable-table" style="max-height:350px;">
+                    <table class="data-table">
+                        <thead><tr>
+                            <th data-i18n="matReq.tireSize">Tire Size</th>
+                            <th class="num" data-i18n="matReq.qtyNeeded">Qty Needed</th>
+                            <th class="num" data-i18n="matReq.weightEa">Wt/ea (lbs)</th>
+                            <th class="num" data-i18n="matReq.crumbRubberLbs">Crumb Rubber (lbs)</th>
+                            <th class="num" data-i18n="matReq.urethaneLbs">Urethane (lbs)</th>
+                        </tr></thead>
+                        <tbody id="matReqTireBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- PALLET RECORDS PAGE -->
         <!-- DRAWINGS LIBRARY PAGE -->
         <div id="drawings-library" class="page">
@@ -2941,6 +3060,33 @@
                 'nav.shippingRecords': 'Shipping Records',
                 'nav.stagedRecords': 'Staged Records',
                 'nav.inventoryHistory': 'Inventory History',
+                'nav.materialReq': 'Material Requirements',
+                'matReq.title': '📦 Material Requirements',
+                'matReq.subtitle': 'Raw material demand vs. inventory for open orders',
+                'matReq.openOrders': 'Open Orders',
+                'matReq.hubsNeeded': 'Hubs Needed',
+                'matReq.tiresNeeded': 'Tires Needed',
+                'matReq.shortages': 'Shortages',
+                'matReq.urethaneNeeded': 'Urethane Needed',
+                'matReq.crumbRubber': 'Crumb Rubber Needed',
+                'matReq.materialStatus': '📊 Material Inventory vs. Demand',
+                'matReq.clickRow': 'Click any row to see demand breakdown by component',
+                'matReq.material': 'Material',
+                'matReq.onHand': 'On Hand',
+                'matReq.needed': 'Needed',
+                'matReq.surplusShortage': 'Surplus / Shortage',
+                'matReq.coverage': 'Coverage',
+                'matReq.status': 'Status',
+                'matReq.hubBreakdown': '🔧 Hub Production Breakdown',
+                'matReq.tireBreakdown': '🛞 Tire Production Breakdown',
+                'matReq.hubPart': 'Hub Part',
+                'matReq.type': 'Type',
+                'matReq.qtyNeeded': 'Qty Needed',
+                'matReq.weightEa': 'Wt/ea (lbs)',
+                'matReq.materials': 'Materials',
+                'matReq.tireSize': 'Tire Size',
+                'matReq.crumbRubberLbs': 'Crumb Rubber (lbs)',
+                'matReq.urethaneLbs': 'Urethane (lbs)',
                 'nav.drawingsLibrary': 'Drawings',
                 'palletRecords.title': 'Pallet Records',
                 'palletRecords.subtitle': 'Pallet photos and dimension records',
@@ -3040,6 +3186,7 @@
                 'inv.selectPartsPrompt': 'Select one or more parts from the list to view their inventory history',
                 'inv.maxPartsWarning': 'Maximum 10 parts can be compared at once',
                 'nav.inventoryHistory': 'Inventory History',
+                'nav.materialReq': 'Material Requirements',
                 'bom.title': 'BOM Explorer',
                 'col.weight': 'Weight',
                 'col.dimensions': 'Dimensions',
@@ -3238,6 +3385,33 @@
                 'nav.shippingRecords': 'Registros de Envíos',
                 'nav.stagedRecords': 'Registros de Staging',
                 'nav.inventoryHistory': 'Historial de Inventario',
+                'nav.materialReq': 'Requerimientos de Material',
+                'matReq.title': '📦 Requerimientos de Material',
+                'matReq.subtitle': 'Demanda de materia prima vs. inventario para órdenes abiertas',
+                'matReq.openOrders': 'Órdenes Abiertas',
+                'matReq.hubsNeeded': 'Hubs Necesarios',
+                'matReq.tiresNeeded': 'Llantas Necesarias',
+                'matReq.shortages': 'Faltantes',
+                'matReq.urethaneNeeded': 'Uretano Necesario',
+                'matReq.crumbRubber': 'Hule Molido Necesario',
+                'matReq.materialStatus': '📊 Inventario de Material vs. Demanda',
+                'matReq.clickRow': 'Haz clic en cualquier fila para ver el desglose de demanda por componente',
+                'matReq.material': 'Material',
+                'matReq.onHand': 'Disponible',
+                'matReq.needed': 'Necesario',
+                'matReq.surplusShortage': 'Excedente / Faltante',
+                'matReq.coverage': 'Cobertura',
+                'matReq.status': 'Estado',
+                'matReq.hubBreakdown': '🔧 Desglose de Producción de Hubs',
+                'matReq.tireBreakdown': '🛞 Desglose de Producción de Llantas',
+                'matReq.hubPart': 'Parte del Hub',
+                'matReq.type': 'Tipo',
+                'matReq.qtyNeeded': 'Cant. Necesaria',
+                'matReq.weightEa': 'Peso/u (lbs)',
+                'matReq.materials': 'Materiales',
+                'matReq.tireSize': 'Tamaño de Llanta',
+                'matReq.crumbRubberLbs': 'Hule Molido (lbs)',
+                'matReq.urethaneLbs': 'Uretano (lbs)',
                 'nav.drawingsLibrary': 'Dibujos',
                 'palletRecords.title': 'Registros de Paletas',
                 'palletRecords.subtitle': 'Fotos y dimensiones de paletas',
@@ -3337,6 +3511,7 @@
                 'inv.selectPartsPrompt': 'Seleccione una o más piezas de la lista para ver su historial de inventario',
                 'inv.maxPartsWarning': 'Máximo 10 piezas se pueden comparar a la vez',
                 'nav.inventoryHistory': 'Historial de Inventario',
+                'nav.materialReq': 'Requerimientos de Material',
                 'bom.title': 'Explorador BOM',
                 'col.weight': 'Peso',
                 'col.dimensions': 'Dimensiones',
@@ -5404,6 +5579,7 @@
                 case 'orders-shipped': updateOrdersShippedPage(); break;
                 case 'inventory': updateInventoryPage(); break;
                 case 'inventory-history': updateInventoryHistoryPage(); break;
+                case 'material-requirements': updateMaterialRequirementsPage(); break;
                 case 'drawings-library': updateDrawingsLibrary(); break;
                 case 'sales-overview': updateSalesOverview(); break;
                 case 'sales-parts': updateSalesPartsPage(); break;
@@ -10151,6 +10327,162 @@
 
         // BOM EXPLORER
         // ============================================================
+        // ========== MATERIAL REQUIREMENTS ==========
+        function computeMaterialRequirements() {
+            const shippedStatuses = new Set(['staged', 'shipped', 'invoiced', 'to bill', 'cancelled', 'canceled', 'complete', 'closed', '']);
+            const bom2Map = {};
+            bomSubData.forEach(row => {
+                const partName = (row['Part name'] || row['Part name '] || Object.values(row)[0] || '').toString().trim();
+                if (!partName) return;
+                const weight = parseFloat((row['Part weight'] || '0').toString().replace(/,/g, '')) || 0;
+                const materials = [];
+                for (let i = 1; i <= 5; i++) {
+                    const name = (row['Component ' + i] || row['Component ' + i + ' '] || '').toString().trim();
+                    const qty = parseFloat((row['Component ' + i + ' Qty.'] || row['Component ' + i + ' Qty'] || '0').toString().replace(/,/g, '')) || 0;
+                    if (name && qty > 0 && name.toLowerCase() !== 'scrap') materials.push({ name, qtyPerUnit: qty });
+                }
+                bom2Map[partName] = { weight, materials, category: (row['Sub-Product Category'] || '').toString().trim() };
+            });
+            const openOrders = allData.filter(row => {
+                const status = (getVal(row, 'STATUS') || getVal(row, 'FUSION_STATUS') || '').toString().toLowerCase().trim();
+                return !shippedStatuses.has(status);
+            });
+            const hubDemand = {}, tireDemand = {};
+            let totalOpenOrders = 0;
+            openOrders.forEach(row => {
+                const qty = parseInt((getVal(row, 'QTY') || '0').toString().replace(/,/g, '')) || 0;
+                if (qty <= 0) return;
+                totalOpenOrders++;
+                const hub = (getVal(row, 'HUB') || '').toString().trim();
+                const tire = (getVal(row, 'TIRE') || '').toString().trim();
+                if (hub) hubDemand[hub] = (hubDemand[hub] || 0) + qty;
+                if (tire) tireDemand[tire] = (tireDemand[tire] || 0) + qty;
+            });
+            const materialDemand = {};
+            function addMaterialDemand(componentName, componentQty, sourceLabel) {
+                if (bom2Map[componentName]) {
+                    bom2Map[componentName].materials.forEach(mat => {
+                        const totalLbs = mat.qtyPerUnit * componentQty;
+                        if (!materialDemand[mat.name]) materialDemand[mat.name] = { needed: 0, sources: [] };
+                        materialDemand[mat.name].needed += totalLbs;
+                        materialDemand[mat.name].sources.push({ component: componentName, qty: componentQty, materialPerUnit: mat.qtyPerUnit, totalLbs, sourceLabel });
+                    });
+                }
+            }
+            Object.entries(hubDemand).forEach(([hub, qty]) => addMaterialDemand(hub, qty, 'Hub'));
+            Object.entries(tireDemand).forEach(([tire, qty]) => addMaterialDemand(tire, qty, 'Tire'));
+            const inventoryLookup = {};
+            inventoryData.forEach(item => {
+                const partNum = (item.partNumber || item.itemNumber || '').toString().trim();
+                if (partNum) inventoryLookup[partNum] = item.fusionQty || 0;
+            });
+            const materials = Object.entries(materialDemand).map(([name, data]) => {
+                const onHand = inventoryLookup[name] || 0;
+                const needed = Math.round(data.needed);
+                const surplus = onHand - needed;
+                const coverage = needed > 0 ? Math.min(100, Math.round((onHand / needed) * 100)) : 100;
+                let status = 'ok';
+                if (surplus < 0 && coverage < 50) status = 'shortage';
+                else if (surplus < 0) status = 'low';
+                return { name, onHand, needed, surplus, coverage, status, sources: data.sources };
+            }).sort((a, b) => a.surplus - b.surplus);
+            const hubs = Object.entries(hubDemand).map(([hub, qty]) => {
+                const bom = bom2Map[hub];
+                return { part: hub, qty, weight: bom ? bom.weight : 0, category: bom ? bom.category : '', materials: bom ? bom.materials.map(m => ({ name: m.name, perUnit: m.qtyPerUnit, total: Math.round(m.qtyPerUnit * qty) })) : [] };
+            }).sort((a, b) => b.qty - a.qty);
+            const tires = Object.entries(tireDemand).map(([tire, qty]) => {
+                const bom = bom2Map[tire];
+                return { part: tire, qty, weight: bom ? bom.weight : 0, category: bom ? bom.category : '', materials: bom ? bom.materials.map(m => ({ name: m.name, perUnit: m.qtyPerUnit, total: Math.round(m.qtyPerUnit * qty) })) : [] };
+            }).sort((a, b) => b.qty - a.qty);
+            return {
+                totalOpenOrders,
+                totalHubs: Object.values(hubDemand).reduce((s, v) => s + v, 0),
+                totalTires: Object.values(tireDemand).reduce((s, v) => s + v, 0),
+                materials, hubs, tires,
+                shortages: materials.filter(m => m.status === 'shortage' || m.status === 'low'),
+                totalUrethane: materials.filter(m => m.name.toLowerCase().includes('urth')).reduce((s, m) => s + m.needed, 0),
+                totalCrumbRubber: materials.filter(m => m.name.toLowerCase().includes('abr')).reduce((s, m) => s + m.needed, 0)
+            };
+        }
+
+        function updateMaterialRequirementsPage() {
+            const data = computeMaterialRequirements();
+            const lang = currentLang;
+            const t = (en, es) => lang === 'es' ? es : en;
+            document.getElementById('matReqOrderCount').textContent = formatNumber(data.totalOpenOrders);
+            document.getElementById('matReqHubCount').textContent = formatNumber(data.totalHubs);
+            document.getElementById('matReqTireCount').textContent = formatNumber(data.totalTires);
+            document.getElementById('matReqShortageCount').textContent = data.shortages.length;
+            document.getElementById('matReqShortageCount').style.color = data.shortages.length > 0 ? 'var(--danger)' : 'var(--success)';
+            document.getElementById('matReqUrethane').textContent = formatNumber(data.totalUrethane) + ' lbs';
+            document.getElementById('matReqCrumbRubber').textContent = formatNumber(data.totalCrumbRubber) + ' lbs';
+            const tbody = document.getElementById('matReqTableBody');
+            tbody.innerHTML = '';
+            data.materials.forEach(mat => {
+                const statusBadge = mat.status === 'shortage' ? '<span class="mat-badge mat-badge-shortage">' + t('SHORTAGE','FALTANTE') + '</span>' : mat.status === 'low' ? '<span class="mat-badge mat-badge-low">' + t('LOW','BAJO') + '</span>' : '<span class="mat-badge mat-badge-ok">OK</span>';
+                const surplusClass = mat.surplus >= 0 ? 'mat-surplus' : 'mat-shortage-num';
+                const barClass = mat.coverage >= 80 ? 'mat-bar-green' : mat.coverage >= 40 ? 'mat-bar-yellow' : 'mat-bar-red';
+                const tr = document.createElement('tr');
+                tr.className = 'mat-req-row';
+                tr.onclick = function() { toggleMaterialDetail(mat.name); };
+                tr.innerHTML = '<td>' + mat.name + '</td><td class="num">' + formatNumber(mat.onHand) + '</td><td class="num">' + formatNumber(mat.needed) + '</td><td class="num ' + surplusClass + '">' + (mat.surplus >= 0 ? '+' : '') + formatNumber(mat.surplus) + '</td><td><div class="mat-coverage-cell"><span>' + mat.coverage + '%</span><div class="mat-bar-bg"><div class="mat-bar ' + barClass + '" style="width:' + mat.coverage + '%"></div></div></div></td><td>' + statusBadge + '</td>';
+                tbody.appendChild(tr);
+                const detailTr = document.createElement('tr');
+                detailTr.id = 'matDetail_' + mat.name.replace(/[^a-zA-Z0-9]/g, '_');
+                detailTr.className = 'mat-detail-row';
+                detailTr.style.display = 'none';
+                const grouped = {};
+                mat.sources.forEach(s => {
+                    if (!grouped[s.component]) grouped[s.component] = { qty: 0, materialPerUnit: s.materialPerUnit, totalLbs: 0, sourceLabel: s.sourceLabel };
+                    grouped[s.component].qty += s.qty;
+                    grouped[s.component].totalLbs += s.totalLbs;
+                });
+                let detailHTML = '<td colspan="6"><div class="mat-detail-content"><strong>' + t('Demand Breakdown','Desglose de Demanda') + ':</strong><table class="mat-detail-table"><tr><th>' + t('Component','Componente') + '</th><th>' + t('Type','Tipo') + '</th><th class="num">' + t('Units','Unidades') + '</th><th class="num">' + t('Lbs/Unit','Lbs/Unidad') + '</th><th class="num">' + t('Total Lbs','Total Lbs') + '</th></tr>';
+                Object.entries(grouped).forEach(([comp, info]) => {
+                    detailHTML += '<tr><td>' + comp + '</td><td>' + info.sourceLabel + '</td><td class="num">' + formatNumber(info.qty) + '</td><td class="num">' + info.materialPerUnit.toFixed(3) + '</td><td class="num">' + formatNumber(Math.round(info.totalLbs)) + '</td></tr>';
+                });
+                detailHTML += '</table></div></td>';
+                detailTr.innerHTML = detailHTML;
+                tbody.appendChild(detailTr);
+            });
+            const hubBody = document.getElementById('matReqHubBody');
+            hubBody.innerHTML = '';
+            data.hubs.forEach(hub => {
+                const matStr = hub.materials.map(m => m.name + ' (' + formatNumber(m.total) + ' lbs)').join(' · ');
+                hubBody.innerHTML += '<tr><td>' + hub.part + '</td><td>' + hub.category + '</td><td class="num">' + formatNumber(hub.qty) + '</td><td class="num">' + hub.weight.toFixed(2) + '</td><td>' + (matStr || '—') + '</td></tr>';
+            });
+            const tireBody = document.getElementById('matReqTireBody');
+            tireBody.innerHTML = '';
+            data.tires.forEach(tire => {
+                const crumb = tire.materials.find(m => m.name.toLowerCase().includes('abr'));
+                const urethane = tire.materials.find(m => m.name.toLowerCase().includes('urth'));
+                tireBody.innerHTML += '<tr><td>' + tire.part + '</td><td class="num">' + formatNumber(tire.qty) + '</td><td class="num">' + tire.weight.toFixed(2) + '</td><td class="num">' + (crumb ? formatNumber(crumb.total) : '—') + '</td><td class="num">' + (urethane ? formatNumber(urethane.total) : '—') + '</td></tr>';
+            });
+            const now = new Date();
+            document.getElementById('matReqTimestamp').textContent = t('Updated','Actualizado') + ': ' + now.toLocaleTimeString();
+        }
+
+        function toggleMaterialDetail(materialName) {
+            const id = 'matDetail_' + materialName.replace(/[^a-zA-Z0-9]/g, '_');
+            const row = document.getElementById(id);
+            if (row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+
+        function exportMaterialRequirementsCSV() {
+            const data = computeMaterialRequirements();
+            let csv = 'Material,On Hand,Needed,Surplus/Shortage,Coverage %,Status\n';
+            data.materials.forEach(m => { csv += '"' + m.name + '",' + m.onHand + ',' + m.needed + ',' + m.surplus + ',' + m.coverage + '%,' + m.status + '\n'; });
+            csv += '\nHub,Category,Qty Needed,Weight/ea\n';
+            data.hubs.forEach(h => { csv += '"' + h.part + '","' + h.category + '",' + h.qty + ',' + h.weight + '\n'; });
+            csv += '\nTire,Qty Needed,Weight/ea\n';
+            data.tires.forEach(t => { csv += '"' + t.part + '",' + t.qty + ',' + t.weight + '\n'; });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'material-requirements-' + new Date().toISOString().slice(0,10) + '.csv';
+            a.click();
+        }
+
         function initBomExplorer() { renderBomSelector(); }
         function filterBomSelector() { renderBomSelector((document.getElementById('bomSearch').value || '').toLowerCase()); }
         
