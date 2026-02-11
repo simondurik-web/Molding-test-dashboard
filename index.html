@@ -527,6 +527,91 @@
         .photo-drilldown-box .photo-info { font-size: 11px; color: var(--text-secondary); line-height: 1.6; margin-top: auto; }
         .pallet-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: all 0.2s; }
         .pallet-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+
+        /* ===== PALLET LOAD CALCULATOR STYLES ===== */
+        .plc-section { margin-top: 24px; }
+        .plc-toggle-btn { width: 100%; background: var(--bg-card); border: 2px dashed var(--border); border-radius: 10px; padding: 16px; color: var(--text-secondary); font-family: inherit; font-size: 15px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .plc-toggle-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(49, 130, 206, 0.08); }
+        .plc-toggle-btn.active { border-style: solid; border-color: var(--accent); color: var(--accent); background: rgba(49, 130, 206, 0.08); }
+        .plc-container { display: none; margin-top: 16px; }
+        .plc-container.show { display: block; }
+        .plc-layout { display: grid; grid-template-columns: 400px 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 1100px) { .plc-layout { grid-template-columns: 1fr; } }
+        .plc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+        .plc-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600; }
+        .plc-trailer-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .plc-trailer-btn { background: var(--bg-dark); border: 2px solid var(--border); border-radius: 8px; padding: 12px; color: var(--text-primary); cursor: pointer; transition: all 0.2s; text-align: center; font-family: inherit; }
+        .plc-trailer-btn:hover { border-color: var(--border-light, #3d444d); }
+        .plc-trailer-btn.active { border-color: var(--accent); background: rgba(49, 130, 206, 0.1); }
+        .plc-trailer-btn .size { font-size: 20px; font-weight: 700; display: block; }
+        .plc-trailer-btn .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; display: block; }
+        .plc-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+        .plc-field label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .plc-field input, .plc-field select { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text-primary); font-size: 14px; transition: border-color 0.15s; width: 100%; font-family: inherit; }
+        .plc-field input:focus, .plc-field select:focus { outline: none; border-color: var(--accent); }
+        .plc-pallet-type { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; transition: border-color 0.2s; position: relative; }
+        .plc-pallet-type:hover { border-color: var(--border-light, #3d444d); }
+        .plc-pallet-type.dragging { opacity: 0.5; border-color: var(--accent); }
+        .plc-pallet-type.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2); }
+        .plc-ptype-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .plc-ptype-header-left { display: flex; align-items: center; gap: 8px; }
+        .plc-drag-handle { cursor: grab; padding: 4px 2px; color: var(--border); display: flex; flex-direction: column; align-items: center; gap: 2px; transition: color 0.15s; user-select: none; }
+        .plc-drag-handle:hover { color: var(--accent); }
+        .plc-drag-handle:active { cursor: grabbing; }
+        .plc-drag-dots { display: flex; gap: 2px; }
+        .plc-drag-dots span { width: 3px; height: 3px; background: currentColor; border-radius: 50%; }
+        .plc-order-badge { width: 22px; height: 22px; border-radius: 5px; background: rgba(49, 130, 206, 0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .plc-color-swatch { width: 20px; height: 20px; border-radius: 4px; border: 2px solid rgba(255,255,255,0.15); cursor: pointer; transition: transform 0.15s; flex-shrink: 0; }
+        .plc-color-swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.4); }
+        .plc-color-popup { position: absolute; top: 30px; left: 60px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: none; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .plc-color-popup.show { display: block; }
+        .plc-color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .plc-color-opt { width: 26px; height: 26px; border-radius: 5px; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
+        .plc-color-opt:hover { transform: scale(1.15); }
+        .plc-color-opt.selected { border-color: white; }
+        .plc-name-input { background: none; border: none; color: var(--text-primary); font-weight: 600; font-size: 14px; font-family: inherit; outline: none; padding: 2px 4px; border-radius: 4px; max-width: 160px; cursor: text; }
+        .plc-name-input:hover { background: var(--bg-dark); }
+        .plc-name-input:focus { background: var(--bg-dark); border: 1px solid var(--accent); }
+        .plc-remove-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; }
+        .plc-remove-btn:hover { background: rgba(248, 81, 73, 0.12); color: #f85149; }
+        .plc-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .plc-stack-row { margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+        .plc-stack-toggle { position: relative; width: 42px; height: 24px; cursor: pointer; flex-shrink: 0; }
+        .plc-stack-toggle input { display: none; }
+        .plc-stack-slider { position: absolute; inset: 0; background: var(--border); border-radius: 12px; transition: background 0.2s; }
+        .plc-stack-slider::after { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: var(--text-primary); border-radius: 50%; transition: transform 0.2s; }
+        .plc-stack-toggle input:checked + .plc-stack-slider { background: var(--accent); }
+        .plc-stack-toggle input:checked + .plc-stack-slider::after { transform: translateX(18px); }
+        .plc-orient-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 4px; }
+        .plc-orient-btn { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; padding: 6px; color: var(--text-secondary); font-size: 11px; cursor: pointer; transition: all 0.15s; text-align: center; }
+        .plc-orient-btn:hover { border-color: var(--border-light, #3d444d); }
+        .plc-orient-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(49, 130, 206, 0.1); }
+        .plc-orient-info { font-size: 10px; margin-top: 6px; padding: 5px 8px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); line-height: 1.4; }
+        .plc-add-btn { width: 100%; background: var(--bg-dark); border: 2px dashed var(--border); border-radius: 8px; padding: 12px; color: var(--text-secondary); font-family: inherit; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .plc-add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(49, 130, 206, 0.08); }
+        .plc-stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+        @media (max-width: 700px) { .plc-stats-bar { grid-template-columns: 1fr 1fr; } }
+        .plc-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+        .plc-stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 4px; }
+        .plc-stat .value { font-size: 20px; font-weight: 700; }
+        .plc-stat .sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .plc-stat.overweight { border-color: #f85149; background: rgba(248, 81, 73, 0.08); }
+        .plc-stat.overweight .value { color: #f85149; }
+        .plc-stat.ok .value { color: #3fb950; }
+        .plc-weight-bar { height: 8px; background: var(--bg-dark); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 12px; }
+        .plc-weight-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease, background-color 0.3s; }
+        .plc-trailer-visual { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; }
+        .plc-trailer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); margin-bottom: 12px; display: flex; justify-content: space-between; }
+        .plc-legend { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-secondary); }
+        .plc-legend-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.1); display: inline-block; vertical-align: middle; margin-right: 6px; }
+        .plc-order-selector { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 8px; }
+        .plc-order-selector .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .plc-order-checkbox-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+        .plc-order-checkbox-list label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.15s; }
+        .plc-order-checkbox-list label:hover { background: rgba(49, 130, 206, 0.08); }
+        .plc-order-checkbox-list input[type="checkbox"] { accent-color: var(--accent); }
+        .plc-link-toggle { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+        /* ===== END PALLET LOAD CALCULATOR STYLES ===== */
         .pallet-card-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .pallet-card-header h4 { font-size: 14px; font-weight: 600; }
         .pallet-card-header .pallet-meta { font-size: 11px; color: var(--text-secondary); }
@@ -2184,6 +2269,60 @@
                     <table class="data-table"><thead><tr id="ordersStagedTableHeader"></tr></thead><tbody id="ordersStagedTableBody"></tbody></table>
                 </div>
             </div>
+
+            <!-- PALLET LOAD CALCULATOR SECTION -->
+            <div class="plc-section">
+                <button class="plc-toggle-btn" id="plcToggleBtn" onclick="plcToggle()">
+                    <span style="font-size:20px;">📦</span>
+                    <span id="plcToggleText">Pallet Load Calculator</span>
+                    <span id="plcToggleArrow" style="font-size:12px;">▼</span>
+                </button>
+                <div class="plc-container" id="plcContainer">
+                    <div class="plc-layout">
+                        <!-- LEFT PANEL: Controls -->
+                        <div class="plc-controls">
+                            <div class="plc-card">
+                                <div class="plc-card-title" id="plcTrailerTitle">Trailer Type</div>
+                                <div class="plc-trailer-toggle">
+                                    <button class="plc-trailer-btn active" data-plc-len="53" onclick="plcSelectTrailer(53)"><span class="size">53'</span><span class="label" id="plcVanLabel1">Van Trailer</span></button>
+                                    <button class="plc-trailer-btn" data-plc-len="48" onclick="plcSelectTrailer(48)"><span class="size">48'</span><span class="label" id="plcVanLabel2">Van Trailer</span></button>
+                                </div>
+                                <div style="margin-top: 12px;">
+                                    <div class="plc-field">
+                                        <label id="plcMaxPayloadLabel">Max Payload (lbs)</label>
+                                        <input type="number" id="plcMaxWeight" value="45000" oninput="plcRecalculate()">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="plc-card">
+                                <div class="plc-card-title" id="plcPalletTypesTitle">Pallet Types</div>
+                                <div style="font-size: 10px; color: var(--text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                    <span>🚛</span> <span id="plcDragHint">Drag to reorder loading sequence. #1 loads first (near door).</span>
+                                </div>
+                                <div id="plcPalletTypesContainer"></div>
+                                <button class="plc-add-btn" onclick="plcAddPalletType()">
+                                    <span style="font-size:20px;font-weight:700;">+</span> <span id="plcAddBtnText">Add Pallet Size</span>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- RIGHT PANEL: Stats + Visual -->
+                        <div class="plc-visual">
+                            <div class="plc-stats-bar">
+                                <div class="plc-stat" id="plcStatTotal"><div class="label" id="plcStatTotalLabel">Total Pallets</div><div class="value" id="plcTotalPallets">0</div></div>
+                                <div class="plc-stat" id="plcStatWeight"><div class="label" id="plcStatWeightLabel">Total Weight</div><div class="value" id="plcTotalWeight">0</div><div class="sub" id="plcWeightSub">of 45,000 lbs</div></div>
+                                <div class="plc-stat" id="plcStatSpace"><div class="label" id="plcStatSpaceLabel">Space Used</div><div class="value" id="plcSpaceUsed">0%</div></div>
+                                <div class="plc-stat" id="plcStatStatus"><div class="label" id="plcStatStatusLabel">Load Status</div><div class="value" id="plcLoadStatus" style="color: var(--text-secondary);">---</div></div>
+                            </div>
+                            <div class="plc-weight-bar"><div class="plc-weight-fill" id="plcWeightFill" style="width:0%;background:#3fb950;"></div></div>
+                            <div class="plc-trailer-visual">
+                                <div class="plc-trailer-label"><span id="plcViewLabel">TOP-DOWN VIEW</span><span id="plcTrailerDimLabel">636" x 98.5"</span></div>
+                                <div id="plcTrailerSvg" style="width:100%;overflow-x:auto;"></div>
+                                <div class="plc-legend" id="plcLegend"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ORDERS SHIPPED PAGE -->
@@ -3727,6 +3866,8 @@
             else if (currentPage === 'staged-records') renderStagedRecordsTable();
             // Update AI chat language
             if (typeof updateAiLanguage === 'function') updateAiLanguage();
+            // Update Pallet Load Calculator language
+            if (typeof plcOnLanguageChange === 'function') plcOnLanguageChange();
             // Re-render mobile cards if in mobile mode
             const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
             if (isCardMode) {
@@ -6441,7 +6582,7 @@
                 if (!isColumnHidden('ordersQueue', 'ifNum')) cells += `<td>${getVal(r, 'IF_NUM') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'fusionStatus')) cells += `<td>${getVal(r, 'FUSION_STATUS') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'part')) cells += `<td>${partCell}</td>`;
-                if (!isColumnHidden('ordersQueue', 'numPackages')) cells += `<td>${getVal(r, 'NUM_PACKAGES') || '-'}</td>`;
+                if (!isColumnHidden('ordersQueue', 'numPackages')) { const npRaw = parseFloat(getVal(r, 'NUM_PACKAGES')); cells += `<td>${npRaw > 0 ? Math.ceil(npRaw) : (getVal(r, 'NUM_PACKAGES') || '-')}</td>`; }
                 if (!isColumnHidden('ordersQueue', 'packaging')) cells += `<td>${getVal(r, 'PACKAGING') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'partsPerPackage')) cells += `<td>${getVal(r, 'PARTS_PER_PACKAGE') || '-'}</td>`;
                 if (!isColumnHidden('ordersQueue', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
@@ -6769,6 +6910,9 @@
             console.log('============================');
             
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
+            const numPkgRaw = orderData ? parseFloat(getVal(orderData, 'NUM_PACKAGES')) : 0;
+            const totalPalletsExpected = numPkgRaw > 0 ? Math.ceil(numPkgRaw) : 0;
+            const palletCountDisplay = totalPalletsExpected > 0 ? `${pallets.length} of ${totalPalletsExpected}` : `${pallets.length}`;
             
             // Build summary section with IF# and days info
             let summaryHtml = `
@@ -6787,7 +6931,7 @@
             }
             
             summaryHtml += `
-                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${palletCountDisplay}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
@@ -6802,8 +6946,9 @@
                 galleryHtml += `<div class="photo-thumbnails" style="margin-bottom: 12px;">`;
                 pallets.forEach((p, idx) => {
                     const num = p.palletNumber || (idx + 1);
+                    const palletLabel = totalPalletsExpected > 0 ? `Pallet ${num} of ${totalPalletsExpected}` : `Pallet ${num}`;
                     if (p.pictureUrl) {
-                        galleryHtml += buildPhotoThumb(p.pictureUrl, `Pallet ${num}`, 'pallet-photo');
+                        galleryHtml += buildPhotoThumb(p.pictureUrl, palletLabel, 'pallet-photo');
                     }
                 });
                 galleryHtml += `</div>`;
@@ -6952,8 +7097,11 @@
             const part = orderData ? getVal(orderData, 'PART') : '';
             const ifNum = orderData ? getVal(orderData, 'IF_NUM') : '';
             const qty = orderData ? parseNumber(getVal(orderData, 'QTY')) : 0;
+            const numPackagesRaw = orderData ? parseFloat(getVal(orderData, 'NUM_PACKAGES')) : 0;
+            const totalPalletsExpected = numPackagesRaw > 0 ? Math.ceil(numPackagesRaw) : 0;
             const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
             const totalParts = pallets.reduce((s, p) => s + parseNumber(p.partsPerPallet || p.boxesPerPallet), 0);
+            const palletCountDisplay = totalPalletsExpected > 0 ? `${pallets.length} of ${totalPalletsExpected}` : `${pallets.length}`;
             
             // Summary info
             let summaryHtml = `
@@ -6961,7 +7109,7 @@
                 <div class="pallet-summary-item"><div class="label">${t('col.part')}</div><div class="value">${part}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('col.ifNum')}</div><div class="value">${ifNum || '-'}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('col.qty')}</div><div class="value">${formatNumber(qty)}</div></div>
-                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${pallets.length}</div></div>
+                <div class="pallet-summary-item"><div class="label">${t('pallet.pallets')}</div><div class="value">${palletCountDisplay}</div></div>
                 <div class="pallet-summary-item"><div class="label">${t('pallet.totalWeight')}</div><div class="value">${formatNumber(totalWeight)} lbs</div></div>
             `;
             
@@ -6973,8 +7121,9 @@
                     const num = p.palletNumber || (idx + 1);
                     const photoUrls = p.pictureUrl ? getPhotoUrls(p.pictureUrl) : null;
                     palletHtml += `<div style="background: rgba(49, 130, 206, 0.1); border: 1px solid var(--accent); border-radius: 10px; overflow: hidden;">`;
+                    const palletLabel = totalPalletsExpected > 0 ? `📦 Pallet ${num} of ${totalPalletsExpected}` : `📦 Pallet ${num}`;
                     palletHtml += `<div style="padding: 12px 16px; background: rgba(49, 130, 206, 0.15); border-bottom: 1px solid var(--accent);">`;
-                    palletHtml += `<strong style="color: var(--accent);">📦 Pallet ${num}</strong>`;
+                    palletHtml += `<strong style="color: var(--accent);">${palletLabel}</strong>`;
                     palletHtml += `</div>`;
                     if (photoUrls) {
                         palletHtml += `<div style="padding: 12px; cursor: pointer;" onclick="openImageModal('${photoUrls.full}')">`;
@@ -7270,6 +7419,491 @@
                 return [line,getVal(r,'IF_NUM'),getVal(r,'PO_NUM'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),r[COL.REVENUE],r[COL.REQUESTED_DATE],getVal(r,'DAYS_UNTIL'),totalWeight,dimensions,getVal(r,'ASSIGNED'),pallets.length].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',');
             });
             downloadCSV([headers.join(','),...rows].join('\n'), 'orders_staged.csv');
+        }
+
+        // ============================================================
+        // PALLET LOAD CALCULATOR
+        // ============================================================
+        const PLC_COLORS = [
+            { fill: '#3182ce', label: 'rgba(49,130,206,0.22)' },
+            { fill: '#f0883e', label: 'rgba(240,136,62,0.22)' },
+            { fill: '#3fb950', label: 'rgba(63,185,80,0.22)' },
+            { fill: '#bc8cff', label: 'rgba(188,140,255,0.22)' },
+            { fill: '#d29922', label: 'rgba(210,153,34,0.22)' },
+            { fill: '#f778ba', label: 'rgba(247,120,186,0.22)' },
+            { fill: '#79c0ff', label: 'rgba(121,192,255,0.22)' },
+            { fill: '#7ee787', label: 'rgba(126,231,135,0.22)' },
+            { fill: '#ff7b72', label: 'rgba(255,123,114,0.22)' },
+            { fill: '#a5d6ff', label: 'rgba(165,214,255,0.22)' },
+            { fill: '#ffa657', label: 'rgba(255,166,87,0.22)' },
+            { fill: '#d2a8ff', label: 'rgba(210,168,255,0.22)' },
+        ];
+        const PLC_TRAILERS = { 53: { length: 636, width: 98.5 }, 48: { length: 576, width: 98.5 } };
+        let plcTrailerLength = 53;
+        let plcPalletTypes = [];
+        let plcNextId = 1;
+        let plcOpenColorPicker = null;
+        let plcDragSrcIndex = null;
+
+        const PLC_I18N = {
+            en: {
+                toggle: 'Pallet Load Calculator', trailerType: 'Trailer Type', vanTrailer: 'Van Trailer', maxPayload: 'Max Payload (lbs)',
+                palletTypes: 'Pallet Types', addPalletSize: 'Add Pallet Size', totalPallets: 'Total Pallets', totalWeight: 'Total Weight',
+                spaceUsed: 'Space Used', loadStatus: 'Load Status', topDown: 'TOP-DOWN VIEW', widthIn: 'Width — W (in)', lengthIn: 'Length — L (in)',
+                qty: 'Qty', weightEa: 'Weight/ea (lbs)', orientation: 'Orientation', auto: 'Auto', wAcross: 'W across', lAcross: 'L across',
+                doubleStack: 'Double Stack', perRow: 'per row', across: 'across', deep: 'deep', gap: 'gap', placed: 'placed',
+                bestFit: 'Best fit', pallet: 'Pallet', noFit: 'NO FIT', overweight: 'OVERWEIGHT', over: 'OVER', ok: 'OK',
+                door: 'DOOR', front: 'FRONT', of: 'of', dragHint: 'Drag to reorder loading sequence. #1 loads first (near door).',
+                loadOrder: 'Load order', nearDoor: 'near door', nearFront: 'near front', palletsNoFit: 'pallets do not fit',
+                linkOrders: 'Link Ready to Ship Orders', selectOrders: 'Select orders to add to this pallet type',
+                palletNoFit: 'pallet does not fit', floorSpots: 'floor spots', physicalPallets: 'physical pallets',
+                note: '<strong>Note:</strong> This shows an estimated arrangement. Actual loading may vary.',
+            },
+            es: {
+                toggle: 'Calculadora de Carga de Tarimas', trailerType: 'Tipo de Tráiler', vanTrailer: 'Tráiler Cerrado', maxPayload: 'Carga Máxima (lbs)',
+                palletTypes: 'Tipos de Tarimas', addPalletSize: 'Agregar Tarima', totalPallets: 'Total Tarimas', totalWeight: 'Peso Total',
+                spaceUsed: 'Espacio Usado', loadStatus: 'Estado de Carga', topDown: 'VISTA SUPERIOR', widthIn: 'Ancho — W (in)', lengthIn: 'Largo — L (in)',
+                qty: 'Cant', weightEa: 'Peso/c.u. (lbs)', orientation: 'Orientación', auto: 'Auto', wAcross: 'W ancho', lAcross: 'L ancho',
+                doubleStack: 'Doble Estiba', perRow: 'por fila', across: 'ancho', deep: 'fondo', gap: 'espacio', placed: 'colocadas',
+                bestFit: 'Mejor ajuste', pallet: 'Tarima', noFit: 'NO CABE', overweight: 'SOBREPESO', over: 'EXCESO', ok: 'OK',
+                door: 'PUERTA', front: 'FRENTE', of: 'de', dragHint: 'Arrastra para cambiar el orden. #1 se carga primero (junto a puerta).',
+                loadOrder: 'Orden de carga', nearDoor: 'junto a puerta', nearFront: 'junto al frente', palletsNoFit: 'tarimas no caben',
+                linkOrders: 'Vincular Órdenes Listas para Enviar', selectOrders: 'Selecciona órdenes para agregar a esta tarima',
+                palletNoFit: 'tarima no cabe', floorSpots: 'posiciones en piso', physicalPallets: 'tarimas físicas',
+                note: '<strong>Nota:</strong> Esto muestra un arreglo estimado. La carga real puede variar.',
+            }
+        };
+
+        function plcT(key) { const lang = currentLang || 'en'; return (PLC_I18N[lang] && PLC_I18N[lang][key]) || PLC_I18N.en[key] || key; }
+
+        function plcToggle() {
+            const container = document.getElementById('plcContainer');
+            const btn = document.getElementById('plcToggleBtn');
+            const arrow = document.getElementById('plcToggleArrow');
+            const isShown = container.classList.toggle('show');
+            btn.classList.toggle('active', isShown);
+            arrow.textContent = isShown ? '▲' : '▼';
+            if (isShown && plcPalletTypes.length === 0) {
+                plcAddPalletType(48, 40, `${plcT('pallet')} 1`);
+            }
+            plcUpdateLabels();
+        }
+
+        function plcUpdateLabels() {
+            const el = (id, text) => { const e = document.getElementById(id); if (e) e.textContent = text; };
+            el('plcToggleText', plcT('toggle'));
+            el('plcTrailerTitle', plcT('trailerType'));
+            el('plcVanLabel1', plcT('vanTrailer'));
+            el('plcVanLabel2', plcT('vanTrailer'));
+            el('plcMaxPayloadLabel', plcT('maxPayload'));
+            el('plcPalletTypesTitle', plcT('palletTypes'));
+            el('plcAddBtnText', plcT('addPalletSize'));
+            el('plcStatTotalLabel', plcT('totalPallets'));
+            el('plcStatWeightLabel', plcT('totalWeight'));
+            el('plcStatSpaceLabel', plcT('spaceUsed'));
+            el('plcStatStatusLabel', plcT('loadStatus'));
+            el('plcViewLabel', plcT('topDown'));
+            el('plcDragHint', plcT('dragHint'));
+        }
+
+        function plcSelectTrailer(len) {
+            plcTrailerLength = len;
+            document.querySelectorAll('.plc-trailer-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.plcLen) === len));
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+
+        function plcGetStagedOrders() {
+            return allData.filter(r => getStatus(r) === 'staged').map(r => {
+                const line = getVal(r, 'LINE');
+                const pallets = getPalletDataForOrder(line);
+                const totalWeight = pallets.reduce((s, p) => s + parseNumber(p.weight), 0);
+                const avgWeight = pallets.length > 0 ? Math.round(totalWeight / pallets.length) : 0;
+                const dims = pallets.length > 0 && pallets[0].dimensions ? pallets[0].dimensions : '';
+                const numPkg = parseFloat(getVal(r, 'NUM_PACKAGES')) || 0;
+                const palletCount = numPkg > 0 ? Math.ceil(numPkg) : pallets.length;
+                let w = 0, l = 0;
+                if (dims) {
+                    const parts = dims.split(/x/i).map(s => parseFloat(s.trim()));
+                    if (parts.length >= 2) { w = parts[0] || 0; l = parts[1] || 0; }
+                }
+                return {
+                    line, ifNum: getVal(r, 'IF_NUM') || '', customer: getVal(r, 'CUSTOMER') || '',
+                    qty: parseNumber(getVal(r, 'QTY')), palletCount, avgWeight, w, l, dims,
+                    part: getVal(r, 'PART') || '',
+                };
+            });
+        }
+
+        function plcAddPalletType(defaultW, defaultL, defaultLabel) {
+            const id = plcNextId++;
+            const ci = plcPalletTypes.length % PLC_COLORS.length;
+            plcPalletTypes.push({
+                id, width: defaultW || 48, length: defaultL || 40, weight: 0, qty: 0,
+                orientation: 'auto', doubleStack: false, color: { ...PLC_COLORS[ci] },
+                label: defaultLabel || `${plcT('pallet')} ${plcPalletTypes.length + 1}`,
+                linkedOrders: [], linkMode: false,
+            });
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+
+        function plcRemovePalletType(id) {
+            plcPalletTypes = plcPalletTypes.filter(p => p.id !== id);
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+
+        function plcUpdatePallet(id, field, value) {
+            const pt = plcPalletTypes.find(p => p.id === id);
+            if (!pt) return;
+            if (field === 'orientation' || field === 'label') pt[field] = value;
+            else if (field === 'doubleStack' || field === 'linkMode') pt[field] = value;
+            else pt[field] = parseFloat(value) || 0;
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+
+        function plcSetColor(id, ci) {
+            const pt = plcPalletTypes.find(p => p.id === id);
+            if (pt) pt.color = { ...PLC_COLORS[ci] };
+            plcOpenColorPicker = null;
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+
+        function plcToggleColorPicker(id, ev) {
+            ev.stopPropagation();
+            const popup = document.getElementById(`plcColor_${id}`);
+            const isOpen = popup && popup.classList.contains('show');
+            document.querySelectorAll('.plc-color-popup').forEach(p => p.classList.remove('show'));
+            if (!isOpen && popup) { popup.classList.add('show'); plcOpenColorPicker = id; }
+            else plcOpenColorPicker = null;
+        }
+
+        document.addEventListener('click', e => {
+            if (plcOpenColorPicker && !e.target.closest('.plc-color-swatch') && !e.target.closest('.plc-color-popup')) {
+                document.querySelectorAll('.plc-color-popup').forEach(p => p.classList.remove('show'));
+                plcOpenColorPicker = null;
+            }
+        });
+
+        function plcToggleOrder(palletId, orderLine) {
+            const pt = plcPalletTypes.find(p => p.id === palletId);
+            if (!pt) return;
+            const idx = pt.linkedOrders.indexOf(orderLine);
+            if (idx >= 0) pt.linkedOrders.splice(idx, 1);
+            else pt.linkedOrders.push(orderLine);
+            // Recalculate from linked orders
+            if (pt.linkedOrders.length > 0) {
+                const staged = plcGetStagedOrders();
+                let totalPallets = 0, totalWt = 0, maxW = 0, maxL = 0;
+                pt.linkedOrders.forEach(ln => {
+                    const order = staged.find(o => o.line === ln);
+                    if (order) {
+                        totalPallets += order.palletCount;
+                        totalWt += order.avgWeight;
+                        if (order.w > maxW) maxW = order.w;
+                        if (order.l > maxL) maxL = order.l;
+                    }
+                });
+                pt.qty = totalPallets;
+                pt.weight = totalWt > 0 ? Math.round(totalWt) : pt.weight;
+                if (maxW > 0) pt.width = maxW;
+                if (maxL > 0) pt.length = maxL;
+            }
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+
+        function plcMovePallet(id, dir) {
+            const idx = plcPalletTypes.findIndex(p => p.id === id);
+            if (idx < 0) return;
+            const ni = idx + dir;
+            if (ni < 0 || ni >= plcPalletTypes.length) return;
+            [plcPalletTypes[idx], plcPalletTypes[ni]] = [plcPalletTypes[ni], plcPalletTypes[idx]];
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+
+        function plcHandleDragStart(e, idx) { plcDragSrcIndex = idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => { const c = document.querySelectorAll('.plc-pallet-type'); if (c[idx]) c[idx].classList.add('dragging'); }, 0); }
+        function plcHandleDragOver(e, idx) { e.preventDefault(); document.querySelectorAll('.plc-pallet-type').forEach((c, i) => c.classList.toggle('drag-over', i === idx && i !== plcDragSrcIndex)); }
+        function plcHandleDragLeave(e, idx) { const c = document.querySelectorAll('.plc-pallet-type'); if (c[idx]) c[idx].classList.remove('drag-over'); }
+        function plcHandleDrop(e, idx) {
+            e.preventDefault();
+            document.querySelectorAll('.plc-pallet-type').forEach(c => { c.classList.remove('drag-over', 'dragging'); });
+            if (plcDragSrcIndex === null || plcDragSrcIndex === idx) return;
+            const moved = plcPalletTypes.splice(plcDragSrcIndex, 1)[0];
+            plcPalletTypes.splice(idx, 0, moved);
+            plcDragSrcIndex = null;
+            plcRenderPalletTypes();
+            plcRecalculate();
+        }
+        function plcHandleDragEnd() { plcDragSrcIndex = null; document.querySelectorAll('.plc-pallet-type').forEach(c => { c.classList.remove('dragging', 'drag-over'); }); }
+
+        function plcGetPlacedDims(pt) {
+            const tW = PLC_TRAILERS[plcTrailerLength].width;
+            if (pt.orientation === 'widthwise') return { across: pt.width, along: pt.length };
+            if (pt.orientation === 'lengthwise') return { across: pt.length, along: pt.width };
+            const fitW = Math.floor(tW / pt.width), fitL = Math.floor(tW / pt.length);
+            if (fitL > fitW) return { across: pt.length, along: pt.width };
+            if (fitW > fitL) return { across: pt.width, along: pt.length };
+            return { across: Math.max(pt.width, pt.length), along: Math.min(pt.width, pt.length) };
+        }
+
+        function plcRenderPalletTypes() {
+            const container = document.getElementById('plcPalletTypesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            const tW = PLC_TRAILERS[plcTrailerLength].width;
+            const total = plcPalletTypes.length;
+            const staged = plcGetStagedOrders();
+
+            plcPalletTypes.forEach((pt, index) => {
+                const fitW = Math.floor(tW / pt.width), fitL = Math.floor(tW / pt.length);
+                const wasteW = (tW - fitW * pt.width).toFixed(1), wasteL = (tW - fitL * pt.length).toFixed(1);
+                let autoFit, autoAcross, autoAlong;
+                if (fitL > fitW) { autoAcross = pt.length; autoAlong = pt.width; autoFit = fitL; }
+                else if (fitW > fitL) { autoAcross = pt.width; autoAlong = pt.length; autoFit = fitW; }
+                else { autoAcross = Math.max(pt.width, pt.length); autoAlong = Math.min(pt.width, pt.length); autoFit = fitW; }
+
+                let colorOpts = '';
+                PLC_COLORS.forEach((c, ci) => {
+                    colorOpts += `<div class="plc-color-opt ${c.fill === pt.color.fill ? 'selected' : ''}" style="background:${c.fill}" onclick="plcSetColor(${pt.id}, ${ci})"></div>`;
+                });
+
+                const orderLabel = index === 0 ? `#${index + 1} — ${plcT('nearDoor')}` : index === total - 1 ? `#${index + 1} — ${plcT('nearFront')}` : `#${index + 1}`;
+
+                // Build order selector
+                let orderSelectorHtml = '';
+                if (pt.linkMode) {
+                    orderSelectorHtml = `<div class="plc-order-selector">
+                        <div class="header"><strong style="font-size:12px;color:var(--accent);">${plcT('selectOrders')}</strong></div>
+                        <div class="plc-order-checkbox-list">`;
+                    staged.forEach(o => {
+                        const checked = pt.linkedOrders.includes(o.line) ? 'checked' : '';
+                        orderSelectorHtml += `<label><input type="checkbox" ${checked} onchange="plcToggleOrder(${pt.id}, '${o.line}')"> <strong>${o.ifNum || 'Line ' + o.line}</strong> — ${o.customer} · ${o.palletCount} pallets · ${o.dims || 'no dims'} · ${o.avgWeight} lbs/ea</label>`;
+                    });
+                    orderSelectorHtml += `</div></div>`;
+                }
+
+                const el = document.createElement('div');
+                el.className = 'plc-pallet-type';
+                el.draggable = true;
+                el.ondragstart = e => plcHandleDragStart(e, index);
+                el.ondragover = e => plcHandleDragOver(e, index);
+                el.ondragleave = e => plcHandleDragLeave(e, index);
+                el.ondrop = e => plcHandleDrop(e, index);
+                el.ondragend = plcHandleDragEnd;
+                el.innerHTML = `
+                    <div class="plc-ptype-header">
+                        <div class="plc-ptype-header-left">
+                            <div class="plc-drag-handle" title="Drag to reorder"><div class="plc-drag-dots"><span></span><span></span></div><div class="plc-drag-dots"><span></span><span></span></div><div class="plc-drag-dots"><span></span><span></span></div></div>
+                            <div class="plc-order-badge">${index + 1}</div>
+                            <div style="position:relative;">
+                                <div class="plc-color-swatch" style="background:${pt.color.fill}" onclick="plcToggleColorPicker(${pt.id}, event)"></div>
+                                <div class="plc-color-popup" id="plcColor_${pt.id}"><div class="plc-color-grid">${colorOpts}</div></div>
+                            </div>
+                            <input class="plc-name-input" type="text" value="${pt.label}" onchange="plcUpdatePallet(${pt.id}, 'label', this.value)" onclick="this.select()">
+                        </div>
+                        <div style="display:flex;align-items:center;gap:2px;">
+                            <button class="plc-remove-btn" style="font-size:14px;padding:4px 6px;${index === 0 ? 'opacity:0.3;pointer-events:none;' : ''}" onclick="plcMovePallet(${pt.id}, -1)" title="▲">▲</button>
+                            <button class="plc-remove-btn" style="font-size:14px;padding:4px 6px;${index === total - 1 ? 'opacity:0.3;pointer-events:none;' : ''}" onclick="plcMovePallet(${pt.id}, 1)" title="▼">▼</button>
+                            ${total > 1 ? `<button class="plc-remove-btn" onclick="plcRemovePalletType(${pt.id})" title="Remove">&times;</button>` : ''}
+                        </div>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;margin-left:52px;">
+                        ${plcT('loadOrder')}: <span style="color:var(--accent);font-weight:600;">${orderLabel}</span>
+                    </div>
+                    <div class="plc-link-toggle">
+                        <label class="plc-stack-toggle"><input type="checkbox" ${pt.linkMode ? 'checked' : ''} onchange="plcUpdatePallet(${pt.id}, 'linkMode', this.checked)"><span class="plc-stack-slider"></span></label>
+                        <span style="font-size:12px;color:var(--text-secondary);">📋 ${plcT('linkOrders')}</span>
+                    </div>
+                    ${orderSelectorHtml}
+                    <div class="plc-fields-grid" style="margin-top:8px;">
+                        <div class="plc-field"><label>${plcT('widthIn')}</label><input type="number" value="${pt.width}" min="1" onchange="plcUpdatePallet(${pt.id}, 'width', this.value)" ${pt.linkMode && pt.linkedOrders.length > 0 ? 'style="opacity:0.6"' : ''}></div>
+                        <div class="plc-field"><label>${plcT('lengthIn')}</label><input type="number" value="${pt.length}" min="1" onchange="plcUpdatePallet(${pt.id}, 'length', this.value)" ${pt.linkMode && pt.linkedOrders.length > 0 ? 'style="opacity:0.6"' : ''}></div>
+                    </div>
+                    <div class="plc-fields-grid">
+                        <div class="plc-field"><label>${plcT('qty')}</label><input type="number" value="${pt.qty}" min="0" max="200" onchange="plcUpdatePallet(${pt.id}, 'qty', this.value)" ${pt.linkMode && pt.linkedOrders.length > 0 ? 'style="opacity:0.6"' : ''}></div>
+                        <div class="plc-field"><label>${plcT('weightEa')}</label><input type="number" value="${pt.weight}" min="0" onchange="plcUpdatePallet(${pt.id}, 'weight', this.value)" ${pt.linkMode && pt.linkedOrders.length > 0 ? 'style="opacity:0.6"' : ''}></div>
+                    </div>
+                    <div class="plc-stack-row">
+                        <label class="plc-stack-toggle"><input type="checkbox" ${pt.doubleStack ? 'checked' : ''} onchange="plcUpdatePallet(${pt.id}, 'doubleStack', this.checked)"><span class="plc-stack-slider"></span></label>
+                        <span style="font-size:12px;color:var(--text-secondary);">📦📦 ${plcT('doubleStack')} ${pt.doubleStack ? '<span style="font-size:10px;background:rgba(49,130,206,0.15);color:var(--accent);padding:2px 6px;border-radius:4px;font-weight:700;">×2</span>' : ''}</span>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <div class="plc-field"><label>${plcT('orientation')}</label>
+                            <div class="plc-orient-toggle">
+                                <button class="plc-orient-btn ${pt.orientation === 'auto' ? 'active' : ''}" onclick="plcUpdatePallet(${pt.id}, 'orientation', 'auto')">⚡ ${plcT('auto')}</button>
+                                <button class="plc-orient-btn ${pt.orientation === 'widthwise' ? 'active' : ''}" onclick="plcUpdatePallet(${pt.id}, 'orientation', 'widthwise')">${plcT('wAcross')}</button>
+                                <button class="plc-orient-btn ${pt.orientation === 'lengthwise' ? 'active' : ''}" onclick="plcUpdatePallet(${pt.id}, 'orientation', 'lengthwise')">${plcT('lAcross')}</button>
+                            </div>
+                            <div class="plc-orient-info">
+                                ${pt.orientation === 'auto' ? `${plcT('bestFit')}: <strong style="color:#3fb950;">${autoFit} ${plcT('perRow')}</strong> — ${autoAcross}" ${plcT('across')}, ${autoAlong}" ${plcT('deep')}`
+                                : pt.orientation === 'widthwise' ? `<strong style="color:#3fb950;">${fitW} ${plcT('perRow')}</strong> — W:${pt.width}" ${plcT('across')}, L:${pt.length}" ${plcT('deep')} — ${wasteW}" ${plcT('gap')}`
+                                : `<strong style="color:#3fb950;">${fitL} ${plcT('perRow')}</strong> — L:${pt.length}" ${plcT('across')}, W:${pt.width}" ${plcT('deep')} — ${wasteL}" ${plcT('gap')}`}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function plcPackPallets() {
+            const trailer = PLC_TRAILERS[plcTrailerLength];
+            const tW = trailer.width, tL = trailer.length;
+            let all = [];
+            plcPalletTypes.forEach((pt, typeOrder) => {
+                const dims = plcGetPlacedDims(pt);
+                const spots = pt.doubleStack ? Math.ceil(pt.qty / 2) : pt.qty;
+                for (let i = 0; i < spots; i++) {
+                    all.push({ across: dims.across, along: dims.along, origW: pt.width, origL: pt.length,
+                        acrossIsWidth: dims.across === pt.width, color: pt.color, typeId: pt.id, label: pt.label,
+                        isDoubleStack: pt.doubleStack, typeOrder });
+                }
+            });
+            all.sort((a, b) => a.typeOrder - b.typeOrder || b.along - a.along || b.across - a.across);
+            let placed = [], cursorY = 0;
+            while (all.length > 0 && cursorY < tL) {
+                let rowH = 0, cursorX = 0, toRem = [];
+                for (let i = 0; i < all.length; i++) {
+                    const p = all[i];
+                    if (cursorX + p.across <= tW + 0.5 && cursorY + p.along <= tL + 0.5) {
+                        placed.push({ x: cursorX, y: cursorY, ...p });
+                        cursorX += p.across;
+                        rowH = Math.max(rowH, p.along);
+                        toRem.push(i);
+                    }
+                }
+                toRem.reverse().forEach(i => all.splice(i, 1));
+                if (rowH === 0) break;
+                cursorY += rowH;
+            }
+            return { placed, overflow: all.length };
+        }
+
+        function plcRecalculate() {
+            const trailer = PLC_TRAILERS[plcTrailerLength];
+            const maxWeight = parseFloat(document.getElementById('plcMaxWeight').value) || 45000;
+            document.getElementById('plcTrailerDimLabel').textContent = `${trailer.length}" x ${trailer.width}"`;
+            let totalQty = 0, totalWt = 0, totalSpots = 0;
+            plcPalletTypes.forEach(pt => { totalQty += pt.qty; totalWt += pt.qty * pt.weight; totalSpots += pt.doubleStack ? Math.ceil(pt.qty / 2) : pt.qty; });
+            const { placed, overflow } = plcPackPallets();
+            const area = trailer.length * trailer.width;
+            let used = 0; placed.forEach(p => used += p.across * p.along);
+            const spacePct = area > 0 ? Math.min(100, Math.round((used / area) * 100)) : 0;
+
+            const palletsEl = document.getElementById('plcTotalPallets');
+            if (totalSpots !== totalQty && totalQty > 0) palletsEl.innerHTML = `${totalQty} <span style="font-size:12px;color:var(--text-secondary);">(${totalSpots} ${plcT('floorSpots')})</span>`;
+            else palletsEl.textContent = totalQty;
+
+            document.getElementById('plcTotalWeight').textContent = totalWt.toLocaleString();
+            document.getElementById('plcWeightSub').textContent = `${plcT('of')} ${maxWeight.toLocaleString()} lbs`;
+            document.getElementById('plcSpaceUsed').textContent = spacePct + '%';
+
+            const isOver = totalWt > maxWeight, noFit = overflow > 0;
+            const statusCard = document.getElementById('plcStatStatus');
+            const weightCard = document.getElementById('plcStatWeight');
+            const statusEl = document.getElementById('plcLoadStatus');
+            statusCard.className = 'plc-stat'; weightCard.className = 'plc-stat';
+            if (totalQty === 0) { statusEl.textContent = '---'; statusEl.style.color = 'var(--text-secondary)'; }
+            else if (isOver && noFit) { statusEl.textContent = plcT('over'); statusEl.style.color = '#f85149'; statusCard.classList.add('overweight'); weightCard.classList.add('overweight'); }
+            else if (isOver) { statusEl.textContent = plcT('overweight'); statusEl.style.color = '#f85149'; statusCard.classList.add('overweight'); weightCard.classList.add('overweight'); }
+            else if (noFit) { statusEl.textContent = plcT('noFit'); statusEl.style.color = '#f85149'; statusCard.classList.add('overweight'); }
+            else { statusEl.textContent = plcT('ok'); statusEl.style.color = '#3fb950'; statusCard.classList.add('ok'); }
+
+            const wPct = maxWeight > 0 ? Math.min(100, (totalWt / maxWeight) * 100) : 0;
+            const wb = document.getElementById('plcWeightFill');
+            wb.style.width = wPct + '%';
+            wb.style.background = wPct > 100 ? '#f85149' : wPct > 85 ? '#d29922' : '#3fb950';
+
+            plcDrawTrailer(placed, overflow);
+        }
+
+        function plcSvgDimArrow(x1, y1, x2, y2, color, labelText, fontSize) {
+            let svg = '';
+            const dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy);
+            if (len < 4) return '';
+            const ux = dx / len, uy = dy / len, px = -uy, py = ux;
+            const hl = Math.min(4, len * 0.15), hw = hl * 0.5;
+            svg += `<line x1="${x1 + px * 3}" y1="${y1 + py * 3}" x2="${x1 - px * 3}" y2="${y1 - py * 3}" stroke="${color}" stroke-width="0.8" opacity="0.9"/>`;
+            svg += `<line x1="${x2 + px * 3}" y1="${y2 + py * 3}" x2="${x2 - px * 3}" y2="${y2 - py * 3}" stroke="${color}" stroke-width="0.8" opacity="0.9"/>`;
+            svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="0.8" opacity="0.8"/>`;
+            svg += `<polygon points="${x1},${y1} ${x1 + ux * hl + px * hw},${y1 + uy * hl + py * hw} ${x1 + ux * hl - px * hw},${y1 + uy * hl - py * hw}" fill="${color}" opacity="0.9"/>`;
+            svg += `<polygon points="${x2},${y2} ${x2 - ux * hl + px * hw},${y2 - uy * hl + py * hw} ${x2 - ux * hl - px * hw},${y2 - uy * hl - py * hw}" fill="${color}" opacity="0.9"/>`;
+            const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, fs = fontSize || 7;
+            const textW = labelText.length * fs * 0.55, textH = fs + 2;
+            if (Math.abs(dy) < Math.abs(dx)) {
+                svg += `<rect x="${mx - textW / 2 - 2}" y="${my - textH}" width="${textW + 4}" height="${textH + 2}" fill="var(--bg-card, #1a1e23)" rx="2" opacity="0.85"/>`;
+                svg += `<text x="${mx}" y="${my - 2}" fill="${color}" font-size="${fs}" font-family="monospace" text-anchor="middle" font-weight="700">${labelText}</text>`;
+            } else {
+                svg += `<rect x="${mx - textW - 4}" y="${my - textH / 2}" width="${textW + 4}" height="${textH + 2}" fill="var(--bg-card, #1a1e23)" rx="2" opacity="0.85"/>`;
+                svg += `<text x="${mx - 3}" y="${my + fs / 2 - 1}" fill="${color}" font-size="${fs}" font-family="monospace" text-anchor="end" font-weight="700">${labelText}</text>`;
+            }
+            return svg;
+        }
+
+        function plcDrawTrailer(placed, overflow) {
+            const trailer = PLC_TRAILERS[plcTrailerLength];
+            const tW = trailer.width, tL = trailer.length;
+            const maxW = 720, scale = Math.min(maxW / tL, 5);
+            const mT = 35, mL = 40, mR = 55, mB = 45;
+            const svgW = tL * scale + mL + mR, svgH = tW * scale + mT + mB;
+            const oX = mL, oY = mT;
+            let svg = `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">`;
+            svg += `<rect x="${oX}" y="${oY}" width="${tL * scale}" height="${tW * scale}" fill="var(--bg-dark, #161b22)" stroke="var(--border, #2d333b)" stroke-width="2" rx="3"/>`;
+            for (let g = 48; g < tL; g += 48) svg += `<line x1="${oX + g * scale}" y1="${oY}" x2="${oX + g * scale}" y2="${oY + tW * scale}" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,3"/>`;
+            svg += `<rect x="${oX - 6}" y="${oY + tW * scale * 0.15}" width="6" height="${tW * scale * 0.7}" fill="var(--accent)" rx="2" opacity="0.6"/>`;
+            svg += `<text x="${oX - 3}" y="${oY - 10}" fill="var(--text-secondary)" font-size="9" font-family="monospace" text-anchor="middle">${plcT('door')}</text>`;
+            svg += `<text x="${oX + tL * scale}" y="${oY - 10}" fill="var(--text-secondary)" font-size="9" font-family="monospace" text-anchor="middle">${plcT('front')}</text>`;
+            svg += plcSvgDimArrow(oX, oY + tW * scale + 16, oX + tL * scale, oY + tW * scale + 16, '#8b949e', `${tL}" (${plcTrailerLength}')`, 9);
+            svg += plcSvgDimArrow(oX + tL * scale + 16, oY, oX + tL * scale + 16, oY + tW * scale, '#8b949e', `${tW}"`, 9);
+            const dimDrawn = {};
+            placed.forEach(p => {
+                const px = oX + p.y * scale, py = oY + p.x * scale;
+                const pw = p.along * scale, ph = p.across * scale;
+                svg += `<rect x="${px + 1}" y="${py + 1}" width="${pw - 2}" height="${ph - 2}" fill="${p.color.label}" stroke="${p.color.fill}" stroke-width="1.5" rx="2"/>`;
+                if (p.isDoubleStack) {
+                    svg += `<rect x="${px + 3}" y="${py + 3}" width="${pw - 6}" height="${ph - 6}" fill="none" stroke="${p.color.fill}" stroke-width="0.8" stroke-dasharray="2,2" rx="2" opacity="0.5"/>`;
+                    svg += `<rect x="${px + pw - 16}" y="${py + 2}" width="14" height="10" fill="${p.color.fill}" rx="2" opacity="0.8"/>`;
+                    svg += `<text x="${px + pw - 9}" y="${py + 10}" fill="#0f1215" font-size="7" font-family="monospace" text-anchor="middle" font-weight="700">x2</text>`;
+                }
+                if (!dimDrawn[p.typeId] && pw > 35 && ph > 25) {
+                    dimDrawn[p.typeId] = true;
+                    const acL = p.acrossIsWidth ? `W:${p.origW}"` : `L:${p.origL}"`;
+                    const alL = p.acrossIsWidth ? `L:${p.origL}"` : `W:${p.origW}"`;
+                    svg += plcSvgDimArrow(px + pw * 0.25, py + 5, px + pw * 0.25, py + ph - 5, p.color.fill, acL, Math.min(7, ph / 3.5));
+                    svg += plcSvgDimArrow(px + 5, py + ph * 0.35, px + pw - 5, py + ph * 0.35, p.color.fill, alL, Math.min(7, pw / 5));
+                } else if (pw > 18 && ph > 12) {
+                    svg += `<text x="${px + pw / 2}" y="${py + ph / 2 + 3}" fill="${p.color.fill}" font-size="${Math.min(7, Math.min(pw, ph) / 4)}" font-family="monospace" text-anchor="middle" opacity="0.65">${p.across}x${p.along}</text>`;
+                }
+            });
+            svg += `</svg>`;
+            document.getElementById('plcTrailerSvg').innerHTML = svg;
+
+            const legendEl = document.getElementById('plcLegend');
+            legendEl.innerHTML = '';
+            plcPalletTypes.forEach((pt, idx) => {
+                if (pt.qty > 0) {
+                    const pc = placed.filter(p => p.typeId === pt.id).length;
+                    const stackNote = pt.doubleStack ? ` (×2 ${plcT('doubleStack')})` : '';
+                    legendEl.innerHTML += `<span><span class="plc-legend-swatch" style="background:${pt.color.fill}"></span>#${idx + 1} ${pt.label} (${pt.width}"×${pt.length}") — ${pt.qty} ${plcT('physicalPallets')}, ${pc} ${plcT('placed')}${stackNote}</span>`;
+                }
+            });
+            if (overflow > 0) legendEl.innerHTML += `<span style="color:#f85149;">⚠ ${overflow} ${overflow > 1 ? plcT('palletsNoFit') : plcT('palletNoFit')}</span>`;
+        }
+
+        // Update PLC labels when language changes
+        const _origSetLangForPlc = typeof window.setLanguage === 'function' ? window.setLanguage : null;
+        // Hook into the existing language toggle to update PLC labels
+        function plcOnLanguageChange() {
+            if (document.getElementById('plcContainer') && document.getElementById('plcContainer').classList.contains('show')) {
+                plcUpdateLabels();
+                plcRenderPalletTypes();
+                plcRecalculate();
+            }
         }
 
         // ============================================================
