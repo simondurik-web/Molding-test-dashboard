@@ -610,6 +610,9 @@
         .plc-order-checkbox-list label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.15s; }
         .plc-order-checkbox-list label:hover { background: rgba(49, 130, 206, 0.08); }
         .plc-order-checkbox-list input[type="checkbox"] { accent-color: var(--accent); }
+        .plc-order-search { width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-size: 12px; font-family: inherit; margin-bottom: 8px; transition: border-color 0.15s; }
+        .plc-order-search:focus { outline: none; border-color: var(--accent); }
+        .plc-order-checkbox-list .plc-order-item-hidden { display: none; }
         .plc-link-toggle { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
         /* ===== END PALLET LOAD CALCULATOR STYLES ===== */
         .pallet-card-header { padding: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -7456,6 +7459,7 @@
                 door: 'DOOR', front: 'FRONT', of: 'of', dragHint: 'Drag to reorder loading sequence. #1 loads first (near door).',
                 loadOrder: 'Load order', nearDoor: 'near door', nearFront: 'near front', palletsNoFit: 'pallets do not fit',
                 linkOrders: 'Link Ready to Ship Orders', selectOrders: 'Select orders to add to this pallet type',
+                searchOrders: 'Search by IF#, PO#, customer, line...',
                 palletNoFit: 'pallet does not fit', floorSpots: 'floor spots', physicalPallets: 'physical pallets',
                 note: '<strong>Note:</strong> This shows an estimated arrangement. Actual loading may vary.',
             },
@@ -7469,6 +7473,7 @@
                 door: 'PUERTA', front: 'FRENTE', of: 'de', dragHint: 'Arrastra para cambiar el orden. #1 se carga primero (junto a puerta).',
                 loadOrder: 'Orden de carga', nearDoor: 'junto a puerta', nearFront: 'junto al frente', palletsNoFit: 'tarimas no caben',
                 linkOrders: 'Vincular Órdenes Listas para Enviar', selectOrders: 'Selecciona órdenes para agregar a esta tarima',
+                searchOrders: 'Buscar por IF#, PO#, cliente, línea...',
                 palletNoFit: 'tarima no cabe', floorSpots: 'posiciones en piso', physicalPallets: 'tarimas físicas',
                 note: '<strong>Nota:</strong> Esto muestra un arreglo estimado. La carga real puede variar.',
             }
@@ -7529,6 +7534,7 @@
                 }
                 return {
                     line, ifNum: getVal(r, 'IF_NUM') || '', customer: getVal(r, 'CUSTOMER') || '',
+                    poNum: getVal(r, 'PO_NUM') || '',
                     qty: parseNumber(getVal(r, 'QTY')), palletCount, avgWeight, w, l, dims,
                     part: getVal(r, 'PART') || '',
                 };
@@ -7616,6 +7622,16 @@
             plcRecalculate();
         }
 
+        function plcFilterOrders(palletId, query) {
+            const list = document.getElementById(`plcOrderList_${palletId}`);
+            if (!list) return;
+            const q = query.toLowerCase().trim();
+            list.querySelectorAll('label').forEach(lbl => {
+                const data = lbl.getAttribute('data-search') || '';
+                lbl.classList.toggle('plc-order-item-hidden', q !== '' && !data.includes(q));
+            });
+        }
+
         function plcMovePallet(id, dir) {
             const idx = plcPalletTypes.findIndex(p => p.id === id);
             if (idx < 0) return;
@@ -7679,10 +7695,12 @@
                 if (pt.linkMode) {
                     orderSelectorHtml = `<div class="plc-order-selector">
                         <div class="header"><strong style="font-size:12px;color:var(--accent);">${plcT('selectOrders')}</strong></div>
-                        <div class="plc-order-checkbox-list">`;
+                        <input type="text" class="plc-order-search" placeholder="🔍 ${plcT('searchOrders')}" oninput="plcFilterOrders(${pt.id}, this.value)">
+                        <div class="plc-order-checkbox-list" id="plcOrderList_${pt.id}">`;
                     staged.forEach(o => {
                         const checked = pt.linkedOrders.includes(o.line) ? 'checked' : '';
-                        orderSelectorHtml += `<label><input type="checkbox" ${checked} onchange="plcToggleOrder(${pt.id}, '${o.line}')"> <strong>${o.ifNum || 'Line ' + o.line}</strong> — ${o.customer} · ${o.palletCount} pallets · ${o.dims || 'no dims'} · ${o.avgWeight} lbs/ea</label>`;
+                        const searchData = `${o.line} ${o.ifNum} ${o.poNum} ${o.customer} ${o.part}`.toLowerCase();
+                        orderSelectorHtml += `<label data-search="${searchData}"><input type="checkbox" ${checked} onchange="plcToggleOrder(${pt.id}, '${o.line}')"> <span style="min-width:45px;display:inline-block;color:var(--text-secondary);font-size:11px;">#${o.line}</span> <strong>${o.ifNum || '-'}</strong> <span style="color:var(--text-secondary);font-size:11px;">${o.poNum ? 'PO:' + o.poNum : ''}</span> — ${o.customer} · ${o.palletCount} pallets · ${o.dims || 'no dims'} · ${o.avgWeight} lbs/ea</label>`;
                     });
                     orderSelectorHtml += `</div></div>`;
                 }
