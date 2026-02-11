@@ -10355,17 +10355,19 @@
                 data: {
                     labels: chartMonths.map(s => formatMonthLabel(s[0])),
                     datasets: [
-                        { label: 'Shipped Profit', data: chartMonths.map(s => Math.max(0, s[1].shippedPL)), backgroundColor: 'rgba(56,161,105,0.8)', stack: 'shipped' },
-                        { label: 'Shipped Loss', data: chartMonths.map(s => Math.min(0, s[1].shippedPL)), backgroundColor: 'rgba(229,62,62,0.8)', stack: 'shipped' },
-                        { label: 'Forecast Profit', data: chartMonths.map(s => Math.max(0, s[1].forecastPL)), backgroundColor: 'rgba(56,161,105,0.4)', stack: 'forecast' },
-                        { label: 'Forecast Loss', data: chartMonths.map(s => Math.min(0, s[1].forecastPL)), backgroundColor: 'rgba(229,62,62,0.4)', stack: 'forecast' }
+                        { label: 'Shipped Profit', data: chartMonths.map(s => Math.max(0, s[1].shippedPL)), backgroundColor: 'rgba(56,161,105,0.8)', stack: 'shipped', yAxisID: 'y' },
+                        { label: 'Shipped Loss', data: chartMonths.map(s => Math.min(0, s[1].shippedPL)), backgroundColor: 'rgba(229,62,62,0.8)', stack: 'shipped', yAxisID: 'y' },
+                        { label: 'Forecast Profit', data: chartMonths.map(s => Math.max(0, s[1].forecastPL)), backgroundColor: 'rgba(56,161,105,0.4)', stack: 'forecast', yAxisID: 'y' },
+                        { label: 'Forecast Loss', data: chartMonths.map(s => Math.min(0, s[1].forecastPL)), backgroundColor: 'rgba(229,62,62,0.4)', stack: 'forecast', yAxisID: 'y' },
+                        { label: 'Revenue', type: 'line', data: chartMonths.map(s => s[1].revenue), borderColor: 'rgba(66,153,225,1)', backgroundColor: 'rgba(66,153,225,0.1)', borderWidth: 2.5, pointBackgroundColor: 'rgba(66,153,225,1)', pointRadius: 4, pointHoverRadius: 6, fill: false, tension: 0.3, yAxisID: 'yRevenue', order: -1 }
                     ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { labels: { color: '#a0aec0' } } },
                     scales: {
-                        y: { stacked: true, ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { stacked: true, position: 'left', ticks: { callback: v => formatCurrency(v), color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' }, title: { display: true, text: 'P/L', color: '#a0aec0' } },
+                        yRevenue: { position: 'right', ticks: { callback: v => formatCurrency(v), color: 'rgba(66,153,225,0.8)' }, grid: { display: false }, title: { display: true, text: 'Revenue', color: 'rgba(66,153,225,0.8)' } },
                         x: { stacked: true, ticks: { color: '#a0aec0', font: { size: 10 } }, grid: { display: false } }
                     }
                 }
