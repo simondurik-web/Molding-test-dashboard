@@ -10338,7 +10338,9 @@
                 const materials = [];
                 for (let i = 1; i <= 5; i++) {
                     const name = (row['Component ' + i] || row['Component ' + i + ' '] || '').toString().trim();
-                    const qty = parseFloat((row['Component ' + i + ' Qty.'] || row['Component ' + i + ' Qty'] || '0').toString().replace(/,/g, '')) || 0;
+                    const rawQty = (row['Component ' + i + ' Qty.'] || row['Component ' + i + ' Qty'] || '0').toString().trim();
+                    let qty = parseFloat(rawQty.replace(/,/g, '').replace(/%/g, '')) || 0;
+                    if (rawQty.includes('%')) qty = qty / 100; // Convert percentage to decimal (e.g., 1% -> 0.01)
                     if (name && qty > 0 && name.toLowerCase() !== 'scrap') materials.push({ name, qtyPerUnit: qty });
                 }
                 bom2Map[partName] = { weight, materials, category: (row['Sub-Product Category'] || '').toString().trim() };
