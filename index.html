@@ -7597,26 +7597,36 @@
         function plcToggleOrder(palletId, orderLine) {
             const pt = plcPalletTypes.find(p => p.id === palletId);
             if (!pt) return;
-            const idx = pt.linkedOrders.indexOf(orderLine);
-            if (idx >= 0) pt.linkedOrders.splice(idx, 1);
-            else pt.linkedOrders.push(orderLine);
-            // Recalculate from linked orders
-            if (pt.linkedOrders.length > 0) {
-                const staged = plcGetStagedOrders();
-                let totalPallets = 0, totalWt = 0, maxW = 0, maxL = 0;
-                pt.linkedOrders.forEach(ln => {
-                    const order = staged.find(o => o.line === ln);
-                    if (order) {
-                        totalPallets += order.palletCount;
-                        totalWt += order.avgWeight;
-                        if (order.w > maxW) maxW = order.w;
-                        if (order.l > maxL) maxL = order.l;
-                    }
-                });
-                pt.qty = totalPallets;
-                pt.weight = totalWt > 0 ? Math.round(totalWt) : pt.weight;
-                if (maxW > 0) pt.width = maxW;
-                if (maxL > 0) pt.length = maxL;
+            const staged = plcGetStagedOrders();
+            const order = staged.find(o => o.line === orderLine);
+
+            // If deselecting the current order
+            if (pt.linkedOrders.includes(orderLine)) {
+                pt.linkedOrders = [];
+                pt.qty = 0; pt.weight = 0; pt.width = 48; pt.length = 40;
+                pt.label = `${plcT('pallet')} ${plcPalletTypes.indexOf(pt) + 1}`;
+            }
+            // If this pallet already has an order → create a new pallet type for the new order
+            else if (pt.linkedOrders.length > 0 && order) {
+                const ci = plcPalletTypes.length % PLC_COLORS.length;
+                const newId = plcNextId++;
+                const newPt = {
+                    id: newId, width: order.w || 48, length: order.l || 40,
+                    weight: order.avgWeight || 0, qty: order.palletCount || 0,
+                    orientation: 'auto', doubleStack: false, color: { ...PLC_COLORS[ci] },
+                    label: order.customer ? `${order.customer.substring(0, 20)}` : `${plcT('pallet')} ${plcPalletTypes.length + 1}`,
+                    linkedOrders: [orderLine], linkMode: true,
+                };
+                plcPalletTypes.push(newPt);
+            }
+            // Selecting an order on an empty pallet
+            else if (order) {
+                pt.linkedOrders = [orderLine];
+                pt.qty = order.palletCount || 0;
+                pt.weight = order.avgWeight || 0;
+                if (order.w > 0) pt.width = order.w;
+                if (order.l > 0) pt.length = order.l;
+                pt.label = order.customer ? `${order.customer.substring(0, 20)}` : pt.label;
             }
             plcRenderPalletTypes();
             plcRecalculate();
@@ -7697,10 +7707,19 @@
                         <div class="header"><strong style="font-size:12px;color:var(--accent);">${plcT('selectOrders')}</strong></div>
                         <input type="text" class="plc-order-search" placeholder="🔍 ${plcT('searchOrders')}" oninput="plcFilterOrders(${pt.id}, this.value)">
                         <div class="plc-order-checkbox-list" id="plcOrderList_${pt.id}">`;
+                    // Find orders already linked by OTHER pallet types
+                    const takenByOther = new Map();
+                    plcPalletTypes.forEach((other, oi) => {
+                        if (other.id !== pt.id) other.linkedOrders.forEach(ln => takenByOther.set(ln, oi + 1));
+                    });
                     staged.forEach(o => {
-                        const checked = pt.linkedOrders.includes(o.line) ? 'checked' : '';
+                        const isSelected = pt.linkedOrders.includes(o.line);
+                        const takenBy = takenByOther.get(o.line);
+                        const disabled = takenBy !== undefined && !isSelected;
                         const searchData = `${o.line} ${o.ifNum} ${o.poNum} ${o.customer} ${o.part}`.toLowerCase();
-                        orderSelectorHtml += `<label data-search="${searchData}"><input type="checkbox" ${checked} onchange="plcToggleOrder(${pt.id}, '${o.line}')"> <span style="min-width:45px;display:inline-block;color:var(--text-secondary);font-size:11px;">#${o.line}</span> <strong>${o.ifNum || '-'}</strong> <span style="color:var(--text-secondary);font-size:11px;">${o.poNum ? 'PO:' + o.poNum : ''}</span> — ${o.customer} · ${o.palletCount} pallets · ${o.dims || 'no dims'} · ${o.avgWeight} lbs/ea</label>`;
+                        const disabledStyle = disabled ? 'opacity:0.4;pointer-events:none;' : '';
+                        const takenLabel = disabled ? ` <span style="font-size:10px;color:var(--accent);">(Pallet #${takenBy})</span>` : '';
+                        orderSelectorHtml += `<label data-search="${searchData}" style="${disabledStyle}cursor:pointer;"><input type="checkbox" ${isSelected ? 'checked' : ''} onclick="plcToggleOrder(${pt.id}, '${o.line}')" ${disabled ? 'disabled' : ''} style="accent-color:var(--accent);"> <span style="min-width:45px;display:inline-block;color:var(--text-secondary);font-size:11px;">#${o.line}</span> <strong>${o.ifNum || '-'}</strong> <span style="color:var(--text-secondary);font-size:11px;">${o.poNum ? 'PO:' + o.poNum : ''}</span> — ${o.customer} · ${o.palletCount} pallets · ${o.dims || 'no dims'} · ${o.avgWeight} lbs/ea${takenLabel}</label>`;
                     });
                     orderSelectorHtml += `</div></div>`;
                 }
