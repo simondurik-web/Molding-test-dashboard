@@ -2404,6 +2404,7 @@
                     <button class="toolbar-btn active" id="invFilterAll" onclick="setInvFilter('all')" data-i18n="filter.all">All</button>
                     <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠️ <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
+                    <button class="toolbar-btn" id="invFilterRunningLow" onclick="setInvFilter('runningLow')">📉 <span data-i18n="filter.runningLow">Running Low</span> <span id="invStatRunningLow" class="filter-count" style="font-size:0.75em;opacity:0.7;"></span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <button class="toolbar-btn columns-btn" id="inventoryColumnsBtn" onclick="openColumnToggle('inventory')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
@@ -5087,6 +5088,30 @@
                     case 'qtyNeeded': values.add(String(i.qtyNeeded)); break;
                     case 'partsToBeMade': values.add(String(i.partsToBeMade)); break;
                     case 'moldType': values.add(i.moldType || '-'); break;
+                    case 'avgUsage': {
+                        const u = invUsageCache[i.partNumber] || {};
+                        values.add(u.projectionRate ? u.projectionRate.toFixed(1) : '-');
+                        break;
+                    }
+                    case 'usageTrend': {
+                        const u2 = invUsageCache[i.partNumber] || {};
+                        if (u2.usage7 != null && u2.usage30 != null) {
+                            if (u2.usage7 > u2.usage30 * 1.1) values.add('↑ Up');
+                            else if (u2.usage7 < u2.usage30 * 0.9) values.add('↓ Down');
+                            else values.add('→ Stable');
+                        } else values.add('-');
+                        break;
+                    }
+                    case 'daysToMin': {
+                        const u3 = invUsageCache[i.partNumber] || {};
+                        values.add(u3.daysToMin !== null ? (u3.daysToMin === 0 ? '⚠️ NOW' : u3.daysToMin + 'd') : '-');
+                        break;
+                    }
+                    case 'daysToZero': {
+                        const u4 = invUsageCache[i.partNumber] || {};
+                        values.add(u4.daysToZero !== null ? u4.daysToZero + 'd' : '-');
+                        break;
+                    }
                     case 'status':
                         const isLow = i.fusionQty < i.minimum && i.minimum > 0;
                         const needsMake = i.partsToBeMade > 0;
@@ -8697,13 +8722,30 @@
             document.getElementById('invFilterAll').classList.toggle('active', filter === 'all');
             document.getElementById('invFilterLow').classList.toggle('active', filter === 'low');
             document.getElementById('invFilterNeeded').classList.toggle('active', filter === 'needed');
+            document.getElementById('invFilterRunningLow')?.classList.toggle('active', filter === 'runningLow');
             renderInvTable();
         }
         
-        function updateInventoryPage() {
+        // Cache for usage stats (recalculated when inventory page loads)
+        let invUsageCache = {};
+
+        async function updateInventoryPage() {
+            // Load history data for forecast columns
+            await loadInventoryHistoryData();
+            
+            // Pre-compute usage stats for all inventory items
+            invUsageCache = {};
+            inventoryData.forEach(i => {
+                invUsageCache[i.partNumber] = calculateUsageStats(i.partNumber);
+            });
+            
             const lowStock = inventoryData.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
             const needsProduction = inventoryData.filter(i => i.partsToBeMade > 0);
             const okStock = inventoryData.filter(i => i.fusionQty >= i.minimum || i.minimum === 0);
+            const runningLow = inventoryData.filter(i => {
+                const u = invUsageCache[i.partNumber];
+                return u && u.daysToMin !== null && u.daysToMin < 30;
+            });
             const productTypes = [...new Set(inventoryData.map(i => i.product).filter(p => p))];
             
             document.getElementById('invStatTotal').textContent = formatNumber(inventoryData.length);
@@ -8711,6 +8753,9 @@
             document.getElementById('invStatLow').textContent = formatNumber(lowStock.length);
             document.getElementById('invStatNeeded').textContent = formatNumber(needsProduction.length);
             document.getElementById('invStatOk').textContent = formatNumber(okStock.length);
+            if (document.getElementById('invStatRunningLow')) {
+                document.getElementById('invStatRunningLow').textContent = formatNumber(runningLow.length);
+            }
             
             setInvFilter('all');
         }
@@ -8732,6 +8777,10 @@
                 { key: 'qtyNeeded', label: 'Qty Needed' },
                 { key: 'partsToBeMade', label: 'Parts to Make' },
                 { key: 'moldType', label: 'Mold Type' },
+                { key: 'avgUsage', label: 'Avg Usage/Day' },
+                { key: 'usageTrend', label: 'Trend' },
+                { key: 'daysToMin', label: 'Days to Min' },
+                { key: 'daysToZero', label: 'Days to Zero' },
                 { key: 'status', label: 'Status' }
             ];
             document.getElementById('invTableHeader').innerHTML = cols.map(col => {
@@ -8747,6 +8796,10 @@
             
             if (invFilter === 'low') data = data.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
             else if (invFilter === 'needed') data = data.filter(i => i.partsToBeMade > 0);
+            else if (invFilter === 'runningLow') data = data.filter(i => {
+                const u = invUsageCache[i.partNumber];
+                return u && u.daysToMin !== null && u.daysToMin < 30;
+            });
             
             if (searchTerm) {
                 data = data.filter(i => (i.partNumber || '').toLowerCase().includes(searchTerm) || (i.product || '').toLowerCase().includes(searchTerm) || (i.moldType || '').toLowerCase().includes(searchTerm));
@@ -8766,12 +8819,40 @@
                 if (!passesColumnFilter('inventory', 'qtyNeeded', String(i.qtyNeeded))) return false;
                 if (!passesColumnFilter('inventory', 'partsToBeMade', String(i.partsToBeMade))) return false;
                 if (!passesColumnFilter('inventory', 'moldType', i.moldType || '-')) return false;
+                // Forecast column filters
+                const uStats = invUsageCache[i.partNumber] || {};
+                const avgUsageVal = uStats.projectionRate ? uStats.projectionRate.toFixed(1) : '-';
+                const trendVal = (uStats.usage7 != null && uStats.usage30 != null) ? (uStats.usage7 > uStats.usage30 * 1.1 ? '↑ Up' : (uStats.usage7 < uStats.usage30 * 0.9 ? '↓ Down' : '→ Stable')) : '-';
+                const daysToMinVal = uStats.daysToMin !== null ? (uStats.daysToMin === 0 ? '⚠️ NOW' : String(uStats.daysToMin) + 'd') : '-';
+                const daysToZeroVal = uStats.daysToZero !== null ? String(uStats.daysToZero) + 'd' : '-';
+                if (!passesColumnFilter('inventory', 'avgUsage', avgUsageVal)) return false;
+                if (!passesColumnFilter('inventory', 'usageTrend', trendVal)) return false;
+                if (!passesColumnFilter('inventory', 'daysToMin', daysToMinVal)) return false;
+                if (!passesColumnFilter('inventory', 'daysToZero', daysToZeroVal)) return false;
                 if (!passesColumnFilter('inventory', 'status', status)) return false;
                 return true;
             });
             
             data.sort((a, b) => {
-                let va = a[invSort.field], vb = b[invSort.field];
+                let va, vb;
+                // Handle forecast columns
+                if (invSort.field === 'avgUsage') {
+                    va = (invUsageCache[a.partNumber]?.projectionRate) || 0;
+                    vb = (invUsageCache[b.partNumber]?.projectionRate) || 0;
+                } else if (invSort.field === 'daysToMin') {
+                    va = invUsageCache[a.partNumber]?.daysToMin ?? 99999;
+                    vb = invUsageCache[b.partNumber]?.daysToMin ?? 99999;
+                } else if (invSort.field === 'daysToZero') {
+                    va = invUsageCache[a.partNumber]?.daysToZero ?? 99999;
+                    vb = invUsageCache[b.partNumber]?.daysToZero ?? 99999;
+                } else if (invSort.field === 'usageTrend') {
+                    const ua = invUsageCache[a.partNumber] || {};
+                    const ub = invUsageCache[b.partNumber] || {};
+                    va = (ua.usage7 != null && ua.usage30 != null && ua.usage30 > 0) ? ua.usage7 / ua.usage30 : 0;
+                    vb = (ub.usage7 != null && ub.usage30 != null && ub.usage30 > 0) ? ub.usage7 / ub.usage30 : 0;
+                } else {
+                    va = a[invSort.field]; vb = b[invSort.field];
+                }
                 if (typeof va === 'string') return invSort.asc ? (va || '').localeCompare(vb || '') : (vb || '').localeCompare(va || '');
                 return invSort.asc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
             });
@@ -8795,6 +8876,40 @@
                 if (!isColumnHidden('inventory', 'qtyNeeded')) cells += `<td>${formatNumber(i.qtyNeeded)}</td>`;
                 if (!isColumnHidden('inventory', 'partsToBeMade')) cells += `<td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>`;
                 if (!isColumnHidden('inventory', 'moldType')) cells += `<td>${i.moldType || '-'}</td>`;
+                
+                // Forecast columns
+                const uStats = invUsageCache[i.partNumber] || {};
+                if (!isColumnHidden('inventory', 'avgUsage')) {
+                    const avgVal = uStats.projectionRate ? uStats.projectionRate.toFixed(1) : '-';
+                    cells += `<td>${avgVal}</td>`;
+                }
+                if (!isColumnHidden('inventory', 'usageTrend')) {
+                    let trendIcon = '-';
+                    let trendColor = 'var(--text-secondary)';
+                    if (uStats.usage7 != null && uStats.usage30 != null) {
+                        if (uStats.usage7 > uStats.usage30 * 1.1) { trendIcon = '↑ Up'; trendColor = 'var(--danger)'; }
+                        else if (uStats.usage7 < uStats.usage30 * 0.9) { trendIcon = '↓ Down'; trendColor = 'var(--success)'; }
+                        else { trendIcon = '→ Stable'; trendColor = 'var(--text-secondary)'; }
+                    }
+                    cells += `<td style="color:${trendColor};font-weight:600;">${trendIcon}</td>`;
+                }
+                if (!isColumnHidden('inventory', 'daysToMin')) {
+                    let dtmText = '-', dtmColor = 'var(--text-secondary)';
+                    if (uStats.daysToMin !== null) {
+                        if (uStats.daysToMin === 0) { dtmText = '⚠️ NOW'; dtmColor = 'var(--danger)'; }
+                        else { dtmText = uStats.daysToMin + 'd'; dtmColor = uStats.daysToMin < 14 ? 'var(--danger)' : (uStats.daysToMin < 30 ? 'var(--warning)' : 'var(--success)'); }
+                    }
+                    cells += `<td style="color:${dtmColor};font-weight:600;">${dtmText}</td>`;
+                }
+                if (!isColumnHidden('inventory', 'daysToZero')) {
+                    let dtzText = '-', dtzColor = 'var(--text-secondary)';
+                    if (uStats.daysToZero !== null) {
+                        dtzText = uStats.daysToZero + 'd';
+                        dtzColor = uStats.daysToZero < 30 ? 'var(--danger)' : (uStats.daysToZero < 60 ? 'var(--warning)' : 'var(--success)');
+                    }
+                    cells += `<td style="color:${dtzColor};font-weight:600;">${dtzText}</td>`;
+                }
+                
                 if (!isColumnHidden('inventory', 'status')) cells += `<td>${statusBadge}</td>`;
                 
                 return `<tr class="${rowClass}" onclick="openInventoryHistoryModal('${escapedPart}')" title="${t('inv.clickHistory')}">${cells}</tr>`;
