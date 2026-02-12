@@ -2405,6 +2405,9 @@
                     <button class="toolbar-btn" id="invFilterLow" onclick="setInvFilter('low')">⚠️ <span data-i18n="filter.lowStock">Low Stock</span></button>
                     <button class="toolbar-btn" id="invFilterNeeded" onclick="setInvFilter('needed')">🔧 <span data-i18n="filter.needsProduction">Needs Production</span></button>
                     <button class="toolbar-btn" id="invFilterRunningLow" onclick="setInvFilter('runningLow')">📉 <span data-i18n="filter.runningLow">Running Low</span> <span id="invStatRunningLow" class="filter-count" style="font-size:0.75em;opacity:0.7;"></span></button>
+                    <button class="toolbar-btn" id="invFilterMake" onclick="setInvFilter('make')">🏭 <span data-i18n="filter.manufactured">Manufactured</span></button>
+                    <button class="toolbar-btn" id="invFilterPurchased" onclick="setInvFilter('purchased')">🛒 <span data-i18n="filter.purchased">Purchased</span></button>
+                    <button class="toolbar-btn" id="invFilterCOM" onclick="setInvFilter('com')">📋 <span data-i18n="filter.com">COM</span></button>
                 </div>
                 <button class="toolbar-btn clear-all-filters-btn" id="inventoryClearFiltersBtn" onclick="clearAllTableFilters('inventory')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
                 <button class="toolbar-btn columns-btn" id="inventoryColumnsBtn" onclick="openColumnToggle('inventory')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
@@ -8730,6 +8733,9 @@
             document.getElementById('invFilterLow').classList.toggle('active', filter === 'low');
             document.getElementById('invFilterNeeded').classList.toggle('active', filter === 'needed');
             document.getElementById('invFilterRunningLow')?.classList.toggle('active', filter === 'runningLow');
+            document.getElementById('invFilterMake')?.classList.toggle('active', filter === 'make');
+            document.getElementById('invFilterPurchased')?.classList.toggle('active', filter === 'purchased');
+            document.getElementById('invFilterCOM')?.classList.toggle('active', filter === 'com');
             renderInvTable();
         }
         
@@ -8806,7 +8812,10 @@
             else if (invFilter === 'runningLow') data = data.filter(i => {
                 const u = invUsageCache[i.partNumber];
                 return u && u.daysToMin !== null && u.daysToMin < 30;
-            });
+            })
+            else if (invFilter === 'make') data = data.filter(i => (i.itemType || '').toLowerCase() === 'make');
+            else if (invFilter === 'purchased') data = data.filter(i => (i.itemType || '').toLowerCase() === 'purchased');
+            else if (invFilter === 'com') data = data.filter(i => (i.itemType || '').toLowerCase() === 'com');
             
             if (searchTerm) {
                 data = data.filter(i => (i.partNumber || '').toLowerCase().includes(searchTerm) || (i.product || '').toLowerCase().includes(searchTerm) || (i.moldType || '').toLowerCase().includes(searchTerm));
