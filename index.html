@@ -8793,7 +8793,12 @@
                 document.getElementById('invStatRunningLow').textContent = formatNumber(runningLow.length);
             }
             
-            setInvFilter('all');
+            // Preserve existing filter selection, only default to 'all' on first load
+            if (invSourceFilters.size === 0 && invConditionFilters.size === 0) {
+                setInvFilter('all');
+            } else {
+                renderInvTable();
+            }
         }
         
         function sortInvTable(field) {
