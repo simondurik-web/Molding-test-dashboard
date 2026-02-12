@@ -4163,6 +4163,8 @@
         let ordersStagedSort = { field: 'customer', asc: true };
         let ordersShippedSort = { field: 'shippedDate', asc: false };
         let invFilter = 'all';
+        let invSourceFilters = new Set(); // 'make', 'purchased', 'com'
+        let invConditionFilters = new Set(); // 'low', 'needed', 'runningLow'
         let invSort = { field: 'partNumber', asc: true };
         let partsSort = { field: 'pl', asc: false };
         let customersSort = { field: 'pl', asc: false };
@@ -8728,14 +8730,35 @@
         // INVENTORY PAGE
         // ============================================================
         function setInvFilter(filter) {
-            invFilter = filter;
-            document.getElementById('invFilterAll').classList.toggle('active', filter === 'all');
-            document.getElementById('invFilterLow').classList.toggle('active', filter === 'low');
-            document.getElementById('invFilterNeeded').classList.toggle('active', filter === 'needed');
-            document.getElementById('invFilterRunningLow')?.classList.toggle('active', filter === 'runningLow');
-            document.getElementById('invFilterMake')?.classList.toggle('active', filter === 'make');
-            document.getElementById('invFilterPurchased')?.classList.toggle('active', filter === 'purchased');
-            document.getElementById('invFilterCOM')?.classList.toggle('active', filter === 'com');
+            const sourceFilters = ['make', 'purchased', 'com'];
+            const conditionFilters = ['low', 'needed', 'runningLow'];
+            
+            if (filter === 'all') {
+                // Reset everything
+                invSourceFilters.clear();
+                invConditionFilters.clear();
+            } else if (sourceFilters.includes(filter)) {
+                // Toggle source filter (multi-select)
+                if (invSourceFilters.has(filter)) invSourceFilters.delete(filter);
+                else invSourceFilters.add(filter);
+            } else if (conditionFilters.includes(filter)) {
+                // Toggle condition filter (multi-select)
+                if (invConditionFilters.has(filter)) invConditionFilters.delete(filter);
+                else invConditionFilters.add(filter);
+            }
+            
+            // Update active states
+            const anyActive = invSourceFilters.size > 0 || invConditionFilters.size > 0;
+            document.getElementById('invFilterAll').classList.toggle('active', !anyActive);
+            document.getElementById('invFilterLow').classList.toggle('active', invConditionFilters.has('low'));
+            document.getElementById('invFilterNeeded').classList.toggle('active', invConditionFilters.has('needed'));
+            document.getElementById('invFilterRunningLow')?.classList.toggle('active', invConditionFilters.has('runningLow'));
+            document.getElementById('invFilterMake')?.classList.toggle('active', invSourceFilters.has('make'));
+            document.getElementById('invFilterPurchased')?.classList.toggle('active', invSourceFilters.has('purchased'));
+            document.getElementById('invFilterCOM')?.classList.toggle('active', invSourceFilters.has('com'));
+            
+            // Keep legacy invFilter for backward compat
+            invFilter = anyActive ? 'multi' : 'all';
             renderInvTable();
         }
         
@@ -8807,15 +8830,25 @@
             let data = [...inventoryData];
             const searchTerm = (document.getElementById('invSearch')?.value || '').toLowerCase();
             
-            if (invFilter === 'low') data = data.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
-            else if (invFilter === 'needed') data = data.filter(i => i.partsToBeMade > 0);
-            else if (invFilter === 'runningLow') data = data.filter(i => {
-                const u = invUsageCache[i.partNumber];
-                return u && u.daysToMin !== null && u.daysToMin < 30;
-            })
-            else if (invFilter === 'make') data = data.filter(i => (i.itemType || '').toLowerCase() === 'make');
-            else if (invFilter === 'purchased') data = data.filter(i => (i.itemType || '').toLowerCase() === 'purchased');
-            else if (invFilter === 'com') data = data.filter(i => (i.itemType || '').toLowerCase() === 'com');
+            // Multi-select filter logic
+            if (invSourceFilters.size > 0) {
+                data = data.filter(i => {
+                    const type = (i.itemType || '').toLowerCase();
+                    return invSourceFilters.has(type);
+                });
+            }
+            if (invConditionFilters.size > 0) {
+                data = data.filter(i => {
+                    // OR within condition group — item passes if it matches ANY selected condition
+                    if (invConditionFilters.has('low') && i.fusionQty < i.minimum && i.minimum > 0) return true;
+                    if (invConditionFilters.has('needed') && i.partsToBeMade > 0) return true;
+                    if (invConditionFilters.has('runningLow')) {
+                        const u = invUsageCache[i.partNumber];
+                        if (u && u.daysToMin !== null && u.daysToMin < 30) return true;
+                    }
+                    return false;
+                });
+            }
             
             if (searchTerm) {
                 data = data.filter(i => (i.partNumber || '').toLowerCase().includes(searchTerm) || (i.product || '').toLowerCase().includes(searchTerm) || (i.moldType || '').toLowerCase().includes(searchTerm));
