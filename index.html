@@ -5383,7 +5383,7 @@
                         var drawing1Url = row['Drawing 1 URL'] || row['Drawing 1 url'] || '';
                         var drawing2Url = row['Drawing 2 URL'] || row['Drawing 2 url'] || '';
                         prodTotalsMap[partNum] = {
-                            product: row['Roll Tech Finish product'] || row['Product'] || '',
+                            product: row['Product'] || row['product'] || '',
                             qtyNeeded: parseNumber(row['Quantity Needed']),
                             minimums: parseNumber(row['Minimums']),
                             manualTarget: parseNumber(row['Manual target']) || parseNumber(row['Manual Target']),
@@ -5399,7 +5399,7 @@
                             if (!window.drawingMap) window.drawingMap = {};
                             if (!window.drawingTypeMap) window.drawingTypeMap = {};
                             window.drawingMap[partNum] = { drawing1: drawing1Url, drawing2: drawing2Url };
-                            var productType = (row['Roll Tech Finish product'] || row['Product'] || '').toString().trim();
+                            var productType = (row['Product'] || row['product'] || '').toString().trim();
                             window.drawingTypeMap[partNum] = productType === 'Tire' ? 'Tire' : productType === 'Hub' ? 'Hub' : (productType || 'Other');
                         }
                     }
