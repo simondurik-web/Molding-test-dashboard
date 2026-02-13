@@ -4661,12 +4661,12 @@
                 { key: 'qtyNeeded', labelEn: 'Qty Needed', labelEs: 'Cant. Necesaria' },
                 { key: 'partsToBeMade', labelEn: 'Parts to Make', labelEs: 'Partes a Producir' },
                 { key: 'moldType', labelEn: 'Mold Type', labelEs: 'Tipo de Molde' },
-                { key: 'itemType', labelEn: 'Item Type', labelEs: 'Tipo de Ítem' },
                 { key: 'avgUsage', labelEn: 'Avg Usage/Day', labelEs: 'Uso Prom/Día' },
                 { key: 'usageTrend', labelEn: 'Trend', labelEs: 'Tendencia' },
                 { key: 'daysToMin', labelEn: 'Days to Min', labelEs: 'Días al Mín' },
                 { key: 'daysToZero', labelEn: 'Days to Zero', labelEs: 'Días a Cero' },
-                { key: 'status', labelEn: 'Status', labelEs: 'Estado' }
+                { key: 'status', labelEn: 'Status', labelEs: 'Estado' },
+                { key: 'itemType', labelEn: 'Item Type', labelEs: 'Tipo de Ítem' }
             ],
             parts: [
                 { key: 'part', labelEn: 'Part #', labelEs: 'Parte #' },
@@ -8973,16 +8973,6 @@
                 if (!isColumnHidden('inventory', 'partsToBeMade')) cells += `<td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>`;
                 if (!isColumnHidden('inventory', 'moldType')) cells += `<td>${i.moldType || '-'}</td>`;
                 
-                // Item Type column
-                if (!isColumnHidden('inventory', 'itemType')) {
-                    const type = (i.itemType || '').toLowerCase();
-                    let badge = '-';
-                    if (type.includes('purchased')) badge = '<span class="badge" style="background:#48bb78;color:white;font-size:10px;">🛒 Purchased</span>';
-                    else if (type.includes('make') || type.includes('manufactured')) badge = '<span class="badge" style="background:#4299e1;color:white;font-size:10px;">🏭 Manufactured</span>';
-                    else if (type.includes('com')) badge = '<span class="badge" style="background:#ed8936;color:white;font-size:10px;">📦 COM</span>';
-                    cells += `<td>${badge}</td>`;
-                }
-                
                 // Forecast columns — different logic for manufactured vs purchased/COM
                 const uStats = invUsageCache[i.partNumber] || {};
                 const isMfg = uStats.isManufactured;
@@ -9032,6 +9022,16 @@
                 }
                 
                 if (!isColumnHidden('inventory', 'status')) cells += `<td>${statusBadge}</td>`;
+                
+                // Item Type column (last)
+                if (!isColumnHidden('inventory', 'itemType')) {
+                    const type = (i.itemType || '').toLowerCase();
+                    let typeBadge = '-';
+                    if (type.includes('purchased')) typeBadge = '<span class="badge" style="background:#48bb78;color:white;font-size:10px;">🛒 Purchased</span>';
+                    else if (type.includes('make') || type.includes('manufactured')) typeBadge = '<span class="badge" style="background:#4299e1;color:white;font-size:10px;">🏭 Manufactured</span>';
+                    else if (type.includes('com')) typeBadge = '<span class="badge" style="background:#ed8936;color:white;font-size:10px;">📦 COM</span>';
+                    cells += `<td>${typeBadge}</td>`;
+                }
                 
                 return `<tr class="${rowClass}" onclick="openInventoryHistoryModal('${escapedPart}')" title="${t('inv.clickHistory')}">${cells}</tr>`;
             }).join('');
