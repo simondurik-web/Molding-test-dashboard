@@ -6438,21 +6438,38 @@
                     const searchStr = (row.partNumber + ' ' + row.moldType + ' ' + row.product).toLowerCase();
                     if (!searchStr.includes(searchTerm)) return false;
                 }
+                if (!passesColumnFilter('prodMake', 'product', row.product || '-')) return false;
+                if (!passesColumnFilter('prodMake', 'partNumber', row.partNumber || '-')) return false;
+                if (!passesColumnFilter('prodMake', 'moldType', row.moldType || '-')) return false;
+                if (!passesColumnFilter('prodMake', 'fusionInventory', String(row.fusionInventory))) return false;
+                if (!passesColumnFilter('prodMake', 'minimums', String(row.minimums))) return false;
+                if (!passesColumnFilter('prodMake', 'partsToBeMade', String(row.partsToBeMade))) return false;
                 return true;
             });
-            
-            let csv = 'Product,Part Number,Mold Type,Fusion Inventory,Minimums,Parts to Make\\n';
-            filtered.forEach(row => {
-                csv += `"${row.product}","${row.partNumber}","${row.moldType}",${row.fusionInventory},${row.minimums},${row.partsToBeMade}\\n`;
+            filtered.sort((a, b) => {
+                let valA = a[prodMakeSortCol];
+                let valB = b[prodMakeSortCol];
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return prodMakeSortDir === 'asc' ? valA - valB : valB - valA;
+                }
+                valA = String(valA || '').toLowerCase();
+                valB = String(valB || '').toLowerCase();
+                if (valA < valB) return prodMakeSortDir === 'asc' ? -1 : 1;
+                if (valA > valB) return prodMakeSortDir === 'asc' ? 1 : -1;
+                return 0;
             });
-            
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'parts-to-make-' + new Date().toISOString().slice(0,10) + '.csv';
-            a.click();
-            URL.revokeObjectURL(url);
+            const allCols = [
+                { key: 'product', header: 'Product', getValue: r => r.product },
+                { key: 'partNumber', header: 'Part #', getValue: r => r.partNumber },
+                { key: 'moldType', header: 'Mold Type', getValue: r => r.moldType },
+                { key: 'fusionInventory', header: 'Fusion Inventory', getValue: r => r.fusionInventory },
+                { key: 'minimums', header: 'Minimums', getValue: r => r.minimums },
+                { key: 'partsToBeMade', header: 'Parts to Make', getValue: r => r.partsToBeMade }
+            ];
+            const visibleCols = allCols.filter(c => !isColumnHidden('prodMake', c.key));
+            const headers = visibleCols.map(c => c.header);
+            const rows = filtered.map(r => visibleCols.map(c => '"' + ((c.getValue(r) === null || c.getValue(r) === undefined ? '' : c.getValue(r)).toString().replace(/"/g, '""')) + '"').join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'parts-to-make-' + new Date().toISOString().slice(0,10) + '.csv');
         }
         
         function updateOrdersQueuePage() {
@@ -6704,10 +6721,101 @@
         function filterOrdersQueueTable() { updateOrdersQueuePage(); }
         
         function exportOrdersQueueToCSV() {
-            const data = allData.filter(r => ordersQueueFilters.categories[getCategory(r)] && getStatus(r) === 'pending');
-            const headers = ['Category','Due Date','Priority','Line','Customer','IF #','IF Status','Part #','# Packages','Packaging','Parts/Package','Qty','Fusion Inventory','Tire','Hub','Hub Mold','Bearings','Assigned','Status','Days Until'];
-            const rows = data.map(r => [getCategory(r),r[COL.REQUESTED_DATE],getVal(r,'PRIORITY'),getVal(r,'LINE'),getVal(r,'CUSTOMER'),getVal(r,'IF_NUM'),getVal(r,'FUSION_STATUS'),getVal(r,'PART'),getVal(r,'NUM_PACKAGES'),getVal(r,'PACKAGING'),getVal(r,'PARTS_PER_PACKAGE'),getVal(r,'QTY'),getVal(r,'FUSION_INV'),getVal(r,'TIRE'),getVal(r,'HUB'),getVal(r,'HUB_MOLD'),getVal(r,'BEARINGS'),getVal(r,'ASSIGNED'),getStatus(r),getVal(r,'DAYS_UNTIL')].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_queue.csv');
+            let data = allData.filter(r => {
+                const cat = getCategory(r);
+                const status = getStatus(r);
+                return ordersQueueFilters.categories[cat] && (status === 'pending' || status === 'wip');
+            });
+            // Apply column filters (same as renderOrdersQueueTable)
+            data = data.filter(r => {
+                const isRollTech = getCategory(r) === 'rolltech';
+                if (!passesColumnFilter('ordersQueue', 'category', getCategory(r) || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'dueDate', r[COL.REQUESTED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'priority', getVal(r, 'PRIORITY') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'fusionStatus', getVal(r, 'FUSION_STATUS') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'numPackages', getVal(r, 'NUM_PACKAGES') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'partsPerPackage', getVal(r, 'PARTS_PER_PACKAGE') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersQueue', 'fusionInv', getVal(r, 'FUSION_INV') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'tire', isRollTech ? (getVal(r, 'TIRE') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'hub', isRollTech ? (getVal(r, 'HUB') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'hubMold', getVal(r, 'HUB_MOLD') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'bearings', isRollTech ? (getVal(r, 'BEARINGS') || '-') : 'N/A')) return false;
+                if (!passesColumnFilter('ordersQueue', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                if (!passesColumnFilter('ordersQueue', 'status', getStatusBadge(getStatus(r)))) return false;
+                if (!passesColumnFilter('ordersQueue', 'daysUntil', String(parseNumber(getVal(r, 'DAYS_UNTIL')) || '-'))) return false;
+                return true;
+            });
+            // Apply sort (same as renderOrdersQueueTable)
+            const catOrder = { 'rolltech': 0, 'molding': 1, 'snappad': 2 };
+            const isUrgentItem = r => { const u = (getVal(r, 'URGENT') || '').toString().toLowerCase().trim(); return u === 'urgent' || u === 'true' || u === '1' || u === 'yes' || u === 'x'; };
+            data.sort((a, b) => {
+                let va, vb;
+                if (ordersQueueSort.field === 'default') {
+                    const urgA = isUrgentItem(a) ? 0 : 1;
+                    const urgB = isUrgentItem(b) ? 0 : 1;
+                    if (urgA !== urgB) return urgA - urgB;
+                    const catA = catOrder[getCategory(a)] ?? 3;
+                    const catB = catOrder[getCategory(b)] ?? 3;
+                    if (catA !== catB) return catA - catB;
+                    va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0);
+                    vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0);
+                    return va - vb;
+                }
+                switch(ordersQueueSort.field) {
+                    case 'category': va = catOrder[getCategory(a)] ?? 3; vb = catOrder[getCategory(b)] ?? 3; break;
+                    case 'dueDate': va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0); vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0); break;
+                    case 'priority': va = parseNumber(getVal(a, 'PRIORITY')); vb = parseNumber(getVal(b, 'PRIORITY')); break;
+                    case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'fusionStatus': va = getVal(a, 'FUSION_STATUS') || ''; vb = getVal(b, 'FUSION_STATUS') || ''; break;
+                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
+                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
+                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                    case 'status': va = getStatus(a); vb = getStatus(b); break;
+                    default: va = getVal(a, ordersQueueSort.field) || ''; vb = getVal(b, ordersQueueSort.field) || '';
+                }
+                if (typeof va === 'string') return ordersQueueSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                return ordersQueueSort.asc ? va - vb : vb - va;
+            });
+            // Apply search
+            const search = (document.getElementById('ordersQueueSearch')?.value || '').toLowerCase();
+            if (search) {
+                data = data.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'LINE') || '').toString().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
+            }
+            // Build CSV with visible columns only
+            const allCols = [
+                { key: 'category', header: 'Category', getValue: r => getCategory(r) === 'rolltech' ? 'Roll Tech' : getCategory(r) === 'molding' ? 'Molding' : getCategory(r) === 'snappad' ? 'Snap Pad' : getCategory(r) },
+                { key: 'dueDate', header: 'Due Date', getValue: r => r[COL.REQUESTED_DATE] },
+                { key: 'priority', header: 'Priority', getValue: r => getVal(r, 'PRIORITY') },
+                { key: 'line', header: 'Line', getValue: r => getVal(r, 'LINE') },
+                { key: 'customer', header: 'Customer', getValue: r => getVal(r, 'CUSTOMER') },
+                { key: 'ifNum', header: 'IF #', getValue: r => getVal(r, 'IF_NUM') },
+                { key: 'fusionStatus', header: 'Fusion Status', getValue: r => getVal(r, 'FUSION_STATUS') },
+                { key: 'part', header: 'Part #', getValue: r => getVal(r, 'PART') },
+                { key: 'numPackages', header: '# Packages', getValue: r => getVal(r, 'NUM_PACKAGES') },
+                { key: 'packaging', header: 'Packaging', getValue: r => getVal(r, 'PACKAGING') },
+                { key: 'partsPerPackage', header: 'Parts/Package', getValue: r => getVal(r, 'PARTS_PER_PACKAGE') },
+                { key: 'qty', header: 'Qty', getValue: r => getVal(r, 'QTY') },
+                { key: 'fusionInv', header: 'Fusion Inventory', getValue: r => getVal(r, 'FUSION_INV') },
+                { key: 'tire', header: 'Tire', getValue: r => getCategory(r) === 'rolltech' ? getVal(r, 'TIRE') : 'N/A' },
+                { key: 'hub', header: 'Hub', getValue: r => getCategory(r) === 'rolltech' ? getVal(r, 'HUB') : 'N/A' },
+                { key: 'hubMold', header: 'Hub Mold', getValue: r => getVal(r, 'HUB_MOLD') },
+                { key: 'bearings', header: 'Bearings', getValue: r => getCategory(r) === 'rolltech' ? getVal(r, 'BEARINGS') : 'N/A' },
+                { key: 'assigned', header: 'Assigned', getValue: r => getVal(r, 'ASSIGNED') },
+                { key: 'status', header: 'Status', getValue: r => getStatus(r) },
+                { key: 'daysUntil', header: 'Days Until', getValue: r => getVal(r, 'DAYS_UNTIL') }
+            ];
+            const visibleCols = allCols.filter(c => !isColumnHidden('ordersQueue', c.key));
+            const headers = visibleCols.map(c => c.header);
+            const rows = data.map(r => visibleCols.map(c => '"' + ((c.getValue(r) === null || c.getValue(r) === undefined ? '' : c.getValue(r)).toString().replace(/"/g, '""')) + '"').join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'orders_queue.csv');
         }
 
         // ============================================================
@@ -7498,16 +7606,81 @@
         function filterOrdersStagedTable() { updateOrdersStagedPage(); }
         
         function exportOrdersStagedToCSV() {
-            const data = allData.filter(r => ordersStagedFilters.categories[getCategory(r)] && getStatus(r) === 'staged');
-            const headers = ['Line','IF #','PO #','Customer','Part','Qty','Packaging','Revenue','Due Date','Days Until','Weight (lbs)','Dimensions','Assigned','Pallets'];
-            const rows = data.map(r => {
-                const line = getVal(r,'LINE');
+            let data = allData.filter(r => ordersStagedFilters.categories[getCategory(r)] && getStatus(r) === 'staged');
+            // Apply column filters (same as renderOrdersStagedTable)
+            data = data.filter(r => {
+                const line = getVal(r, 'LINE');
                 const pallets = getPalletDataForOrder(line);
-                const totalWeight = pallets.length > 0 ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : '';
-                const dimensions = pallets.length > 0 && pallets[0].dimensions ? pallets[0].dimensions : '';
-                return [line,getVal(r,'IF_NUM'),getVal(r,'PO_NUM'),getVal(r,'CUSTOMER'),getVal(r,'PART'),getVal(r,'QTY'),getVal(r,'PACKAGING'),r[COL.REVENUE],r[COL.REQUESTED_DATE],getVal(r,'DAYS_UNTIL'),totalWeight,dimensions,getVal(r,'ASSIGNED'),pallets.length].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',');
+                const hasPallets = pallets.length > 0;
+                const totalWeight = hasPallets ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : 0;
+                const firstDimensions = hasPallets && pallets[0].dimensions ? pallets[0].dimensions : '-';
+                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                if (!passesColumnFilter('ordersStaged', 'line', line || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'poNum', getVal(r, 'PO_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersStaged', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (salesUnlocked && !passesColumnFilter('ordersStaged', 'revenue', formatCurrency(parseNumber(r[COL.REVENUE])))) return false;
+                if (!passesColumnFilter('ordersStaged', 'dueDate', r[COL.REQUESTED_DATE] || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'daysUntil', String(daysUntil || '-'))) return false;
+                if (!passesColumnFilter('ordersStaged', 'weight', hasPallets ? formatNumber(totalWeight) + ' lbs' : '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'dimensions', firstDimensions)) return false;
+                if (!passesColumnFilter('ordersStaged', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                if (!passesColumnFilter('ordersStaged', 'pallets', hasPallets ? String(pallets.length) : '-')) return false;
+                return true;
             });
-            downloadCSV([headers.join(','),...rows].join('\n'), 'orders_staged.csv');
+            // Apply sort (same as renderOrdersStagedTable)
+            data.sort((a, b) => {
+                let va, vb;
+                const lineA = getVal(a, 'LINE'), lineB = getVal(b, 'LINE');
+                const palletA = getPalletDataForOrder(lineA), palletB = getPalletDataForOrder(lineB);
+                switch(ordersStagedSort.field) {
+                    case 'line': va = parseNumber(lineA); vb = parseNumber(lineB); break;
+                    case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                    case 'poNum': va = getVal(a, 'PO_NUM') || ''; vb = getVal(b, 'PO_NUM') || ''; break;
+                    case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
+                    case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
+                    case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
+                    case 'revenue': va = parseNumber(a[COL.REVENUE]); vb = parseNumber(b[COL.REVENUE]); break;
+                    case 'dueDate': va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0); vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0); break;
+                    case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                    case 'weight': va = palletA.length > 0 ? palletA.reduce((s, p) => s + parseNumber(p.weight), 0) : 0; vb = palletB.length > 0 ? palletB.reduce((s, p) => s + parseNumber(p.weight), 0) : 0; break;
+                    case 'pallets': va = palletA.length; vb = palletB.length; break;
+                    default: va = getVal(a, ordersStagedSort.field) || ''; vb = getVal(b, ordersStagedSort.field) || '';
+                }
+                if (typeof va === 'string') return ordersStagedSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                return ordersStagedSort.asc ? va - vb : vb - va;
+            });
+            // Apply search
+            const search = (document.getElementById('ordersStagedSearch')?.value || '').toLowerCase();
+            if (search) {
+                data = data.filter(r => (getVal(r, 'CUSTOMER') || '').toLowerCase().includes(search) || (getVal(r, 'PART') || '').toLowerCase().includes(search) || (getVal(r, 'IF_NUM') || '').toLowerCase().includes(search) || (getVal(r, 'PO_NUM') || '').toLowerCase().includes(search));
+            }
+            // Build CSV with visible columns only
+            const allCols = [
+                { key: 'line', header: 'Line', getValue: r => getVal(r, 'LINE') },
+                { key: 'ifNum', header: 'IF #', getValue: r => getVal(r, 'IF_NUM') },
+                { key: 'poNum', header: 'PO #', getValue: r => getVal(r, 'PO_NUM') },
+                { key: 'customer', header: 'Customer', getValue: r => getVal(r, 'CUSTOMER') },
+                { key: 'part', header: 'Part', getValue: r => getVal(r, 'PART') },
+                { key: 'qty', header: 'Qty', getValue: r => getVal(r, 'QTY') },
+                { key: 'packaging', header: 'Packaging', getValue: r => getVal(r, 'PACKAGING') }
+            ];
+            if (salesUnlocked) allCols.push({ key: 'revenue', header: 'Revenue', getValue: r => r[COL.REVENUE] });
+            allCols.push(
+                { key: 'dueDate', header: 'Due Date', getValue: r => r[COL.REQUESTED_DATE] },
+                { key: 'daysUntil', header: 'Days Until', getValue: r => getVal(r, 'DAYS_UNTIL') },
+                { key: 'weight', header: 'Weight (lbs)', getValue: r => { const p = getPalletDataForOrder(getVal(r, 'LINE')); return p.length > 0 ? p.reduce((s, x) => s + parseNumber(x.weight), 0) : ''; } },
+                { key: 'dimensions', header: 'Dimensions', getValue: r => { const p = getPalletDataForOrder(getVal(r, 'LINE')); return p.length > 0 && p[0].dimensions ? p[0].dimensions : ''; } },
+                { key: 'assigned', header: 'Assigned', getValue: r => getVal(r, 'ASSIGNED') },
+                { key: 'pallets', header: 'Pallets', getValue: r => getPalletDataForOrder(getVal(r, 'LINE')).length }
+            );
+            const visibleCols = allCols.filter(c => !isColumnHidden('ordersStaged', c.key));
+            const headers = visibleCols.map(c => c.header);
+            const rows = data.map(r => visibleCols.map(c => '"' + ((c.getValue(r) === null || c.getValue(r) === undefined ? '' : c.getValue(r)).toString().replace(/"/g, '""')) + '"').join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'orders_staged.csv');
         }
 
         // ============================================================
@@ -9043,7 +9216,92 @@
         }
         
         function filterInvTable() { renderInvTable(); }
-        function exportInvCSV() { downloadCSV('Product Type,Part Number,...', 'inventory.csv'); }
+        function exportInvCSV() {
+            let data = [...inventoryData];
+            // Apply source filters
+            if (invSourceFilters.size > 0) {
+                data = data.filter(i => { const type = (i.itemType || '').toLowerCase(); return invSourceFilters.has(type); });
+            }
+            // Apply condition filters
+            if (invConditionFilters.size > 0) {
+                data = data.filter(i => {
+                    if (invConditionFilters.has('low') && i.fusionQty < i.minimum && i.minimum > 0) return true;
+                    if (invConditionFilters.has('needed') && i.partsToBeMade > 0) return true;
+                    if (invConditionFilters.has('runningLow')) { const u = invUsageCache[i.partNumber]; if (u && u.daysToMin !== null && u.daysToMin < 30) return true; }
+                    return false;
+                });
+            }
+            // Apply search
+            const searchTerm = (document.getElementById('invSearch')?.value || '').toLowerCase();
+            if (searchTerm) {
+                data = data.filter(i => (i.partNumber || '').toLowerCase().includes(searchTerm) || (i.product || '').toLowerCase().includes(searchTerm) || (i.moldType || '').toLowerCase().includes(searchTerm));
+            }
+            // Apply column filters (same as renderInvTable)
+            data = data.filter(i => {
+                const isLow = i.fusionQty < i.minimum && i.minimum > 0;
+                const needsMake = i.partsToBeMade > 0;
+                const status = isLow ? 'LOW' : (needsMake ? 'MAKE' : 'OK');
+                if (!passesColumnFilter('inventory', 'product', i.product || '-')) return false;
+                if (!passesColumnFilter('inventory', 'partNumber', i.partNumber)) return false;
+                if (!passesColumnFilter('inventory', 'fusionQty', String(i.fusionQty))) return false;
+                if (!passesColumnFilter('inventory', 'minimum', String(i.minimum))) return false;
+                if (!passesColumnFilter('inventory', 'manualTarget', String(i.manualTarget))) return false;
+                if (!passesColumnFilter('inventory', 'qtyNeeded', String(i.qtyNeeded))) return false;
+                if (!passesColumnFilter('inventory', 'partsToBeMade', String(i.partsToBeMade))) return false;
+                if (!passesColumnFilter('inventory', 'moldType', i.moldType || '-')) return false;
+                const iType = (i.itemType || '').toLowerCase();
+                const itemTypeBadge = iType.includes('purchased') ? '🛒 Purchased' : (iType.includes('make') || iType.includes('manufactured') ? '🏭 Manufactured' : (iType.includes('com') ? '📦 COM' : '-'));
+                if (!passesColumnFilter('inventory', 'itemType', itemTypeBadge)) return false;
+                const uStats = invUsageCache[i.partNumber] || {};
+                const isMfgF = uStats.isManufactured;
+                const pStatsF = uStats.prodStats;
+                const avgUsageVal = isMfgF && pStatsF ? (pStatsF.avgDailyProduction ? pStatsF.avgDailyProduction.toFixed(1) + ' ⚙️' : '-') : (uStats.projectionRate ? uStats.projectionRate.toFixed(1) : '-');
+                let trendVal;
+                if (isMfgF && pStatsF && pStatsF.prod7 != null && pStatsF.prod30 != null) { trendVal = pStatsF.prod7 > pStatsF.prod30 * 1.1 ? '↑ Faster' : (pStatsF.prod7 < pStatsF.prod30 * 0.9 ? '↓ Slower' : '→ Stable'); }
+                else { trendVal = (uStats.usage7 != null && uStats.usage30 != null) ? (uStats.usage7 > uStats.usage30 * 1.1 ? '↑ Up' : (uStats.usage7 < uStats.usage30 * 0.9 ? '↓ Down' : '→ Stable')) : '-'; }
+                const daysToMinVal = isMfgF && pStatsF && pStatsF.daysToTarget !== null ? pStatsF.daysToTarget + 'd to target' : (uStats.daysToMin !== null ? (uStats.daysToMin === 0 ? '⚠️ NOW' : String(uStats.daysToMin) + 'd') : '-');
+                const daysToZeroVal = !isMfgF && uStats.daysToZero !== null ? String(uStats.daysToZero) + 'd' : '-';
+                if (!passesColumnFilter('inventory', 'avgUsage', avgUsageVal)) return false;
+                if (!passesColumnFilter('inventory', 'usageTrend', trendVal)) return false;
+                if (!passesColumnFilter('inventory', 'daysToMin', daysToMinVal)) return false;
+                if (!passesColumnFilter('inventory', 'daysToZero', daysToZeroVal)) return false;
+                if (!passesColumnFilter('inventory', 'status', status)) return false;
+                return true;
+            });
+            // Apply sort (same as renderInvTable)
+            data.sort((a, b) => {
+                let va, vb;
+                if (invSort.field === 'itemType') { va = a.itemType || ''; vb = b.itemType || ''; }
+                else if (invSort.field === 'avgUsage') { const ca = invUsageCache[a.partNumber] || {}, cb = invUsageCache[b.partNumber] || {}; va = ca.isManufactured && ca.prodStats ? (ca.prodStats.avgDailyProduction || 0) : (ca.projectionRate || 0); vb = cb.isManufactured && cb.prodStats ? (cb.prodStats.avgDailyProduction || 0) : (cb.projectionRate || 0); }
+                else if (invSort.field === 'daysToMin') { va = invUsageCache[a.partNumber]?.daysToMin ?? 99999; vb = invUsageCache[b.partNumber]?.daysToMin ?? 99999; }
+                else if (invSort.field === 'daysToZero') { va = invUsageCache[a.partNumber]?.daysToZero ?? 99999; vb = invUsageCache[b.partNumber]?.daysToZero ?? 99999; }
+                else if (invSort.field === 'usageTrend') { const ua = invUsageCache[a.partNumber] || {}, ub = invUsageCache[b.partNumber] || {}; va = (ua.usage7 != null && ua.usage30 != null && ua.usage30 > 0) ? ua.usage7 / ua.usage30 : 0; vb = (ub.usage7 != null && ub.usage30 != null && ub.usage30 > 0) ? ub.usage7 / ub.usage30 : 0; }
+                else { va = a[invSort.field]; vb = b[invSort.field]; }
+                if (typeof va === 'string') return invSort.asc ? (va || '').localeCompare(vb || '') : (vb || '').localeCompare(va || '');
+                return invSort.asc ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
+            });
+            // Build CSV with visible columns
+            const allCols = [
+                { key: 'product', header: 'Product Type', getValue: i => i.product },
+                { key: 'partNumber', header: 'Part Number', getValue: i => i.partNumber },
+                { key: 'fusionQty', header: 'Fusion Qty', getValue: i => i.fusionQty },
+                { key: 'minimum', header: 'Minimum', getValue: i => i.minimum },
+                { key: 'manualTarget', header: 'Manual Target', getValue: i => i.manualTarget },
+                { key: 'qtyNeeded', header: 'Qty Needed', getValue: i => i.qtyNeeded },
+                { key: 'partsToBeMade', header: 'Parts to Make', getValue: i => i.partsToBeMade },
+                { key: 'moldType', header: 'Mold Type', getValue: i => i.moldType },
+                { key: 'avgUsage', header: 'Avg Usage/Day', getValue: i => { const u = invUsageCache[i.partNumber] || {}; return u.isManufactured && u.prodStats ? (u.prodStats.avgDailyProduction ? u.prodStats.avgDailyProduction.toFixed(1) : '-') : (u.projectionRate ? u.projectionRate.toFixed(1) : '-'); } },
+                { key: 'usageTrend', header: 'Trend', getValue: i => { const u = invUsageCache[i.partNumber] || {}; if (u.isManufactured && u.prodStats && u.prodStats.prod7 != null && u.prodStats.prod30 != null) { return u.prodStats.prod7 > u.prodStats.prod30 * 1.1 ? 'Faster' : (u.prodStats.prod7 < u.prodStats.prod30 * 0.9 ? 'Slower' : 'Stable'); } return (u.usage7 != null && u.usage30 != null) ? (u.usage7 > u.usage30 * 1.1 ? 'Up' : (u.usage7 < u.usage30 * 0.9 ? 'Down' : 'Stable')) : '-'; } },
+                { key: 'daysToMin', header: 'Days to Min', getValue: i => { const u = invUsageCache[i.partNumber] || {}; if (u.isManufactured && u.prodStats && u.prodStats.daysToTarget !== null) return u.prodStats.daysToTarget; return u.daysToMin !== null ? u.daysToMin : '-'; } },
+                { key: 'daysToZero', header: 'Days to Zero', getValue: i => { const u = invUsageCache[i.partNumber] || {}; return !u.isManufactured && u.daysToZero !== null ? u.daysToZero : '-'; } },
+                { key: 'status', header: 'Status', getValue: i => { const isLow = i.fusionQty < i.minimum && i.minimum > 0; return isLow ? 'LOW' : (i.partsToBeMade > 0 ? 'MAKE' : 'OK'); } },
+                { key: 'itemType', header: 'Item Type', getValue: i => i.itemType || '-' }
+            ];
+            const visibleCols = allCols.filter(c => !isColumnHidden('inventory', c.key));
+            const headers = visibleCols.map(c => c.header);
+            const rows = data.map(i => visibleCols.map(c => '"' + ((c.getValue(i) === null || c.getValue(i) === undefined ? '' : c.getValue(i)).toString().replace(/"/g, '""')) + '"').join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'inventory_' + new Date().toISOString().slice(0,10) + '.csv');
+        }
         
         // ============================================================
         // INVENTORY HISTORY MODAL
@@ -10331,7 +10589,39 @@
         }
         
         function filterPartsTable() { updateSalesPartsPage(); }
-        function exportPartsCSV() { downloadCSV('Part,Orders,Qty,Revenue,P/L,Margin', 'parts_pl.csv'); }
+        function exportPartsCSV() {
+            const data = getFilteredPartsData();
+            const partStats = {};
+            data.forEach(r => {
+                const p = getVal(r, 'PART');
+                if (!partStats[p]) partStats[p] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
+                partStats[p].orders++;
+                partStats[p].qty += parseNumber(getVal(r, 'QTY'));
+                partStats[p].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) partStats[p].pl += getPLValue(r);
+            });
+            let partsArray = Object.entries(partStats).map(([part, stats]) => ({ part, ...stats, margin: stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0 }));
+            if (partsFilters.watchlistOnly) partsArray = partsArray.filter(p => isInWatchlist('part', p.part));
+            const search = (document.getElementById('partsSearch')?.value || '').toLowerCase();
+            if (search) partsArray = partsArray.filter(p => p.part.toLowerCase().includes(search));
+            partsArray = partsArray.filter(p => {
+                if (!passesColumnFilter('parts', 'part', p.part)) return false;
+                if (!passesColumnFilter('parts', 'orders', String(p.orders))) return false;
+                if (!passesColumnFilter('parts', 'qty', String(p.qty))) return false;
+                if (!passesColumnFilter('parts', 'revenue', formatCurrency(p.revenue))) return false;
+                if (!passesColumnFilter('parts', 'pl', p.pl >= 0 ? 'Positive' : 'Negative')) return false;
+                let marginCat; if (p.margin < 0) marginCat = 'Negative'; else if (p.margin < 10) marginCat = 'Low (0-10%)'; else if (p.margin < 20) marginCat = 'Medium (10-20%)'; else marginCat = 'High (>20%)';
+                if (!passesColumnFilter('parts', 'margin', marginCat)) return false;
+                return true;
+            });
+            partsArray.sort((a, b) => {
+                if (partsSort.field === 'part') return partsSort.asc ? a.part.localeCompare(b.part) : b.part.localeCompare(a.part);
+                return partsSort.asc ? a[partsSort.field] - b[partsSort.field] : b[partsSort.field] - a[partsSort.field];
+            });
+            const headers = ['Part','Orders','Qty','Revenue','P/L','Margin'];
+            const rows = partsArray.map(p => ['"' + p.part.replace(/"/g, '""') + '"', p.orders, p.qty, p.revenue.toFixed(2), p.pl.toFixed(2), p.margin.toFixed(1) + '%'].join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'parts_pl.csv');
+        }
         
         // Parts Drilldown Functions
         let partsCustomerDrilldownData = []; // Store data for re-sorting
@@ -10670,7 +10960,39 @@
         }
         
         function filterCustomersTable() { updateSalesCustomersPage(); }
-        function exportCustomersCSV() { downloadCSV('Customer,Orders,Qty,Revenue,P/L,Margin', 'customers_pl.csv'); }
+        function exportCustomersCSV() {
+            const data = getFilteredCustomersData();
+            const custStats = {};
+            data.forEach(r => {
+                const c = getVal(r, 'CUSTOMER') || 'Unknown';
+                if (!custStats[c]) custStats[c] = { orders: 0, qty: 0, revenue: 0, pl: 0 };
+                custStats[c].orders++;
+                custStats[c].qty += parseNumber(getVal(r, 'QTY'));
+                custStats[c].revenue += parseNumber(r[COL.REVENUE]);
+                if (!hasMissingCostData(r)) custStats[c].pl += getPLValue(r);
+            });
+            let custArray = Object.entries(custStats).map(([customer, stats]) => ({ customer, ...stats, margin: stats.revenue > 0 ? (stats.pl / stats.revenue * 100) : 0 }));
+            if (customersFilters.watchlistOnly) custArray = custArray.filter(c => isInWatchlist('customer', c.customer));
+            const search = (document.getElementById('customersSearch')?.value || '').toLowerCase();
+            if (search) custArray = custArray.filter(c => c.customer.toLowerCase().includes(search));
+            custArray = custArray.filter(c => {
+                if (!passesColumnFilter('customers', 'customer', c.customer)) return false;
+                if (!passesColumnFilter('customers', 'orders', String(c.orders))) return false;
+                if (!passesColumnFilter('customers', 'qty', String(c.qty))) return false;
+                if (!passesColumnFilter('customers', 'revenue', formatCurrency(c.revenue))) return false;
+                if (!passesColumnFilter('customers', 'pl', c.pl >= 0 ? 'Positive' : 'Negative')) return false;
+                let marginCat; if (c.margin < 0) marginCat = 'Negative'; else if (c.margin < 10) marginCat = 'Low (0-10%)'; else if (c.margin < 20) marginCat = 'Medium (10-20%)'; else marginCat = 'High (>20%)';
+                if (!passesColumnFilter('customers', 'margin', marginCat)) return false;
+                return true;
+            });
+            custArray.sort((a, b) => {
+                if (customersSort.field === 'customer') return customersSort.asc ? a.customer.localeCompare(b.customer) : b.customer.localeCompare(a.customer);
+                return customersSort.asc ? a[customersSort.field] - b[customersSort.field] : b[customersSort.field] - a[customersSort.field];
+            });
+            const headers = ['Customer','Orders','Qty','Revenue','P/L','Margin'];
+            const rows = custArray.map(c => ['"' + c.customer.replace(/"/g, '""') + '"', c.orders, c.qty, c.revenue.toFixed(2), c.pl.toFixed(2), c.margin.toFixed(1) + '%'].join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'customers_pl.csv');
+        }
         
         // Customers Drilldown Functions
         function showCustomersProductDrilldown(customer) {
@@ -12127,14 +12449,18 @@
         }
         
         function exportFpRefToCSV() {
-            const headers = fpReferenceHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
-            const rows = fpReferenceData.map(row => 
-                fpReferenceHeaders.map(h => {
-                    const val = row[h];
-                    if (val === undefined || val === null) return '""';
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                }).join(',')
-            );
+            let data = [...fpReferenceData];
+            const globalSearch = (document.getElementById('fpRefGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) { data = data.filter(row => fpReferenceHeaders.some(h => { const val = row[h]; return val && String(val).toLowerCase().includes(globalSearch); })); }
+            data = data.filter(row => fpReferenceHeaders.every((h, i) => { const colKey = `col_${i}`; const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : ''; return passesColumnFilter('fpRef', colKey, val); }));
+            if (fpRefSort.field !== null) {
+                const colIndex = parseInt(fpRefSort.field.replace('col_', '')); const header = fpReferenceHeaders[colIndex];
+                const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
+                data.sort((a, b) => { const strA = (a[header] !== undefined && a[header] !== null ? String(a[header]).trim() : ''); const strB = (b[header] !== undefined && b[header] !== null ? String(b[header]).trim() : ''); if (looksNumeric(strA) && looksNumeric(strB)) return fpRefSort.asc ? parseNumber(a[header]) - parseNumber(b[header]) : parseNumber(b[header]) - parseNumber(a[header]); return fpRefSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA); });
+            }
+            const visibleIndices = fpReferenceHeaders.map((h, i) => ({ h, i })).filter(x => !isColumnHidden('fpRef', `col_${x.i}`));
+            const headers = visibleIndices.map(x => `"${x.h.replace(/"/g, '""')}"`).join(',');
+            const rows = data.map(row => visibleIndices.map(x => { const val = row[x.h]; if (val === undefined || val === null) return '""'; return `"${String(val).replace(/"/g, '""')}"`; }).join(','));
             downloadCSV([headers, ...rows].join('\n'), `fp_reference_${new Date().toISOString().split('T')[0]}.csv`);
         }
         
@@ -12254,14 +12580,18 @@
         }
         
         function exportCustRefToCSV() {
-            const headers = customerReferenceHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
-            const rows = customerReferenceData.map(row => 
-                customerReferenceHeaders.map(h => {
-                    const val = row[h];
-                    if (val === undefined || val === null) return '""';
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                }).join(',')
-            );
+            let data = [...customerReferenceData];
+            const globalSearch = (document.getElementById('custRefGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) { data = data.filter(row => customerReferenceHeaders.some(h => { const val = row[h]; return val && String(val).toLowerCase().includes(globalSearch); })); }
+            data = data.filter(row => customerReferenceHeaders.every((h, i) => { const colKey = `col_${i}`; const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : ''; return passesColumnFilter('custRef', colKey, val); }));
+            if (custRefSort.field !== null) {
+                const colIndex = parseInt(custRefSort.field.replace('col_', '')); const header = customerReferenceHeaders[colIndex];
+                const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
+                data.sort((a, b) => { const strA = (a[header] !== undefined && a[header] !== null ? String(a[header]).trim() : ''); const strB = (b[header] !== undefined && b[header] !== null ? String(b[header]).trim() : ''); if (looksNumeric(strA) && looksNumeric(strB)) return custRefSort.asc ? parseNumber(a[header]) - parseNumber(b[header]) : parseNumber(b[header]) - parseNumber(a[header]); return custRefSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA); });
+            }
+            const visibleIndices = customerReferenceHeaders.map((h, i) => ({ h, i })).filter(x => !isColumnHidden('custRef', `col_${x.i}`));
+            const headers = visibleIndices.map(x => `"${x.h.replace(/"/g, '""')}"`).join(',');
+            const rows = data.map(row => visibleIndices.map(x => { const val = row[x.h]; if (val === undefined || val === null) return '""'; return `"${String(val).replace(/"/g, '""')}"`; }).join(','));
             downloadCSV([headers, ...rows].join('\n'), `customer_reference_${new Date().toISOString().split('T')[0]}.csv`);
         }
         
@@ -12385,14 +12715,18 @@
         }
         
         function exportQuotesToCSV() {
-            const headers = quotesRegistryHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
-            const rows = quotesRegistryData.map(row => 
-                quotesRegistryHeaders.map(h => {
-                    const val = row[h];
-                    if (val === undefined || val === null) return '""';
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                }).join(',')
-            );
+            let data = [...quotesRegistryData];
+            const globalSearch = (document.getElementById('quotesGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) { data = data.filter(row => quotesRegistryHeaders.some(h => { const val = row[h]; return val && String(val).toLowerCase().includes(globalSearch); })); }
+            data = data.filter(row => quotesRegistryHeaders.every((h, i) => { const colKey = `col_${i}`; const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : ''; return passesColumnFilter('quotes', colKey, val); }));
+            if (quotesSort.field !== null) {
+                const colIndex = parseInt(quotesSort.field.replace('col_', '')); const header = quotesRegistryHeaders[colIndex];
+                const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
+                data.sort((a, b) => { const strA = (a[header] !== undefined && a[header] !== null ? String(a[header]).trim() : ''); const strB = (b[header] !== undefined && b[header] !== null ? String(b[header]).trim() : ''); if (looksNumeric(strA) && looksNumeric(strB)) return quotesSort.asc ? parseNumber(a[header]) - parseNumber(b[header]) : parseNumber(b[header]) - parseNumber(a[header]); return quotesSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA); });
+            }
+            const visibleIndices = quotesRegistryHeaders.map((h, i) => ({ h, i })).filter(x => !isColumnHidden('quotes', `col_${x.i}`));
+            const headers = visibleIndices.map(x => `"${x.h.replace(/"/g, '""')}"`).join(',');
+            const rows = data.map(row => visibleIndices.map(x => { const val = row[x.h]; if (val === undefined || val === null) return '""'; return `"${String(val).replace(/"/g, '""')}"`; }).join(','));
             downloadCSV([headers, ...rows].join('\n'), `quotes_registry_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
@@ -12580,15 +12914,20 @@
         }
         
         function exportPalletRecordsToCSV() {
-            const headers = currentLang === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
-            const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
-            const rows = palletRecordsData.map(row => 
-                PALLET_RECORDS_HEADERS.map(h => {
-                    const val = row[h];
-                    if (val === undefined || val === null) return '""';
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                }).join(',')
-            );
+            const displayHeaders = currentLang === 'es' ? PALLET_RECORDS_HEADERS_ES : PALLET_RECORDS_HEADERS;
+            const dataHeaders = PALLET_RECORDS_HEADERS;
+            let data = [...palletRecordsData];
+            data = data.filter(row => palletRecordsFilters.categories[getPalletRecordsCategory(row)] || getPalletRecordsCategory(row) === 'other');
+            const globalSearch = (document.getElementById('palletRecordsGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) { data = data.filter(row => dataHeaders.some(h => { const val = row[h]; return val && String(val).toLowerCase().includes(globalSearch); })); }
+            data = data.filter(row => dataHeaders.every((h, i) => { const colKey = `col_${i}`; const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : ''; return passesColumnFilter('palletRecords', colKey, val); }));
+            if (palletRecordsSort.field !== null) {
+                const colIndex = parseInt(palletRecordsSort.field.replace('col_', '')); const header = dataHeaders[colIndex];
+                data.sort((a, b) => { const aVal = a[header] ?? ''; const bVal = b[header] ?? ''; const aNum = parseFloat(aVal), bNum = parseFloat(bVal); if (!isNaN(aNum) && !isNaN(bNum)) return palletRecordsSort.asc ? aNum - bNum : bNum - aNum; return palletRecordsSort.asc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal)); });
+            }
+            const visibleIndices = dataHeaders.map((h, i) => ({ h, dh: displayHeaders[i] || h, i })).filter(x => !isColumnHidden('palletRecords', `col_${x.i}`));
+            const headerRow = visibleIndices.map(x => `"${x.dh.replace(/"/g, '""')}"`).join(',');
+            const rows = data.map(row => visibleIndices.map(x => { const val = row[x.h]; if (val === undefined || val === null) return '""'; return `"${String(val).replace(/"/g, '""')}"`; }).join(','));
             downloadCSV([headerRow, ...rows].join('\n'), `pallet_records_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
@@ -12844,17 +13183,20 @@
         }
         
         function exportShippingRecordsToCSV() {
-            const headers = currentLang === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
-            const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
-            const rows = shippingRecordsData.map(row => 
-                SHIPPING_RECORDS_HEADERS.map(h => {
-                    let val = row[h];
-                    if (val === undefined || val === null) return '""';
-                    // Handle arrays by joining with semicolon
-                    if (Array.isArray(val)) val = val.join('; ');
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                }).join(',')
-            );
+            const displayHeaders = currentLang === 'es' ? SHIPPING_RECORDS_HEADERS_ES : SHIPPING_RECORDS_HEADERS;
+            const dataHeaders = SHIPPING_RECORDS_HEADERS;
+            let data = [...shippingRecordsData];
+            data = data.filter(row => shippingRecordsFilters.categories[getShippingRecordsCategory(row)] || getShippingRecordsCategory(row) === 'other');
+            const globalSearch = (document.getElementById('shippingRecordsGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) { data = data.filter(row => dataHeaders.some(h => { const val = row[h]; return val && String(val).toLowerCase().includes(globalSearch); })); }
+            data = data.filter(row => dataHeaders.every((h, i) => { const colKey = `col_${i}`; const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : ''; return passesColumnFilter('shippingRecords', colKey, val); }));
+            if (shippingRecordsSort.field !== null) {
+                const colIndex = parseInt(shippingRecordsSort.field.replace('col_', '')); const header = dataHeaders[colIndex];
+                data.sort((a, b) => { const aVal = a[header] ?? ''; const bVal = b[header] ?? ''; const aNum = parseFloat(aVal), bNum = parseFloat(bVal); if (!isNaN(aNum) && !isNaN(bNum)) return shippingRecordsSort.asc ? aNum - bNum : bNum - aNum; return shippingRecordsSort.asc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal)); });
+            }
+            const visibleIndices = dataHeaders.map((h, i) => ({ h, dh: displayHeaders[i] || h, i })).filter(x => !isColumnHidden('shippingRecords', `col_${x.i}`));
+            const headerRow = visibleIndices.map(x => `"${x.dh.replace(/"/g, '""')}"`).join(',');
+            const rows = data.map(row => visibleIndices.map(x => { let val = row[x.h]; if (val === undefined || val === null) return '""'; if (Array.isArray(val)) val = val.join('; '); return `"${String(val).replace(/"/g, '""')}"`; }).join(','));
             downloadCSV([headerRow, ...rows].join('\n'), `shipping_records_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
@@ -13072,17 +13414,20 @@
         }
         
         function exportStagedRecordsToCSV() {
-            const headers = currentLang === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
-            const headerRow = headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
-            const rows = stagedRecordsData.map(row => 
-                STAGED_RECORDS_HEADERS.map(h => {
-                    let val = row[h];
-                    if (val === undefined || val === null) return '""';
-                    // Handle arrays by joining with semicolon
-                    if (Array.isArray(val)) val = val.join('; ');
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                }).join(',')
-            );
+            const displayHeaders = currentLang === 'es' ? STAGED_RECORDS_HEADERS_ES : STAGED_RECORDS_HEADERS;
+            const dataHeaders = STAGED_RECORDS_HEADERS;
+            let data = [...stagedRecordsData];
+            data = data.filter(row => stagedRecordsFilters.categories[getStagedRecordsCategory(row)] || getStagedRecordsCategory(row) === 'other');
+            const globalSearch = (document.getElementById('stagedRecordsGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) { data = data.filter(row => dataHeaders.some(h => { const val = row[h]; return val && String(val).toLowerCase().includes(globalSearch); })); }
+            data = data.filter(row => dataHeaders.every((h, i) => { const colKey = `col_${i}`; const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : ''; return passesColumnFilter('stagedRecords', colKey, val); }));
+            if (stagedRecordsSort.field !== null) {
+                const colIndex = parseInt(stagedRecordsSort.field.replace('col_', '')); const header = dataHeaders[colIndex];
+                data.sort((a, b) => { const aVal = a[header] ?? ''; const bVal = b[header] ?? ''; const aNum = parseFloat(aVal), bNum = parseFloat(bVal); if (!isNaN(aNum) && !isNaN(bNum)) return stagedRecordsSort.asc ? aNum - bNum : bNum - aNum; return stagedRecordsSort.asc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal)); });
+            }
+            const visibleIndices = dataHeaders.map((h, i) => ({ h, dh: displayHeaders[i] || h, i })).filter(x => !isColumnHidden('stagedRecords', `col_${x.i}`));
+            const headerRow = visibleIndices.map(x => `"${x.dh.replace(/"/g, '""')}"`).join(',');
+            const rows = data.map(row => visibleIndices.map(x => { let val = row[x.h]; if (val === undefined || val === null) return '""'; if (Array.isArray(val)) val = val.join('; '); return `"${String(val).replace(/"/g, '""')}"`; }).join(','));
             downloadCSV([headerRow, ...rows].join('\n'), `staged_records_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
