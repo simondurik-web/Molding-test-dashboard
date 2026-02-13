@@ -9101,12 +9101,11 @@
             document.getElementById('historyStatMax').textContent = formatNumber(maxVal);
             document.getElementById('historyStatAvg').textContent = formatNumber(avg);
 
-            // Calculate and display usage stats (only for Purchased items)
+            // Calculate and display usage stats (all items)
             const invItem = inventoryData.find(i => i.partNumber === currentHistoryPart);
-            const isPurchased = invItem && invItem.itemType === 'Purchased';
             const usagePanel = document.getElementById('historyUsagePanel');
 
-            if (isPurchased) {
+            {
                 const usage = calculateUsageStats(currentHistoryPart);
                 usagePanel.style.display = 'grid';
 
@@ -9146,8 +9145,6 @@
                     document.getElementById('historyUsageTrend').textContent = '-';
                     document.getElementById('historyUsageTrend').style.color = 'var(--text-secondary)';
                 }
-            } else {
-                usagePanel.style.display = 'none';
             }
 
             // Destroy existing chart
@@ -9200,9 +9197,9 @@
                 };
             }
 
-            // Build projection datasets for purchased items
+            // Build projection datasets for all items
             const extraDatasets = [];
-            if (isPurchased) {
+            {
                 const usage = calculateUsageStats(currentHistoryPart);
                 if (usage.projectionRate && usage.projectionRate > 0 && usage.currentQty > 0) {
                     // Add projected future data points (extend chart into the future)
