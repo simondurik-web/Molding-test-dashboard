@@ -8847,7 +8847,8 @@
                 { key: 'usageTrend', label: 'Trend' },
                 { key: 'daysToMin', label: 'Days to Min' },
                 { key: 'daysToZero', label: 'Days to Zero' },
-                { key: 'status', label: 'Status' }
+                { key: 'status', label: 'Status' },
+                { key: 'itemType', label: 'Item Type' }
             ];
             document.getElementById('invTableHeader').innerHTML = cols.map(col => {
                 if (isColumnHidden('inventory', col.key)) return '';
