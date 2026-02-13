@@ -4661,6 +4661,7 @@
                 { key: 'qtyNeeded', labelEn: 'Qty Needed', labelEs: 'Cant. Necesaria' },
                 { key: 'partsToBeMade', labelEn: 'Parts to Make', labelEs: 'Partes a Producir' },
                 { key: 'moldType', labelEn: 'Mold Type', labelEs: 'Tipo de Molde' },
+                { key: 'itemType', labelEn: 'Item Type', labelEs: 'Tipo de Ítem' },
                 { key: 'avgUsage', labelEn: 'Avg Usage/Day', labelEs: 'Uso Prom/Día' },
                 { key: 'usageTrend', labelEn: 'Trend', labelEs: 'Tendencia' },
                 { key: 'daysToMin', labelEn: 'Days to Min', labelEs: 'Días al Mín' },
@@ -5100,14 +5101,30 @@
                     case 'qtyNeeded': values.add(String(i.qtyNeeded)); break;
                     case 'partsToBeMade': values.add(String(i.partsToBeMade)); break;
                     case 'moldType': values.add(i.moldType || '-'); break;
+                    case 'itemType': {
+                        const t = (i.itemType || '').toLowerCase();
+                        if (t.includes('purchased')) values.add('🛒 Purchased');
+                        else if (t.includes('make') || t.includes('manufactured')) values.add('🏭 Manufactured');
+                        else if (t.includes('com')) values.add('📦 COM');
+                        else values.add('-');
+                        break;
+                    }
                     case 'avgUsage': {
                         const u = invUsageCache[i.partNumber] || {};
-                        values.add(u.projectionRate ? u.projectionRate.toFixed(1) : '-');
+                        if (u.isManufactured && u.prodStats) {
+                            values.add(u.prodStats.avgDailyProduction ? u.prodStats.avgDailyProduction.toFixed(1) + ' ⚙️' : '-');
+                        } else {
+                            values.add(u.projectionRate ? u.projectionRate.toFixed(1) : '-');
+                        }
                         break;
                     }
                     case 'usageTrend': {
                         const u2 = invUsageCache[i.partNumber] || {};
-                        if (u2.usage7 != null && u2.usage30 != null) {
+                        if (u2.isManufactured && u2.prodStats && u2.prodStats.prod7 != null && u2.prodStats.prod30 != null) {
+                            if (u2.prodStats.prod7 > u2.prodStats.prod30 * 1.1) values.add('↑ Faster');
+                            else if (u2.prodStats.prod7 < u2.prodStats.prod30 * 0.9) values.add('↓ Slower');
+                            else values.add('→ Stable');
+                        } else if (u2.usage7 != null && u2.usage30 != null) {
                             if (u2.usage7 > u2.usage30 * 1.1) values.add('↑ Up');
                             else if (u2.usage7 < u2.usage30 * 0.9) values.add('↓ Down');
                             else values.add('→ Stable');
@@ -5116,12 +5133,16 @@
                     }
                     case 'daysToMin': {
                         const u3 = invUsageCache[i.partNumber] || {};
-                        values.add(u3.daysToMin !== null ? (u3.daysToMin === 0 ? '⚠️ NOW' : u3.daysToMin + 'd') : '-');
+                        if (u3.isManufactured && u3.prodStats && u3.prodStats.daysToTarget !== null) {
+                            values.add(u3.prodStats.daysToTarget + 'd to target');
+                        } else {
+                            values.add(u3.daysToMin !== null ? (u3.daysToMin === 0 ? '⚠️ NOW' : u3.daysToMin + 'd') : '-');
+                        }
                         break;
                     }
                     case 'daysToZero': {
                         const u4 = invUsageCache[i.partNumber] || {};
-                        values.add(u4.daysToZero !== null ? u4.daysToZero + 'd' : '-');
+                        values.add(!u4.isManufactured && u4.daysToZero !== null ? u4.daysToZero + 'd' : '-');
                         break;
                     }
                     case 'status':
@@ -8769,10 +8790,14 @@
             // Load history data for forecast columns
             await loadInventoryHistoryData();
             
-            // Pre-compute usage stats for all inventory items
+            // Pre-compute usage/production stats for all inventory items
             invUsageCache = {};
             inventoryData.forEach(i => {
-                invUsageCache[i.partNumber] = calculateUsageStats(i.partNumber);
+                const type = (i.itemType || '').toLowerCase();
+                const isManufactured = type.includes('make') || type.includes('manufactured');
+                const usageStats = calculateUsageStats(i.partNumber);
+                const prodStats = isManufactured ? calculateProductionStats(i.partNumber) : null;
+                invUsageCache[i.partNumber] = { ...usageStats, prodStats, isManufactured };
             });
             
             const lowStock = inventoryData.filter(i => i.fusionQty < i.minimum && i.minimum > 0);
@@ -8873,12 +8898,25 @@
                 if (!passesColumnFilter('inventory', 'qtyNeeded', String(i.qtyNeeded))) return false;
                 if (!passesColumnFilter('inventory', 'partsToBeMade', String(i.partsToBeMade))) return false;
                 if (!passesColumnFilter('inventory', 'moldType', i.moldType || '-')) return false;
-                // Forecast column filters
+                
+                // Item type filter
+                const iType = (i.itemType || '').toLowerCase();
+                const itemTypeBadge = iType.includes('purchased') ? '🛒 Purchased' : (iType.includes('make') || iType.includes('manufactured') ? '🏭 Manufactured' : (iType.includes('com') ? '📦 COM' : '-'));
+                if (!passesColumnFilter('inventory', 'itemType', itemTypeBadge)) return false;
+                
+                // Forecast column filters (type-aware)
                 const uStats = invUsageCache[i.partNumber] || {};
-                const avgUsageVal = uStats.projectionRate ? uStats.projectionRate.toFixed(1) : '-';
-                const trendVal = (uStats.usage7 != null && uStats.usage30 != null) ? (uStats.usage7 > uStats.usage30 * 1.1 ? '↑ Up' : (uStats.usage7 < uStats.usage30 * 0.9 ? '↓ Down' : '→ Stable')) : '-';
-                const daysToMinVal = uStats.daysToMin !== null ? (uStats.daysToMin === 0 ? '⚠️ NOW' : String(uStats.daysToMin) + 'd') : '-';
-                const daysToZeroVal = uStats.daysToZero !== null ? String(uStats.daysToZero) + 'd' : '-';
+                const isMfgF = uStats.isManufactured;
+                const pStatsF = uStats.prodStats;
+                const avgUsageVal = isMfgF && pStatsF ? (pStatsF.avgDailyProduction ? pStatsF.avgDailyProduction.toFixed(1) + ' ⚙️' : '-') : (uStats.projectionRate ? uStats.projectionRate.toFixed(1) : '-');
+                let trendVal;
+                if (isMfgF && pStatsF && pStatsF.prod7 != null && pStatsF.prod30 != null) {
+                    trendVal = pStatsF.prod7 > pStatsF.prod30 * 1.1 ? '↑ Faster' : (pStatsF.prod7 < pStatsF.prod30 * 0.9 ? '↓ Slower' : '→ Stable');
+                } else {
+                    trendVal = (uStats.usage7 != null && uStats.usage30 != null) ? (uStats.usage7 > uStats.usage30 * 1.1 ? '↑ Up' : (uStats.usage7 < uStats.usage30 * 0.9 ? '↓ Down' : '→ Stable')) : '-';
+                }
+                const daysToMinVal = isMfgF && pStatsF && pStatsF.daysToTarget !== null ? pStatsF.daysToTarget + 'd to target' : (uStats.daysToMin !== null ? (uStats.daysToMin === 0 ? '⚠️ NOW' : String(uStats.daysToMin) + 'd') : '-');
+                const daysToZeroVal = !isMfgF && uStats.daysToZero !== null ? String(uStats.daysToZero) + 'd' : '-';
                 if (!passesColumnFilter('inventory', 'avgUsage', avgUsageVal)) return false;
                 if (!passesColumnFilter('inventory', 'usageTrend', trendVal)) return false;
                 if (!passesColumnFilter('inventory', 'daysToMin', daysToMinVal)) return false;
@@ -8890,9 +8928,13 @@
             data.sort((a, b) => {
                 let va, vb;
                 // Handle forecast columns
-                if (invSort.field === 'avgUsage') {
-                    va = (invUsageCache[a.partNumber]?.projectionRate) || 0;
-                    vb = (invUsageCache[b.partNumber]?.projectionRate) || 0;
+                if (invSort.field === 'itemType') {
+                    va = a.itemType || ''; vb = b.itemType || '';
+                } else if (invSort.field === 'avgUsage') {
+                    const ca = invUsageCache[a.partNumber] || {};
+                    const cb = invUsageCache[b.partNumber] || {};
+                    va = ca.isManufactured && ca.prodStats ? (ca.prodStats.avgDailyProduction || 0) : (ca.projectionRate || 0);
+                    vb = cb.isManufactured && cb.prodStats ? (cb.prodStats.avgDailyProduction || 0) : (cb.projectionRate || 0);
                 } else if (invSort.field === 'daysToMin') {
                     va = invUsageCache[a.partNumber]?.daysToMin ?? 99999;
                     vb = invUsageCache[b.partNumber]?.daysToMin ?? 99999;
@@ -8931,16 +8973,38 @@
                 if (!isColumnHidden('inventory', 'partsToBeMade')) cells += `<td class="${i.partsToBeMade > 0 ? 'negative' : ''}">${formatNumber(i.partsToBeMade)}</td>`;
                 if (!isColumnHidden('inventory', 'moldType')) cells += `<td>${i.moldType || '-'}</td>`;
                 
-                // Forecast columns
+                // Item Type column
+                if (!isColumnHidden('inventory', 'itemType')) {
+                    const type = (i.itemType || '').toLowerCase();
+                    let badge = '-';
+                    if (type.includes('purchased')) badge = '<span class="badge" style="background:#48bb78;color:white;font-size:10px;">🛒 Purchased</span>';
+                    else if (type.includes('make') || type.includes('manufactured')) badge = '<span class="badge" style="background:#4299e1;color:white;font-size:10px;">🏭 Manufactured</span>';
+                    else if (type.includes('com')) badge = '<span class="badge" style="background:#ed8936;color:white;font-size:10px;">📦 COM</span>';
+                    cells += `<td>${badge}</td>`;
+                }
+                
+                // Forecast columns — different logic for manufactured vs purchased/COM
                 const uStats = invUsageCache[i.partNumber] || {};
+                const isMfg = uStats.isManufactured;
+                const pStats = uStats.prodStats;
+                
                 if (!isColumnHidden('inventory', 'avgUsage')) {
-                    const avgVal = uStats.projectionRate ? uStats.projectionRate.toFixed(1) : '-';
-                    cells += `<td>${avgVal}</td>`;
+                    if (isMfg && pStats) {
+                        const avgVal = pStats.avgDailyProduction ? pStats.avgDailyProduction.toFixed(1) : '-';
+                        cells += `<td style="color:#4299e1;">${avgVal}${avgVal !== '-' ? ' ⚙️' : ''}</td>`;
+                    } else {
+                        const avgVal = uStats.projectionRate ? uStats.projectionRate.toFixed(1) : '-';
+                        cells += `<td>${avgVal}</td>`;
+                    }
                 }
                 if (!isColumnHidden('inventory', 'usageTrend')) {
                     let trendIcon = '-';
                     let trendColor = 'var(--text-secondary)';
-                    if (uStats.usage7 != null && uStats.usage30 != null) {
+                    if (isMfg && pStats && pStats.prod7 != null && pStats.prod30 != null) {
+                        if (pStats.prod7 > pStats.prod30 * 1.1) { trendIcon = '↑ Faster'; trendColor = 'var(--success)'; }
+                        else if (pStats.prod7 < pStats.prod30 * 0.9) { trendIcon = '↓ Slower'; trendColor = 'var(--danger)'; }
+                        else { trendIcon = '→ Stable'; trendColor = 'var(--text-secondary)'; }
+                    } else if (uStats.usage7 != null && uStats.usage30 != null) {
                         if (uStats.usage7 > uStats.usage30 * 1.1) { trendIcon = '↑ Up'; trendColor = 'var(--danger)'; }
                         else if (uStats.usage7 < uStats.usage30 * 0.9) { trendIcon = '↓ Down'; trendColor = 'var(--success)'; }
                         else { trendIcon = '→ Stable'; trendColor = 'var(--text-secondary)'; }
@@ -8949,7 +9013,10 @@
                 }
                 if (!isColumnHidden('inventory', 'daysToMin')) {
                     let dtmText = '-', dtmColor = 'var(--text-secondary)';
-                    if (uStats.daysToMin !== null) {
+                    if (isMfg && pStats && pStats.daysToTarget !== null) {
+                        dtmText = pStats.daysToTarget + 'd to target';
+                        dtmColor = 'var(--accent)';
+                    } else if (uStats.daysToMin !== null) {
                         if (uStats.daysToMin === 0) { dtmText = '⚠️ NOW'; dtmColor = 'var(--danger)'; }
                         else { dtmText = uStats.daysToMin + 'd'; dtmColor = uStats.daysToMin < 14 ? 'var(--danger)' : (uStats.daysToMin < 30 ? 'var(--warning)' : 'var(--success)'); }
                     }
@@ -8957,7 +9024,7 @@
                 }
                 if (!isColumnHidden('inventory', 'daysToZero')) {
                     let dtzText = '-', dtzColor = 'var(--text-secondary)';
-                    if (uStats.daysToZero !== null) {
+                    if (!isMfg && uStats.daysToZero !== null) {
                         dtzText = uStats.daysToZero + 'd';
                         dtzColor = uStats.daysToZero < 30 ? 'var(--danger)' : (uStats.daysToZero < 60 ? 'var(--warning)' : 'var(--success)');
                     }
@@ -9101,49 +9168,102 @@
             document.getElementById('historyStatMax').textContent = formatNumber(maxVal);
             document.getElementById('historyStatAvg').textContent = formatNumber(avg);
 
-            // Calculate and display usage stats (all items)
+            // Calculate and display usage/production stats (all items)
             const invItem = inventoryData.find(i => i.partNumber === currentHistoryPart);
             const usagePanel = document.getElementById('historyUsagePanel');
+            const itemType = (invItem?.itemType || '').toLowerCase();
+            const isMfgItem = itemType.includes('make') || itemType.includes('manufactured');
 
             {
-                const usage = calculateUsageStats(currentHistoryPart);
                 usagePanel.style.display = 'grid';
 
-                document.getElementById('historyUsage7').textContent = usage.usage7 !== null ? usage.usage7.toFixed(1) : 'N/A';
-                document.getElementById('historyUsage30').textContent = usage.usage30 !== null ? usage.usage30.toFixed(1) : 'N/A';
+                if (isMfgItem) {
+                    // MANUFACTURED: show production stats
+                    const prod = calculateProductionStats(currentHistoryPart);
+                    document.getElementById('historyUsage7').textContent = prod.prod7 !== null ? prod.prod7.toFixed(1) : 'N/A';
+                    document.getElementById('historyUsage7').parentElement.querySelector('.history-stat-label').innerHTML = '7-Day Avg Made<br><small>/day ⚙️</small>';
+                    document.getElementById('historyUsage30').textContent = prod.prod30 !== null ? prod.prod30.toFixed(1) : 'N/A';
+                    document.getElementById('historyUsage30').parentElement.querySelector('.history-stat-label').innerHTML = '30-Day Avg Made<br><small>/day ⚙️</small>';
 
-                if (usage.daysToMin !== null) {
-                    document.getElementById('historyDaysToMin').textContent = usage.daysToMin === 0 ? '⚠️ NOW' : usage.daysToMin + 'd';
-                    document.getElementById('historyDaysToMin').style.color = usage.daysToMin < 14 ? 'var(--danger)' : (usage.daysToMin < 30 ? 'var(--warning)' : 'var(--success)');
-                } else {
-                    document.getElementById('historyDaysToMin').textContent = 'N/A';
-                    document.getElementById('historyDaysToMin').style.color = 'var(--text-secondary)';
-                }
-
-                if (usage.daysToZero !== null) {
-                    document.getElementById('historyDaysToZero').textContent = usage.daysToZero + 'd';
-                    document.getElementById('historyDaysToZero').style.color = usage.daysToZero < 30 ? 'var(--danger)' : (usage.daysToZero < 60 ? 'var(--warning)' : 'var(--success)');
-                } else {
-                    document.getElementById('historyDaysToZero').textContent = 'N/A';
-                    document.getElementById('historyDaysToZero').style.color = 'var(--text-secondary)';
-                }
-
-                // Trend: compare 7-day vs 30-day
-                if (usage.usage7 !== null && usage.usage30 !== null && usage.usage30 > 0) {
-                    const ratio = usage.usage7 / usage.usage30;
-                    if (ratio > 1.15) {
-                        document.getElementById('historyUsageTrend').textContent = '📈 Increasing';
-                        document.getElementById('historyUsageTrend').style.color = 'var(--danger)';
-                    } else if (ratio < 0.85) {
-                        document.getElementById('historyUsageTrend').textContent = '📉 Decreasing';
-                        document.getElementById('historyUsageTrend').style.color = 'var(--success)';
+                    if (prod.daysToTarget !== null) {
+                        document.getElementById('historyDaysToMin').textContent = prod.daysToTarget + 'd';
+                        document.getElementById('historyDaysToMin').style.color = 'var(--accent)';
+                        document.getElementById('historyDaysToMin').parentElement.querySelector('.history-stat-label').textContent = 'Days to Target';
                     } else {
-                        document.getElementById('historyUsageTrend').textContent = '➡️ Stable';
+                        document.getElementById('historyDaysToMin').textContent = 'N/A';
+                        document.getElementById('historyDaysToMin').style.color = 'var(--text-secondary)';
+                        document.getElementById('historyDaysToMin').parentElement.querySelector('.history-stat-label').textContent = 'Days to Target';
+                    }
+
+                    document.getElementById('historyDaysToZero').textContent = '-';
+                    document.getElementById('historyDaysToZero').style.color = 'var(--text-secondary)';
+                    document.getElementById('historyDaysToZero').parentElement.querySelector('.history-stat-label').textContent = 'N/A';
+                } else {
+                    // PURCHASED/COM: show usage/consumption stats
+                    const usage = calculateUsageStats(currentHistoryPart);
+                    document.getElementById('historyUsage7').textContent = usage.usage7 !== null ? usage.usage7.toFixed(1) : 'N/A';
+                    document.getElementById('historyUsage7').parentElement.querySelector('.history-stat-label').innerHTML = '7-Day Avg Usage<br><small>/day</small>';
+                    document.getElementById('historyUsage30').textContent = usage.usage30 !== null ? usage.usage30.toFixed(1) : 'N/A';
+                    document.getElementById('historyUsage30').parentElement.querySelector('.history-stat-label').innerHTML = '30-Day Avg Usage<br><small>/day</small>';
+
+                    if (usage.daysToMin !== null) {
+                        document.getElementById('historyDaysToMin').textContent = usage.daysToMin === 0 ? '⚠️ NOW' : usage.daysToMin + 'd';
+                        document.getElementById('historyDaysToMin').style.color = usage.daysToMin < 14 ? 'var(--danger)' : (usage.daysToMin < 30 ? 'var(--warning)' : 'var(--success)');
+                    } else {
+                        document.getElementById('historyDaysToMin').textContent = 'N/A';
+                        document.getElementById('historyDaysToMin').style.color = 'var(--text-secondary)';
+                    }
+                    document.getElementById('historyDaysToMin').parentElement.querySelector('.history-stat-label').textContent = 'Days to Minimum';
+
+                    if (usage.daysToZero !== null) {
+                        document.getElementById('historyDaysToZero').textContent = usage.daysToZero + 'd';
+                        document.getElementById('historyDaysToZero').style.color = usage.daysToZero < 30 ? 'var(--danger)' : (usage.daysToZero < 60 ? 'var(--warning)' : 'var(--success)');
+                    } else {
+                        document.getElementById('historyDaysToZero').textContent = 'N/A';
+                        document.getElementById('historyDaysToZero').style.color = 'var(--text-secondary)';
+                    }
+                    document.getElementById('historyDaysToZero').parentElement.querySelector('.history-stat-label').textContent = 'Days to Zero';
+                }
+
+                // Trend: compare 7-day vs 30-day (different logic for mfg vs purchased)
+                if (isMfgItem) {
+                    const prod = calculateProductionStats(currentHistoryPart);
+                    if (prod.prod7 !== null && prod.prod30 !== null && prod.prod30 > 0) {
+                        const ratio = prod.prod7 / prod.prod30;
+                        if (ratio > 1.15) {
+                            document.getElementById('historyUsageTrend').textContent = '⚡ Faster';
+                            document.getElementById('historyUsageTrend').style.color = 'var(--success)';
+                        } else if (ratio < 0.85) {
+                            document.getElementById('historyUsageTrend').textContent = '🐌 Slower';
+                            document.getElementById('historyUsageTrend').style.color = 'var(--danger)';
+                        } else {
+                            document.getElementById('historyUsageTrend').textContent = '➡️ Stable';
+                            document.getElementById('historyUsageTrend').style.color = 'var(--text-secondary)';
+                        }
+                    } else {
+                        document.getElementById('historyUsageTrend').textContent = '-';
                         document.getElementById('historyUsageTrend').style.color = 'var(--text-secondary)';
                     }
+                    document.getElementById('historyUsageTrend').parentElement.querySelector('.history-stat-label').textContent = 'Production Trend';
                 } else {
-                    document.getElementById('historyUsageTrend').textContent = '-';
-                    document.getElementById('historyUsageTrend').style.color = 'var(--text-secondary)';
+                    const usage2 = calculateUsageStats(currentHistoryPart);
+                    if (usage2.usage7 !== null && usage2.usage30 !== null && usage2.usage30 > 0) {
+                        const ratio = usage2.usage7 / usage2.usage30;
+                        if (ratio > 1.15) {
+                            document.getElementById('historyUsageTrend').textContent = '📈 Increasing';
+                            document.getElementById('historyUsageTrend').style.color = 'var(--danger)';
+                        } else if (ratio < 0.85) {
+                            document.getElementById('historyUsageTrend').textContent = '📉 Decreasing';
+                            document.getElementById('historyUsageTrend').style.color = 'var(--success)';
+                        } else {
+                            document.getElementById('historyUsageTrend').textContent = '➡️ Stable';
+                            document.getElementById('historyUsageTrend').style.color = 'var(--text-secondary)';
+                        }
+                    } else {
+                        document.getElementById('historyUsageTrend').textContent = '-';
+                        document.getElementById('historyUsageTrend').style.color = 'var(--text-secondary)';
+                    }
+                    document.getElementById('historyUsageTrend').parentElement.querySelector('.history-stat-label').textContent = 'Usage Trend';
                 }
             }
 
@@ -9197,9 +9317,50 @@
                 };
             }
 
-            // Build projection datasets for all items
+            // Build projection datasets
             const extraDatasets = [];
-            {
+            if (isMfgItem) {
+                // MANUFACTURED: show production projection (inventory growing)
+                const prod = calculateProductionStats(currentHistoryPart);
+                if (prod.avgDailyProduction && prod.avgDailyProduction > 0) {
+                    const target = invItem ? (invItem.manualTarget || 0) : 0;
+                    const projDays = target > 0 && current < target ? Math.min(Math.ceil((target - current) / prod.avgDailyProduction) + 5, 120) : 60;
+                    const projLabels = [];
+                    const projData = [];
+                    const monthNames2 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const lastDate2 = new Date();
+                    for (let d = 0; d <= projDays; d++) {
+                        const fd = new Date(lastDate2); fd.setDate(fd.getDate() + d);
+                        const projQty = current + (prod.avgDailyProduction * d);
+                        projLabels.push(d === 0 ? labels[labels.length - 1] : `${monthNames2[fd.getMonth()]} ${fd.getDate()}`);
+                        projData.push(Math.round(projQty));
+                        if (target > 0 && projQty >= target) break;
+                    }
+                    const paddedProj = new Array(dataPoints.length - 1).fill(null).concat(projData);
+                    const allLbls = labels.concat(projLabels.slice(1));
+                    while (dataPoints.length < allLbls.length) dataPoints.push(null);
+                    labels.length = 0; allLbls.forEach(l => labels.push(l));
+                    extraDatasets.push({
+                        label: 'Projected Production (30d avg)',
+                        data: paddedProj, borderColor: '#48bb78', backgroundColor: 'rgba(72,187,120,0.05)',
+                        borderDash: [8, 4], fill: false, tension: 0, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2
+                    });
+                    if (target > 0) {
+                        extraDatasets.push({
+                            label: 'Target', data: new Array(labels.length).fill(target),
+                            borderColor: '#4299e1', borderDash: [4, 4], fill: false, pointRadius: 0, pointHoverRadius: 0, borderWidth: 1.5
+                        });
+                    }
+                    if (minimum > 0) {
+                        extraDatasets.push({
+                            label: 'Minimum Threshold', data: new Array(labels.length).fill(minimum),
+                            borderColor: '#ed8936', borderDash: [4, 4], fill: false, pointRadius: 0, pointHoverRadius: 0, borderWidth: 1.5
+                        });
+                    }
+                    suggestedMin = 0;
+                }
+            } else {
+                // PURCHASED/COM: show depletion projection
                 const usage = calculateUsageStats(currentHistoryPart);
                 if (usage.projectionRate && usage.projectionRate > 0 && usage.currentQty > 0) {
                     // Add projected future data points (extend chart into the future)
@@ -9556,6 +9717,59 @@
             }
 
             return { usage7, usage30, daysToMin, daysToZero, projectionRate, currentQty };
+        }
+
+        function calculateProductionStats(partNumber) {
+            const partData = inventoryHistoryData.find(p => p.partNumber === partNumber);
+            if (!partData || Object.keys(partData.dataByDate).length < 2) {
+                return { prod7: null, prod30: null, daysToTarget: null, avgDailyProduction: null };
+            }
+
+            const allDates = Object.keys(partData.dataByDate).map(dateStr => {
+                const parts = dateStr.split('/');
+                return { str: dateStr, date: new Date(parts[2], parts[0] - 1, parts[1]) };
+            }).sort((a, b) => a.date - b.date);
+
+            if (allDates.length < 2) return { prod7: null, prod30: null, daysToTarget: null, avgDailyProduction: null };
+
+            const latest = allDates[allDates.length - 1];
+            const currentQty = partData.dataByDate[latest.str];
+
+            // Calculate production rate: sum of daily INCREASES over N days / N days
+            function getProductionRate(days) {
+                const targetDate = new Date(latest.date);
+                targetDate.setDate(targetDate.getDate() - days);
+
+                // Get all data points within the window
+                const windowPoints = allDates.filter(d => d.date >= targetDate && d.date <= latest.date);
+                if (windowPoints.length < 2) return null;
+
+                let totalProduced = 0;
+                for (let idx = 1; idx < windowPoints.length; idx++) {
+                    const prev = partData.dataByDate[windowPoints[idx - 1].str];
+                    const curr = partData.dataByDate[windowPoints[idx].str];
+                    const diff = curr - prev;
+                    if (diff > 0) totalProduced += diff; // Only count increases (production)
+                }
+
+                const actualDays = (latest.date - windowPoints[0].date) / (1000 * 60 * 60 * 24);
+                if (actualDays < 1) return null;
+                return totalProduced / actualDays;
+            }
+
+            const prod7 = getProductionRate(7);
+            const prod30 = getProductionRate(30);
+            const avgDailyProduction = prod30 !== null && prod30 > 0 ? prod30 : (prod7 !== null && prod7 > 0 ? prod7 : null);
+
+            // Days to target (if target exists)
+            const invItem = inventoryData.find(i => i.partNumber === partNumber);
+            const target = invItem ? (invItem.manualTarget || 0) : 0;
+            let daysToTarget = null;
+            if (avgDailyProduction && avgDailyProduction > 0 && target > 0 && currentQty < target) {
+                daysToTarget = Math.round((target - currentQty) / avgDailyProduction);
+            }
+
+            return { prod7, prod30, daysToTarget, avgDailyProduction, currentQty };
         }
 
         function renderHistoryPageChart() {
