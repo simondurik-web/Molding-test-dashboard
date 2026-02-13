@@ -11300,17 +11300,15 @@
             if (allDataSort.field !== null) {
                 const colIndex = parseInt(allDataSort.field.replace('col_', ''));
                 const header = allRawHeaders[colIndex];
+                const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
                 data.sort((a, b) => {
                     let va = a[header], vb = b[header];
-                    // Try numeric comparison first
-                    const numA = parseNumber(va), numB = parseNumber(vb);
-                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
-                        return allDataSort.asc ? numA - numB : numB - numA;
+                    const strA = va !== undefined && va !== null ? String(va).trim() : '';
+                    const strB = vb !== undefined && vb !== null ? String(vb).trim() : '';
+                    if (looksNumeric(strA) && looksNumeric(strB)) {
+                        return allDataSort.asc ? parseNumber(va) - parseNumber(vb) : parseNumber(vb) - parseNumber(va);
                     }
-                    // Fall back to string comparison
-                    va = va !== undefined && va !== null ? String(va) : '';
-                    vb = vb !== undefined && vb !== null ? String(vb) : '';
-                    return allDataSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                    return allDataSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA);
                 });
             }
             
@@ -11804,15 +11802,15 @@
             if (fpRefSort.field !== null) {
                 const colIndex = parseInt(fpRefSort.field.replace('col_', ''));
                 const header = fpReferenceHeaders[colIndex];
+                const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
                 data.sort((a, b) => {
                     let va = a[header], vb = b[header];
-                    const numA = parseNumber(va), numB = parseNumber(vb);
-                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
-                        return fpRefSort.asc ? numA - numB : numB - numA;
+                    const strA = va !== undefined && va !== null ? String(va).trim() : '';
+                    const strB = vb !== undefined && vb !== null ? String(vb).trim() : '';
+                    if (looksNumeric(strA) && looksNumeric(strB)) {
+                        return fpRefSort.asc ? parseNumber(va) - parseNumber(vb) : parseNumber(vb) - parseNumber(va);
                     }
-                    va = va !== undefined && va !== null ? String(va) : '';
-                    vb = vb !== undefined && vb !== null ? String(vb) : '';
-                    return fpRefSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                    return fpRefSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA);
                 });
             }
             
@@ -11924,15 +11922,15 @@
             if (custRefSort.field !== null) {
                 const colIndex = parseInt(custRefSort.field.replace('col_', ''));
                 const header = customerReferenceHeaders[colIndex];
+                const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
                 data.sort((a, b) => {
                     let va = a[header], vb = b[header];
-                    const numA = parseNumber(va), numB = parseNumber(vb);
-                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
-                        return custRefSort.asc ? numA - numB : numB - numA;
+                    const strA = va !== undefined && va !== null ? String(va).trim() : '';
+                    const strB = vb !== undefined && vb !== null ? String(vb).trim() : '';
+                    if (looksNumeric(strA) && looksNumeric(strB)) {
+                        return custRefSort.asc ? parseNumber(va) - parseNumber(vb) : parseNumber(vb) - parseNumber(va);
                     }
-                    va = va !== undefined && va !== null ? String(va) : '';
-                    vb = vb !== undefined && vb !== null ? String(vb) : '';
-                    return custRefSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                    return custRefSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA);
                 });
             }
             
