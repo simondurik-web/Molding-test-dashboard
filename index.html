@@ -8740,6 +8740,7 @@
         function exportCustomersExcel() { exportFromDOMTable('customersTableBody', 'customersTableHeader', 'customers_pl.xlsx'); }
         function exportDatesExcel() { exportFromDOMTable('datesTableBody', 'datesTableHeader', 'dates_pl.xlsx'); }
         function exportAllDataExcel() { exportFromDOMTable('allDataTableBody', 'allDataTableHeader', `all_data_${new Date().toISOString().split('T')[0]}.xlsx`); }
+        function exportAllDataToExcel() { exportAllDataExcel(); }
         function exportFpRefExcel() { exportFromDOMTable('fpRefTableBody', 'fpRefTableHeader', `fp_reference_${new Date().toISOString().split('T')[0]}.xlsx`); }
         function exportCustRefExcel() { exportFromDOMTable('custRefTableBody', 'custRefTableHeader', `customer_reference_${new Date().toISOString().split('T')[0]}.xlsx`); }
         function exportQuotesExcel() { exportFromDOMTable('quotesTableBody', 'quotesTableHeader', `quotes_registry_${new Date().toISOString().split('T')[0]}.xlsx`); }
@@ -11593,15 +11594,62 @@
         }
         
         function exportAllDataToCSV() {
-            const headers = allRawHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
-            const rows = allRawData.map(row => 
-                allRawHeaders.map(h => {
+            // Export exactly what's visible on the dashboard: respects hidden columns, filters, and sort order
+            const visibleIndices = [];
+            const visibleHeaders = [];
+            allRawHeaders.forEach((h, i) => {
+                const colKey = `col_${i}`;
+                if (!isColumnHidden('allData', colKey)) {
+                    visibleIndices.push(i);
+                    visibleHeaders.push(h);
+                }
+            });
+            
+            // Get filtered + sorted data (same logic as renderAllDataTable)
+            let data = [...allRawData];
+            const firstColHeader = allRawHeaders[0];
+            if (firstColHeader) {
+                data = data.filter(row => {
+                    const val = row[firstColHeader];
+                    return val !== undefined && val !== null && val !== '';
+                });
+            }
+            const globalSearch = (document.getElementById('allDataGlobalSearch')?.value || '').toLowerCase();
+            if (globalSearch) {
+                data = data.filter(row => allRawHeaders.some(h => {
+                    const val = row[h];
+                    return val && String(val).toLowerCase().includes(globalSearch);
+                }));
+            }
+            data = data.filter(row => allRawHeaders.every((h, i) => {
+                const colKey = `col_${i}`;
+                const val = row[h] !== undefined && row[h] !== null ? String(row[h]) : '';
+                return passesColumnFilter('allData', colKey, val);
+            }));
+            if (allDataSort.field !== null) {
+                const colIndex = parseInt(allDataSort.field.replace('col_', ''));
+                const header = allRawHeaders[colIndex];
+                const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
+                data.sort((a, b) => {
+                    const strA = (a[header] !== undefined && a[header] !== null ? String(a[header]).trim() : '');
+                    const strB = (b[header] !== undefined && b[header] !== null ? String(b[header]).trim() : '');
+                    if (looksNumeric(strA) && looksNumeric(strB)) {
+                        return allDataSort.asc ? parseNumber(a[header]) - parseNumber(b[header]) : parseNumber(b[header]) - parseNumber(a[header]);
+                    }
+                    return allDataSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA);
+                });
+            }
+            
+            // Build CSV with only visible columns
+            const headerLine = visibleHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(',');
+            const rows = data.map(row => 
+                visibleHeaders.map(h => {
                     const val = row[h];
                     if (val === undefined || val === null) return '""';
                     return `"${String(val).replace(/"/g, '""')}"`;
                 }).join(',')
             );
-            downloadCSV([headers, ...rows].join('\n'), `all_data_${new Date().toISOString().split('T')[0]}.csv`);
+            downloadCSV([headerLine, ...rows].join('\n'), `all_data_${new Date().toISOString().split('T')[0]}.csv`);
         }
 
         // BOM EXPLORER
