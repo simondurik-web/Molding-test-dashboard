@@ -12053,13 +12053,15 @@
                 const header = quotesRegistryHeaders[colIndex];
                 data.sort((a, b) => {
                     let va = a[header], vb = b[header];
-                    const numA = parseNumber(va), numB = parseNumber(vb);
-                    if (!isNaN(numA) && !isNaN(numB) && va !== '' && vb !== '') {
+                    // Only use numeric sort if values actually look numeric (not just parseNumber returning 0 for text)
+                    const strA = va !== undefined && va !== null ? String(va).trim() : '';
+                    const strB = vb !== undefined && vb !== null ? String(vb).trim() : '';
+                    const looksNumeric = v => v !== '' && !isNaN(Number(v.replace(/[$,%\s()]/g, '').replace(/^\((.+)\)$/, '-$1')));
+                    if (looksNumeric(strA) && looksNumeric(strB)) {
+                        const numA = parseNumber(va), numB = parseNumber(vb);
                         return quotesSort.asc ? numA - numB : numB - numA;
                     }
-                    va = va !== undefined && va !== null ? String(va) : '';
-                    vb = vb !== undefined && vb !== null ? String(vb) : '';
-                    return quotesSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                    return quotesSort.asc ? strA.localeCompare(strB) : strB.localeCompare(strA);
                 });
             }
             
