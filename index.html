@@ -3984,6 +3984,7 @@
         const PROD_DATA_TOTALS_GID = '430274636'; // Production Data Totals Dashboard (static export, unaffected by filters)
         const CONFIG_GID = '912029812';
         const PALLET_PICTURES_GID = '1879462508';
+        const APP_PALLET_RECORDS_GID = '759673144';
         const BOM_FINAL_GID = '74377031';
         const BOM_SUB_GID = '206288913';
         const BOM_INDIVIDUAL_GID = '751106736';
@@ -5621,6 +5622,47 @@
             } catch (e) { 
                 console.error('Pallet data load error:', e); 
                 palletData = []; 
+            }
+
+            // Also fetch from App Pallet Records (new app) and merge
+            try {
+                const appData = await fetchSheetData(APP_PALLET_RECORDS_GID);
+                if (appData && appData.length > 0) {
+                    const appPallets = appData.map(row => {
+                        const keys = Object.keys(row);
+                        // App Pallet Records columns: Timestamp(A), Line#(B), Pallet#(C), Weight(D), Parts/Boxes(E), Length(F), Width(G), Height(H), Photo1(I), Photo2(J), Photo3(K), Photo4(L), RecordedBy(M), EditedBy(N), EditTimestamp(O), InternalStatus(P)
+                        const lineNum = row[keys[1]] || '';
+                        const palletNum = row[keys[2]] || '';
+                        const weight = row[keys[3]] || '';
+                        const length = row[keys[5]] || '';
+                        const width = row[keys[6]] || '';
+                        const height = row[keys[7]] || '';
+                        const photo1 = row[keys[8]] || '';
+                        const partsBoxes = row[keys[4]] || '';
+                        const dims = (length && width && height) ? `${length}" x ${width}" x ${height}"` : '';
+                        const status = row[keys[15]] || '';
+                        
+                        // Skip deleted records
+                        if (status === 'DELETED') return null;
+                        
+                        return {
+                            orderNumber: String(lineNum).trim(),
+                            palletNumber: palletNum,
+                            pictureUrl: photo1,
+                            weight: weight,
+                            dimensions: dims,
+                            partsPerPallet: partsBoxes,
+                            source: 'app'
+                        };
+                    }).filter(p => p && p.orderNumber && p.orderNumber !== '');
+                    
+                    console.log('App Pallet Records loaded:', appPallets.length, 'entries');
+                    // Merge: app records take priority (add at beginning so they show first)
+                    palletData = [...appPallets, ...palletData];
+                    console.log('Total pallet data after merge:', palletData.length);
+                }
+            } catch (e) {
+                console.warn('App Pallet Records load failed (non-fatal):', e);
             }
         }
 
