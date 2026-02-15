@@ -5645,6 +5645,10 @@
                         // Skip deleted records
                         if (status === 'DELETED') return null;
                         
+                        const recordedBy = row[keys[12]] || '';
+                        const editedBy = row[keys[13]] || '';
+                        const editTimestamp = row[keys[14]] || '';
+                        
                         return {
                             orderNumber: String(lineNum).trim(),
                             palletNumber: palletNum,
@@ -5652,6 +5656,9 @@
                             weight: weight,
                             dimensions: dims,
                             partsPerPallet: partsBoxes,
+                            recordedBy: recordedBy,
+                            editedBy: editedBy,
+                            editTimestamp: editTimestamp,
                             source: 'app'
                         };
                     }).filter(p => p && p.orderNumber && p.orderNumber !== '');
@@ -7374,6 +7381,16 @@
                     palletHtml += `<div class="pallet-detail"><span class="label">Dimensions:</span> <span class="value">${p.dimensions || '-'}</span></div>`;
                     palletHtml += `<div class="pallet-detail"><span class="label">Parts/Boxes:</span> <span class="value">${p.partsPerPallet || p.boxesPerPallet || '-'}</span></div>`;
                     palletHtml += `<div class="pallet-detail"><span class="label">Order #:</span> <span class="value">${p.orderNumber || '-'}</span></div>`;
+                    if (p.recordedBy) {
+                        palletHtml += `<div class="pallet-detail" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border);">`;
+                        palletHtml += `<span class="label">📝 By:</span> <span class="value" style="text-transform: capitalize;">${p.recordedBy}</span>`;
+                        palletHtml += `</div>`;
+                    }
+                    if (p.editedBy && p.editedBy !== p.recordedBy) {
+                        palletHtml += `<div class="pallet-detail">`;
+                        palletHtml += `<span class="label">✏️ Edited:</span> <span class="value" style="text-transform: capitalize;">${p.editedBy}</span>`;
+                        palletHtml += `</div>`;
+                    }
                     palletHtml += `</div></div>`;
                 });
                 palletHtml += `</div>`;
