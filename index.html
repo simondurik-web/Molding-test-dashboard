@@ -208,6 +208,8 @@
         .status-btn { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.2s; border: 1px solid; }
         .status-btn.pending { border-color: var(--warning); color: var(--warning); background: transparent; }
         .status-btn.pending.active { background: var(--warning); color: #1a202c; }
+        .status-btn.completed { border-color: #48bb78; color: #48bb78; background: transparent; }
+        .status-btn.completed.active { background: #48bb78; color: white; }
         .status-btn.staged { border-color: var(--staged-blue); color: var(--staged-blue); background: transparent; }
         .status-btn.staged.active { background: var(--staged-blue); color: white; }
         .status-btn.wip { border-color: var(--teal); color: var(--teal); background: transparent; }
@@ -233,6 +235,7 @@
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge.shipped { background: linear-gradient(135deg, var(--success) 0%, #2f855a 100%); color: white; }
         .badge.pending { background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%); color: #1a202c; }
+        .badge.completed { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }
         .badge.staged { background: linear-gradient(135deg, var(--staged-blue) 0%, #3182ce 100%); color: white; }
         .badge.wip { background: linear-gradient(135deg, var(--teal) 0%, #2c7a7b 100%); color: white; }
         .badge.urgent { background: linear-gradient(135deg, var(--danger) 0%, #c53030 100%); color: white; }
@@ -1472,6 +1475,9 @@
             body.tablet-portrait .orders-queue-toolbar { display: none !important; }
             body.tablet-portrait .ai-chat-fab { display: none !important; }
             body.tablet-portrait .menu-toggle { display: none !important; }
+            body.tablet-portrait #orders-completed .toolbar { display: none !important; }
+            body.tablet-portrait #orders-completed .stats-grid { display: none !important; }
+            body.tablet-portrait #orders-completed .page-header { padding-top: 50px; }
             body.tablet-portrait #orders-staged .toolbar { display: none !important; }
             body.tablet-portrait #orders-staged .stats-grid { display: none !important; }
             body.tablet-portrait #orders-staged .page-header { padding-top: 50px; }
@@ -1740,6 +1746,9 @@
             body.mobile-mode .orders-queue-toolbar { display: none !important; }
             body.mobile-mode .ai-chat-fab { display: none !important; }
             body.mobile-mode .menu-toggle { display: none !important; }
+            body.mobile-mode #orders-completed .toolbar { display: none !important; }
+            body.mobile-mode #orders-completed .stats-grid { display: none !important; }
+            body.mobile-mode #orders-completed .page-header { padding-top: 50px; }
             body.mobile-mode #orders-staged .toolbar { display: none !important; }
             body.mobile-mode #orders-staged .stats-grid { display: none !important; }
             body.mobile-mode #orders-staged .page-header { padding-top: 50px; }
@@ -1994,6 +2003,7 @@
             <div class="nav-item" data-page="orders-data" onclick="navigateTo('orders-data')"><span class="icon">📋</span> <span data-i18n="nav.ordersData">Orders Data</span></div>
             <div class="nav-item sub-item" data-page="production-make" onclick="navigateTo('production-make')"><span class="icon">🏭</span> <span data-i18n="nav.productionMake">Need to Make</span></div>
             <div class="nav-item sub-item" data-page="orders-queue" onclick="navigateTo('orders-queue')"><span class="icon">📦</span> <span data-i18n="nav.ordersQueue">Need to Package</span></div>
+            <div class="nav-item sub-item" data-page="orders-completed" onclick="navigateTo('orders-completed')"><span class="icon">✅</span> <span data-i18n="nav.ordersCompleted">Completed</span></div>
             <div class="nav-item sub-item" data-page="orders-staged" onclick="navigateTo('orders-staged')"><span class="icon">📦</span> <span data-i18n="nav.ordersStaged">Ready to Ship</span></div>
             <div class="nav-item sub-item" data-page="orders-shipped" onclick="navigateTo('orders-shipped')"><span class="icon">🚚</span> <span data-i18n="nav.ordersShipped">Shipped</span></div>
             <div class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><span class="icon">📦</span> <span data-i18n="nav.inventory">Inventory</span></div>
@@ -2109,6 +2119,7 @@
                     <label data-i18n="ui.status">Status:</label>
                     <button class="status-btn pending active" id="ordersDataStatusPending" onclick="toggleOrdersDataStatus('pending')"><span data-i18n="status.needToMake">Need to Make</span></button>
                     <button class="status-btn wip active" id="ordersDataStatusWip" onclick="toggleOrdersDataStatus('wip')"><span data-i18n="status.making">Making</span></button>
+                    <button class="status-btn completed active" id="ordersDataStatusCompleted" onclick="toggleOrdersDataStatus('completed')"><span data-i18n="status.completed">Completed</span></button>
                     <button class="status-btn staged active" id="ordersDataStatusStaged" onclick="toggleOrdersDataStatus('staged')"><span data-i18n="status.readyToShip">Ready to Ship</span></button>
                     <button class="status-btn shipped" id="ordersDataStatusShipped" onclick="toggleOrdersDataStatus('shipped')"><span data-i18n="status.shipped">Shipped</span></button>
                 </div>
@@ -2122,6 +2133,7 @@
                 <div class="stat-card"><div class="label" data-i18n="stats.totalOrders">Total Orders</div><div class="value" id="ordersDataTotalOrders">-</div><div class="sub" id="ordersDataTotalUnits">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.needToMake">Need to Make</div><div class="value warning" id="ordersDataNeedToMake">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.making">Making</div><div class="value" style="color:var(--teal);" id="ordersDataMaking">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.completed">Completed</div><div class="value" style="color:var(--accent);" id="ordersDataCompleted">-</div></div>
                 <div class="stat-card"><div class="label" data-i18n="stats.readyToShip">Ready to Ship</div><div class="value positive" id="ordersDataReadyToShip">-</div></div>
             </div>
             <div class="chart-container">
@@ -2251,6 +2263,36 @@
                 <div class="chart-header" style="padding:4px 12px;"><h3 data-i18n="table.ordersToMake" style="font-size:13px;">Orders to Make</h3><span style="color:var(--text-secondary);font-size:11px;" id="ordersQueueTableCount">-</span></div>
                 <div class="scrollable-table" style="max-height:calc(100vh - 100px);">
                     <table class="data-table" style="font-size:12px;"><thead><tr id="ordersQueueTableHeader"></tr></thead><tbody id="ordersQueueTableBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+        <!-- ORDERS COMPLETED PAGE -->
+        <div id="orders-completed" class="page has-card-view">
+            <div class="page-header">
+                <div><h2 data-i18n="ordersCompleted.title">Completed Orders</h2><p data-i18n="ordersCompleted.subtitle">Orders with all pallets logged, awaiting staging</p></div>
+                <button class="toolbar-btn" onclick="navigateTo('main')">←  Back</button>
+            </div>
+            <div class="toolbar">
+                <div class="toolbar-group category-filters">
+                    <label data-i18n="ui.category">Category:</label>
+                    <button class="category-btn rolltech active" id="ordersCompletedBtnRollTech" onclick="toggleOrdersCompletedCategory('rolltech')"><span class="indicator"></span> <span data-i18n="category.rollTech">Roll Tech</span></button>
+                    <button class="category-btn molding active" id="ordersCompletedBtnMolding" onclick="toggleOrdersCompletedCategory('molding')"><span class="indicator"></span> <span data-i18n="category.molding">Molding</span></button>
+                    <button class="category-btn snappad active" id="ordersCompletedBtnSnapPad" onclick="toggleOrdersCompletedCategory('snappad')"><span class="indicator"></span> <span data-i18n="category.snappad">Snap Pad</span></button>
+                </div>
+                <button class="toolbar-btn clear-all-filters-btn" id="ordersCompletedClearFiltersBtn" onclick="clearAllTableFilters('ordersCompleted')">🗑 <span data-i18n="filter.clearFilters">Clear Filters</span></button>
+                <button class="toolbar-btn columns-btn" id="ordersCompletedColumnsBtn" onclick="openColumnToggle('ordersCompleted')">⚙️ <span data-i18n="ui.columns">Columns</span></button>
+                <div class="toolbar-spacer"></div>
+                <input type="text" class="search-box" id="ordersCompletedSearch" data-i18n-placeholder="ui.search" placeholder="Search..." oninput="filterOrdersCompletedTable()">
+                <div class="export-dropdown"><button class="toolbar-btn" onclick="toggleExportDropdown(this)">📥 <span data-i18n="ui.export">Export</span> ▾</button><div class="export-dropdown-content"><a onclick="exportOrdersCompletedToCSV();closeExportDropdowns()">📄 CSV</a><a onclick="exportOrdersCompletedToExcel();closeExportDropdowns()">📊 Excel</a></div></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label" data-i18n="stats.completedOrders">Completed Orders</div><div class="value" id="ordersCompletedTotalOrders">-</div><div class="sub" id="ordersCompletedTotalUnits">-</div></div>
+                <div class="stat-card"><div class="label" data-i18n="stats.customers">Customers</div><div class="value" id="ordersCompletedCustomers">-</div></div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-header"><h3 data-i18n="ordersCompleted.tableTitle">Completed Orders</h3><span style="color:var(--text-secondary);font-size:12px;" id="ordersCompletedTableCount">-</span></div>
+                <div class="scrollable-table" style="max-height:calc(100vh - 340px);">
+                    <table class="data-table"><thead><tr id="ordersCompletedTableHeader"></tr></thead><tbody id="ordersCompletedTableBody"></tbody></table>
                 </div>
             </div>
         </div>
@@ -3212,6 +3254,7 @@
                 'nav.ordersData': 'Orders Data',
                 'nav.productionMake': 'Need to Make',
                 'nav.ordersQueue': 'Need to Package',
+                'nav.ordersCompleted': 'Completed',
                 'nav.ordersStaged': 'Ready to Ship',
                 'nav.ordersShipped': 'Shipped',
                 'nav.inventory': 'Inventory',
@@ -3278,6 +3321,8 @@
                 'main.subtitle': 'Real-time overview of manufacturing operations',
                 'stats.needToMake': 'Need to Make',
                 'stats.making': 'Making',
+                'stats.completed': 'Completed',
+                'stats.completedOrders': 'Completed Orders',
                 'stats.readyToShip': 'Ready to Ship',
                 'stats.urgent': 'Urgent',
                 'stats.totalUnits': 'Total Units',
@@ -3286,6 +3331,7 @@
                 'stats.missingParts': 'Missing Parts',
                 'status.needToMake': 'Need to Make',
                 'status.making': 'Making',
+                'status.completed': 'Completed',
                 'status.readyToShip': 'Ready to Ship',
                 'status.shipped': 'Shipped',
                 'status.urgent': 'URGENT',
@@ -3306,6 +3352,9 @@
                 'ordersData.subtitle': 'Complete order database with all statuses',
                 'ordersQueue.title': 'Orders Queue - Need to Make',
                 'ordersQueue.subtitle': 'Orders pending production (Pending + Approved status)',
+                'ordersCompleted.title': 'Completed Orders',
+                'ordersCompleted.subtitle': 'Orders with all pallets logged, awaiting staging',
+                'ordersCompleted.tableTitle': 'Completed Orders',
                 'ordersStaged.title': 'Staged Orders - Ready to Ship',
                 'ordersShipped.title': 'Shipped Orders History',
                 'prod.missingMsg': 'orders have missing components.',
@@ -3537,6 +3586,7 @@
                 'nav.ordersData': 'Datos de Órdenes',
                 'nav.productionMake': 'Por Fabricar',
                 'nav.ordersQueue': 'Por Empacar',
+                'nav.ordersCompleted': 'Completado',
                 'nav.ordersStaged': 'Listo para Enviar',
                 'nav.ordersShipped': 'Enviados',
                 'nav.inventory': 'Inventario',
@@ -3603,6 +3653,8 @@
                 'main.subtitle': 'Vista en tiempo real de las operaciones de manufactura',
                 'stats.needToMake': 'Por Fabricar',
                 'stats.making': 'Fabricando',
+                'stats.completed': 'Completado',
+                'stats.completedOrders': 'Órdenes Completadas',
                 'stats.readyToShip': 'Listo para Enviar',
                 'stats.urgent': 'Urgente',
                 'stats.totalUnits': 'Unidades Totales',
@@ -3611,6 +3663,7 @@
                 'stats.missingParts': 'Partes Faltantes',
                 'status.needToMake': 'Por Fabricar',
                 'status.making': 'Fabricando',
+                'status.completed': 'Completado',
                 'status.readyToShip': 'Listo para Enviar',
                 'status.shipped': 'Enviado',
                 'status.urgent': 'URGENTE',
@@ -3631,6 +3684,9 @@
                 'ordersData.subtitle': 'Base de datos completa de órdenes',
                 'ordersQueue.title': 'Cola de Órdenes - Por Fabricar',
                 'ordersQueue.subtitle': 'Órdenes pendientes de producción',
+                'ordersCompleted.title': 'Órdenes Completadas',
+                'ordersCompleted.subtitle': 'Órdenes con todas las paletas registradas, pendientes de staging',
+                'ordersCompleted.tableTitle': 'Órdenes Completadas',
                 'ordersStaged.title': 'Órdenes en Staging - Listas para Enviar',
                 'ordersShipped.title': 'Historial de Órdenes Enviadas',
                 'prod.missingMsg': 'órdenes tienen componentes faltantes.',
@@ -3880,6 +3936,7 @@
             if (currentPage.startsWith('orders-')) {
                 if (currentPage === 'orders-data') updateOrdersDataPage();
                 else if (currentPage === 'orders-queue') updateOrdersQueuePage();
+                else if (currentPage === 'orders-completed') updateOrdersCompletedPage();
                 else if (currentPage === 'orders-staged') updateOrdersStagedPage();
                 else if (currentPage === 'orders-shipped') updateOrdersShippedPage();
             } else if (currentPage === 'inventory') updateInventoryPage();
@@ -3903,7 +3960,10 @@
             // Re-render mobile cards if in mobile mode
             const isCardMode = document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait');
             if (isCardMode) {
-                if (typeof renderMobileOrderCards === 'function') renderMobileOrderCards('orders-queue');
+                if (typeof renderMobileOrderCards === 'function') {
+                    renderMobileOrderCards('orders-queue');
+                    renderMobileOrderCards('orders-completed');
+                }
                 if (typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
                 if (typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
             }
@@ -4119,12 +4179,12 @@
         let stagedRecordsSort = { field: null, asc: true };
         
         // English headers for the new sections (mapped from bilingual spreadsheet headers)
-        const PALLET_RECORDS_HEADERS = ['Timestamp', 'Order Number', 'Pallet Number', 'Pallet Picture 1', 'Pallet Weight (lbs)', 'Pallet Dimensions', 'Pallet Picture 2', 'Pallet Picture 3', 'Pallet Picture 4', 'Pallet Picture 5', 'Parts/Boxes per Pallet', 'Customer', 'IF Number', 'Category'];
+        const PALLET_RECORDS_HEADERS = ['Timestamp', 'Order Number', 'Pallet Number', 'Pallet Picture 1', 'Pallet Weight (lbs)', 'Pallet Dimensions', 'Pallet Picture 2', 'Pallet Picture 3', 'Pallet Picture 4', 'Pallet Picture 5', 'Parts/Boxes per Pallet', 'Customer', 'IF Number', 'Category', 'Recorded By'];
         const SHIPPING_RECORDS_HEADERS = ['Timestamp', 'Carrier', 'IF Number', 'System', 'Order Number', 'Shipment Pictures', 'Paperwork Pictures', 'Close Up Pictures', 'Customer', 'Category'];
         const STAGED_RECORDS_HEADERS = ['Timestamp', 'Line Number', 'IF Number', 'Order Quantity', 'Number of Pallets', 'Staged By', 'Comments', 'Order Status', 'Staged in Fusion', 'Pallet Dimensions', 'Pallet Weight (lbs)', 'Confirmed Staged', 'Fusion Pictures', 'Customer', 'Category'];
         
         // Spanish headers for the new sections
-        const PALLET_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Orden', 'Número de Paleta', 'Foto de Paleta 1', 'Peso de Paleta (lbs)', 'Dimensiones de Paleta', 'Foto de Paleta 2', 'Foto de Paleta 3', 'Foto de Paleta 4', 'Foto de Paleta 5', 'Partes/Cajas por Paleta', 'Cliente', 'Número IF', 'Categoría'];
+        const PALLET_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Orden', 'Número de Paleta', 'Foto de Paleta 1', 'Peso de Paleta (lbs)', 'Dimensiones de Paleta', 'Foto de Paleta 2', 'Foto de Paleta 3', 'Foto de Paleta 4', 'Foto de Paleta 5', 'Partes/Cajas por Paleta', 'Cliente', 'Número IF', 'Categoría', 'Registrado Por'];
         const SHIPPING_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Transportista', 'Número IF', 'Sistema', 'Número de Orden', 'Fotos de Envío', 'Fotos de Papeleo', 'Fotos de Primer Plano', 'Cliente', 'Categoría'];
         const STAGED_RECORDS_HEADERS_ES = ['Marca de tiempo', 'Número de Línea', 'Número IF', 'Cantidad de Orden', 'Número de Paletas', 'Staging por', 'Comentarios', 'Estado de Orden', 'Staging en Fusion', 'Dimensiones de Paleta', 'Peso de Paleta (lbs)', 'Staging Confirmado', 'Fotos de Fusion', 'Cliente', 'Categoría'];
         
@@ -4149,8 +4209,10 @@
         let currentPalletOrder = null; // Currently viewed pallet order
         
         // Filter states for each page
-        let ordersDataFilters = { categories: { rolltech: true, molding: true, snappad: true }, statuses: { pending: true, wip: true, staged: true, shipped: false } };
+        let ordersDataFilters = { categories: { rolltech: true, molding: true, snappad: true }, statuses: { pending: true, wip: true, completed: true, staged: true, shipped: false } };
         let ordersQueueFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let ordersCompletedFilters = { categories: { rolltech: true, molding: true, snappad: true } };
+        let ordersCompletedSort = { field: null, asc: true };
         let ordersStagedFilters = { categories: { rolltech: true, molding: true, snappad: true } };
         let ordersShippedFilters = { categories: { rolltech: true, molding: true, snappad: true }, fromDate: null, toDate: null };
         let salesFilters = { categories: { rolltech: true, molding: true, snappad: true } };
@@ -4308,6 +4370,7 @@
             if (status.includes('cancel')) return 'cancelled';
             if (status.includes('closed')) return 'closed';
             if (status.includes('pending') || status.includes('approved')) return 'pending';
+            if (status.includes('completed')) return 'completed';
             if (status.includes('staged')) return 'staged';
             if (status.includes('work in progress') || status.includes('wip')) return 'wip';
             if (status.includes('shipped') || status.includes('invoiced') || status.includes('to bill')) return 'shipped';
@@ -4319,6 +4382,7 @@
             const s = (status || '').toLowerCase();
             if (s.includes('shipped') || s === 'shipped') return `<span class="badge shipped">${t('status.shipped')}</span>`;
             if (s.includes('pending') || s.includes('approved') || s === 'pending') return `<span class="badge pending">${t('status.needToMake')}</span>`;
+            if (s.includes('completed') || s === 'completed') return `<span class="badge completed">${t('status.completed')}</span>`;
             if (s.includes('staged') || s === 'staged') return `<span class="badge staged">${t('status.readyToShip')}</span>`;
             if (s.includes('work in progress') || s.includes('wip') || s === 'wip') return `<span class="badge wip">${t('status.making')}</span>`;
             return `<span class="badge">${status || '-'}</span>`;
@@ -4373,6 +4437,7 @@
                 case 'customers': sortCustomersTable(columnKey); break;
                 case 'ordersData': sortOrdersDataTable(columnKey); break;
                 case 'ordersQueue': sortOrdersQueueTable(columnKey); break;
+                case 'ordersCompleted': sortOrdersCompletedTable(columnKey); break;
                 case 'ordersStaged': sortOrdersStagedTable(columnKey); break;
                 case 'ordersShipped': sortOrdersShippedTable(columnKey); break;
                 case 'inventory': sortInvTable(columnKey); break;
@@ -4515,6 +4580,7 @@
                 case 'customers': updateSalesCustomersPage(); break;
                 case 'ordersData': updateOrdersDataPage(); break;
                 case 'ordersQueue': updateOrdersQueuePage(); break;
+                case 'ordersCompleted': updateOrdersCompletedPage(); break;
                 case 'ordersStaged': updateOrdersStagedPage(); break;
                 case 'ordersShipped': updateOrdersShippedPage(); break;
                 case 'inventory': renderInvTable(); break;
@@ -4935,6 +5001,7 @@
                     return getUniqueCustomersColumnValues(columnKey);
                 case 'ordersData':
                 case 'ordersQueue':
+                case 'ordersCompleted':
                 case 'ordersStaged':
                 case 'ordersShipped':
                     return getUniqueOrdersColumnValues(tableId, columnKey);
@@ -5051,6 +5118,7 @@
             let data = allData;
             // Filter based on table type
             if (tableId === 'ordersQueue') data = data.filter(r => ordersQueueFilters.categories[getCategory(r)] && getStatus(r) === 'pending');
+            else if (tableId === 'ordersCompleted') data = data.filter(r => ordersCompletedFilters.categories[getCategory(r)] && getStatus(r) === 'completed');
             else if (tableId === 'ordersStaged') data = data.filter(r => ordersStagedFilters.categories[getCategory(r)] && getStatus(r) === 'staged');
             else if (tableId === 'ordersShipped') data = data.filter(r => ordersShippedFilters.categories[getCategory(r)] && getStatus(r) === 'shipped');
             else if (tableId === 'ordersData') data = data.filter(r => ordersDataFilters.categories[getCategory(r)] && ordersDataFilters.statuses[getStatus(r)]);
@@ -5854,6 +5922,7 @@
                 case 'orders-data': updateOrdersDataPage(); break;
                 case 'production-make': updateProdMakePage(); break;
                 case 'orders-queue': updateOrdersQueuePage(); break;
+                case 'orders-completed': updateOrdersCompletedPage(); break;
                 case 'orders-staged': updateOrdersStagedPage(); break;
                 case 'orders-shipped': updateOrdersShippedPage(); break;
                 case 'inventory': updateInventoryPage(); break;
@@ -5881,6 +5950,7 @@
             if (isCardMode) {
                 setTimeout(() => {
                     if (page === 'orders-queue' && typeof renderMobileOrderCards === 'function') renderMobileOrderCards('orders-queue');
+                    else if (page === 'orders-completed' && typeof renderMobileOrderCards === 'function') renderMobileOrderCards('orders-completed');
                     else if (page === 'orders-staged' && typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
                     else if (page === 'inventory' && typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
                 }, 100);
@@ -6022,12 +6092,14 @@
             const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
             const needToMake = data.filter(r => getStatus(r) === 'pending').length;
             const making = data.filter(r => getStatus(r) === 'wip').length;
+            const completed = data.filter(r => getStatus(r) === 'completed').length;
             const readyToShip = data.filter(r => getStatus(r) === 'staged').length;
             
             document.getElementById('ordersDataTotalOrders').textContent = formatNumber(data.length);
             document.getElementById('ordersDataTotalUnits').textContent = `${formatNumber(totalQty)} ${t('ui.units')}`;
             document.getElementById('ordersDataNeedToMake').textContent = formatNumber(needToMake);
             document.getElementById('ordersDataMaking').textContent = formatNumber(making);
+            document.getElementById('ordersDataCompleted').textContent = formatNumber(completed);
             document.getElementById('ordersDataReadyToShip').textContent = formatNumber(readyToShip);
             document.getElementById('ordersDataLastUpdated').textContent = new Date().toLocaleTimeString();
             
@@ -6866,6 +6938,150 @@
             const rows = data.map(r => visibleCols.map(c => '"' + ((c.getValue(r) === null || c.getValue(r) === undefined ? '' : c.getValue(r)).toString().replace(/"/g, '""')) + '"').join(','));
             downloadCSV([headers.join(','), ...rows].join('\n'), 'orders_queue.csv');
         }
+
+        // ============================================================
+        // ORDERS COMPLETED PAGE
+        // ============================================================
+        function toggleOrdersCompletedCategory(cat) {
+            ordersCompletedFilters.categories[cat] = !ordersCompletedFilters.categories[cat];
+            if (!ordersCompletedFilters.categories.rolltech && !ordersCompletedFilters.categories.molding && !ordersCompletedFilters.categories.snappad) { ordersCompletedFilters.categories[cat] = true; return; }
+            document.getElementById('ordersCompletedBtnRollTech').classList.toggle('active', ordersCompletedFilters.categories.rolltech);
+            document.getElementById('ordersCompletedBtnMolding').classList.toggle('active', ordersCompletedFilters.categories.molding);
+            document.getElementById('ordersCompletedBtnSnapPad').classList.toggle('active', ordersCompletedFilters.categories.snappad);
+            updateOrdersCompletedPage();
+        }
+        function updateOrdersCompletedPage() {
+            const data = allData.filter(r => {
+                const cat = getCategory(r);
+                const status = getStatus(r);
+                return ordersCompletedFilters.categories[cat] && status === 'completed';
+            });
+            
+            const totalQty = data.reduce((s, r) => s + parseNumber(getVal(r, 'QTY')), 0);
+            const customers = new Set(data.map(r => getVal(r, 'CUSTOMER'))).size;
+            
+            document.getElementById('ordersCompletedTotalOrders').textContent = formatNumber(data.length);
+            document.getElementById('ordersCompletedTotalUnits').textContent = `${formatNumber(totalQty)} ${t('ui.units')}`;
+            document.getElementById('ordersCompletedCustomers').textContent = formatNumber(customers);
+            
+            renderOrdersCompletedTableHeader();
+            renderOrdersCompletedTable(data);
+        }
+        
+        function renderOrdersCompletedTableHeader() {
+            initTableFilters('ordersCompleted');
+            initHiddenColumns('ordersCompleted');
+            const headers = [
+                { key: 'line', label: t('col.line') }, { key: 'ifNum', label: t('col.ifNum') }, { key: 'poNum', label: t('col.poNum') },
+                { key: 'customer', label: t('col.customer') },
+                { key: 'part', label: t('col.part') }, { key: 'qty', label: t('col.qty') },
+                { key: 'packaging', label: t('col.packaging') },
+                { key: 'dueDate', label: t('col.dueDate') }, { key: 'daysUntil', label: t('col.daysUntil') },
+                { key: 'assigned', label: t('col.assigned') }, { key: 'pallets', label: '📦' }
+            ];
+            document.getElementById('ordersCompletedTableHeader').innerHTML = headers.map(h => {
+                if (isColumnHidden('ordersCompleted', h.key)) return '';
+                return createFilterHeader('ordersCompleted', h.key, h.label, true);
+            }).join('');
+        }
+        
+        function renderOrdersCompletedTable(data) {
+            renderOrdersCompletedTableHeader();
+            
+            let sorted = [...data].filter(r => {
+                if (!passesColumnFilter('ordersCompleted', 'line', getVal(r, 'LINE') || '-')) return false;
+                if (!passesColumnFilter('ordersCompleted', 'ifNum', getVal(r, 'IF_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersCompleted', 'poNum', getVal(r, 'PO_NUM') || '-')) return false;
+                if (!passesColumnFilter('ordersCompleted', 'customer', getVal(r, 'CUSTOMER') || '-')) return false;
+                if (!passesColumnFilter('ordersCompleted', 'part', getVal(r, 'PART') || '-')) return false;
+                if (!passesColumnFilter('ordersCompleted', 'qty', String(parseNumber(getVal(r, 'QTY')) || '-'))) return false;
+                if (!passesColumnFilter('ordersCompleted', 'packaging', getVal(r, 'PACKAGING') || '-')) return false;
+                if (!passesColumnFilter('ordersCompleted', 'assigned', getVal(r, 'ASSIGNED') || '-')) return false;
+                return true;
+            });
+            
+            // Search filter
+            const search = (document.getElementById('ordersCompletedSearch')?.value || '').toLowerCase();
+            if (search) {
+                sorted = sorted.filter(r => {
+                    return [getVal(r, 'LINE'), getVal(r, 'IF_NUM'), getVal(r, 'PO_NUM'), getVal(r, 'CUSTOMER'), getVal(r, 'PART'), getVal(r, 'ASSIGNED')]
+                        .some(v => v && String(v).toLowerCase().includes(search));
+                });
+            }
+            
+            // Sort
+            if (ordersCompletedSort.field) {
+                sorted.sort((a, b) => {
+                    let va, vb;
+                    switch(ordersCompletedSort.field) {
+                        case 'line': va = parseNumber(getVal(a, 'LINE')); vb = parseNumber(getVal(b, 'LINE')); break;
+                        case 'ifNum': va = getVal(a, 'IF_NUM') || ''; vb = getVal(b, 'IF_NUM') || ''; break;
+                        case 'customer': va = getVal(a, 'CUSTOMER') || ''; vb = getVal(b, 'CUSTOMER') || ''; break;
+                        case 'part': va = getVal(a, 'PART') || ''; vb = getVal(b, 'PART') || ''; break;
+                        case 'qty': va = parseNumber(getVal(a, 'QTY')); vb = parseNumber(getVal(b, 'QTY')); break;
+                        case 'dueDate': va = parseDate(a[COL.REQUESTED_DATE]) || new Date(0); vb = parseDate(b[COL.REQUESTED_DATE]) || new Date(0); break;
+                        case 'daysUntil': va = parseNumber(getVal(a, 'DAYS_UNTIL')); vb = parseNumber(getVal(b, 'DAYS_UNTIL')); break;
+                        default: va = getVal(a, ordersCompletedSort.field) || ''; vb = getVal(b, ordersCompletedSort.field) || '';
+                    }
+                    if (typeof va === 'string') return ordersCompletedSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+                    return ordersCompletedSort.asc ? va - vb : vb - va;
+                });
+            }
+            
+            document.getElementById('ordersCompletedTableCount').textContent = `${sorted.length} orders`;
+            
+            const tbody = document.getElementById('ordersCompletedTableBody');
+            tbody.innerHTML = sorted.map(r => {
+                const line = getVal(r, 'LINE');
+                const pallets = getPalletDataForOrder(line);
+                const hasPallets = pallets.length > 0;
+                const totalWeight = hasPallets ? pallets.reduce((s, p) => s + parseNumber(p.weight), 0) : 0;
+                const dims = hasPallets ? pallets[0].dimensions : '';
+                const dueDate = r[COL.REQUESTED_DATE] ? formatDate(r[COL.REQUESTED_DATE]) : '-';
+                const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
+                const daysClass = daysUntil <= 0 ? 'overdue' : daysUntil <= 3 ? 'urgent' : daysUntil <= 7 ? 'warning' : '';
+                
+                return '<tr>' + [
+                    { key: 'line', val: line || '-' },
+                    { key: 'ifNum', val: getVal(r, 'IF_NUM') || '-' },
+                    { key: 'poNum', val: getVal(r, 'PO_NUM') || '-' },
+                    { key: 'customer', val: getVal(r, 'CUSTOMER') || '-' },
+                    { key: 'part', val: getVal(r, 'PART') || '-' },
+                    { key: 'qty', val: formatNumber(parseNumber(getVal(r, 'QTY'))) },
+                    { key: 'packaging', val: getVal(r, 'PACKAGING') || '-' },
+                    { key: 'dueDate', val: dueDate },
+                    { key: 'daysUntil', val: `<span class="${daysClass}">${daysUntil}</span>` },
+                    { key: 'assigned', val: getVal(r, 'ASSIGNED') || '-' },
+                    { key: 'pallets', val: hasPallets ? `📦 ${pallets.length}` : '-' }
+                ].map(c => isColumnHidden('ordersCompleted', c.key) ? '' : `<td>${c.val}</td>`).join('') + '</tr>';
+            }).join('');
+            
+            updateFilterButtonState('ordersCompleted');
+        }
+        
+        function sortOrdersCompletedTable(field) {
+            if (ordersCompletedSort.field === field) { ordersCompletedSort.asc = !ordersCompletedSort.asc; }
+            else { ordersCompletedSort.field = field; ordersCompletedSort.asc = true; }
+            updateOrdersCompletedPage();
+        }
+        function filterOrdersCompletedTable() { updateOrdersCompletedPage(); }
+        function exportOrdersCompletedToCSV() {
+            const data = allData.filter(r => ordersCompletedFilters.categories[getCategory(r)] && getStatus(r) === 'completed');
+            const cols = [
+                { header: 'Line #', getValue: r => getVal(r, 'LINE') },
+                { header: 'IF Number', getValue: r => getVal(r, 'IF_NUM') },
+                { header: 'PO Number', getValue: r => getVal(r, 'PO_NUM') },
+                { header: 'Customer', getValue: r => getVal(r, 'CUSTOMER') },
+                { header: 'Part', getValue: r => getVal(r, 'PART') },
+                { header: 'Qty', getValue: r => getVal(r, 'QTY') },
+                { header: 'Packaging', getValue: r => getVal(r, 'PACKAGING') },
+                { header: 'Assigned', getValue: r => getVal(r, 'ASSIGNED') }
+            ];
+            const headers = cols.map(c => c.header);
+            const rows = data.map(r => cols.map(c => '"' + ((c.getValue(r) === null || c.getValue(r) === undefined ? '' : c.getValue(r)).toString().replace(/"/g, '""')) + '"').join(','));
+            downloadCSV([headers.join(','), ...rows].join('\n'), 'orders_completed.csv');
+        }
+        function exportOrdersCompletedToExcel() { exportOrdersCompletedToCSV(); }
 
         // ============================================================
         // ORDERS STAGED PAGE (Ready to Ship)
@@ -12830,7 +13046,8 @@
                         'Parts/Boxes per Pallet': findVal('parts/boxes per pallet', 'partes o cajas por paleta'),
                         'Customer': findVal('customer', 'cliente'),
                         'IF Number': findVal('if number', 'numero if'),
-                        'Category': findVal('category', 'categoria')
+                        'Category': findVal('category', 'categoria'),
+                        'Recorded By': findVal('recorded by', 'registrado por', 'who recorded', 'name')
                     };
                 }).filter(row => {
                     // Keep rows that have at least a timestamp or IF number
@@ -14560,6 +14777,7 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             if (document.body.classList.contains('mobile-mode') || document.body.classList.contains('tablet-portrait')) {
                 const currentPage = document.querySelector('.page:not([style*="display: none"])')?.id || 'main';
                 if (currentPage === 'orders-queue') renderMobileOrderCards('orders-queue');
+                else if (currentPage === 'orders-completed') renderMobileOrderCards('orders-completed');
                 else if (currentPage === 'orders-staged' && typeof renderMobileStagedCards === 'function') renderMobileStagedCards();
                 else if (currentPage === 'inventory' && typeof renderMobileInventoryCards === 'function') renderMobileInventoryCards();
             }
@@ -14577,7 +14795,7 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
         navigateTo(page);
         
         // Render mobile cards for relevant pages
-        if (['orders-queue', 'orders-staged', 'orders-shipped'].includes(page)) {
+        if (['orders-queue', 'orders-completed', 'orders-staged', 'orders-shipped'].includes(page)) {
             renderMobileOrderCards(page);
         }
     }
@@ -14650,6 +14868,12 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                 // Also check category filters (Roll Tech / Molding / Snap Pad buttons)
                 const catOk = typeof ordersQueueFilters !== 'undefined' ? ordersQueueFilters.categories[cat] : true;
                 return (status === 'pending' || status === 'wip') && catOk;
+            };
+        } else if (pageType === 'orders-completed') {
+            filterFn = row => {
+                const cat = getCategory(row);
+                const catOk = typeof ordersCompletedFilters !== 'undefined' ? ordersCompletedFilters.categories[cat] : true;
+                return getStatus(row) === 'completed' && catOk;
             };
         } else if (pageType === 'orders-staged') {
             filterFn = row => getStatus(row) === 'staged';
@@ -15083,6 +15307,8 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
                 const status = getStatus(row);
                 return status === 'pending' || status === 'wip';
             };
+        } else if (pageType === 'orders-completed') {
+            filterFn = row => getStatus(row) === 'completed';
         } else if (pageType === 'orders-staged') {
             filterFn = row => getStatus(row) === 'staged';
         } else if (pageType === 'orders-shipped') {
