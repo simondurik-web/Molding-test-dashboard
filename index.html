@@ -13086,8 +13086,58 @@
                     return row['Timestamp'] || row['IF Number'] || row['Order Number'];
                 });
                 
+                console.log('Loaded Pallet Records (Forms):', palletRecordsData.length, 'rows');
+                
+                // Also load App Pallet Records (new production app data) and merge
+                try {
+                    const appRawData = await fetchSheetData(APP_PALLET_RECORDS_GID);
+                    if (appRawData && appRawData.length > 0) {
+                        const appRecords = appRawData.map(row => {
+                            const keys = Object.keys(row);
+                            // App Pallet Records columns: Timestamp(A), Line#(B), Pallet#(C), Weight(D), Parts/Boxes(E), Length(F), Width(G), Height(H), Photo1(I), Photo2(J), Photo3(K), Photo4(L), RecordedBy(M), EditedBy(N), EditTimestamp(O), InternalStatus(P)
+                            const status = row[keys[15]] || '';
+                            if (status === 'DELETED' || String(row[keys[2]]).trim() === '0') return null; // Skip deleted and STARTED markers
+                            
+                            const length = row[keys[5]] || '';
+                            const width = row[keys[6]] || '';
+                            const height = row[keys[7]] || '';
+                            const dims = (length && width && height) ? `${length}" x ${width}" x ${height}"` : '';
+                            
+                            // Look up category/customer/IF from allData using line number
+                            const lineNum = String(row[keys[1]] || '').trim();
+                            const orderRow = allData.find(r => String(getVal(r, 'LINE')).trim() === lineNum);
+                            const category = orderRow ? getCategory(orderRow) : '';
+                            const catLabel = category === 'rolltech' ? 'Roll Tech' : category === 'molding' ? 'Molding' : category === 'snappad' ? 'Snap Pad' : '';
+                            
+                            return {
+                                'Timestamp': row[keys[0]] || '',
+                                'Order Number': lineNum,
+                                'Pallet Number': row[keys[2]] || '',
+                                'Pallet Picture 1': row[keys[8]] || '',
+                                'Pallet Weight (lbs)': row[keys[3]] || '',
+                                'Pallet Dimensions': dims,
+                                'Pallet Picture 2': row[keys[9]] || '',
+                                'Pallet Picture 3': row[keys[10]] || '',
+                                'Pallet Picture 4': row[keys[11]] || '',
+                                'Pallet Picture 5': '',
+                                'Parts/Boxes per Pallet': row[keys[4]] || '',
+                                'Customer': orderRow ? getVal(orderRow, 'CUSTOMER') : '',
+                                'IF Number': orderRow ? getVal(orderRow, 'IF_NUM') : '',
+                                'Category': catLabel,
+                                'Recorded By': row[keys[12]] || ''
+                            };
+                        }).filter(r => r && (r['Order Number'] || r['IF Number']));
+                        
+                        console.log('App Pallet Records for table:', appRecords.length, 'rows');
+                        // Merge: app records first
+                        palletRecordsData = [...appRecords, ...palletRecordsData];
+                    }
+                } catch (e) {
+                    console.warn('App Pallet Records load for table failed (non-fatal):', e);
+                }
+                
                 palletRecordsLoaded = true;
-                console.log('Loaded Pallet Records:', palletRecordsData.length, 'rows');
+                console.log('Total Pallet Records:', palletRecordsData.length, 'rows');
                 if (palletRecordsData.length > 0) {
                     console.log('First row sample:', palletRecordsData[0]);
                 }
