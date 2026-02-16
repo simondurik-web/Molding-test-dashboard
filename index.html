@@ -7256,10 +7256,11 @@
         }
         
         // Get pallet data for a specific order (by Line number)
+        // Excludes pallet #0 (STARTED marker) from counts and display
         function getPalletDataForOrder(lineNum) {
             if (!lineNum || !palletData || palletData.length === 0) return [];
             const lineStr = String(lineNum).trim();
-            const matches = palletData.filter(p => String(p.orderNumber).trim() === lineStr);
+            const matches = palletData.filter(p => String(p.orderNumber).trim() === lineStr && String(p.palletNumber).trim() !== '0');
             if (matches.length > 0) {
                 console.log(`Found ${matches.length} pallets for line ${lineStr}`);
             }
