@@ -6175,8 +6175,11 @@
                 const daysUntil = parseNumber(getVal(r, 'DAYS_UNTIL'));
                 const daysClass = daysUntil < 0 ? 'negative' : daysUntil <= 3 ? 'warning-text' : '';
                 const isRollTech = getCategory(r) === 'rolltech';
-                // Only show missing warning for Roll Tech items
-                const isMissing = isRollTech && (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')));
+                const catForMissing = getCategory(r);
+                // Show missing warning for Roll Tech (tire/hub) and Molding/Snap Pad (inventory)
+                const isMissing = isRollTech 
+                    ? (isMissingComponent(getVal(r, 'TIRE')) || isMissingComponent(getVal(r, 'HUB')) || isMissingComponent(getVal(r, 'BEARINGS')))
+                    : ((catForMissing === 'molding' || catForMissing === 'snappad') && !hasEnoughInventory(r));
                 const lineNum = getVal(r, 'LINE') || '-';
                 const status = getStatus(r);
                 // Make all rows clickable to show order details
@@ -6195,10 +6198,38 @@
                 if (!isColumnHidden('ordersData', 'priority')) cells += `<td>${getPriorityBadge(getVal(r, 'PRIORITY'), getVal(r, 'URGENT'))}</td>`;
                 if (!isColumnHidden('ordersData', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
                 if (!isColumnHidden('ordersData', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
-                if (!isColumnHidden('ordersData', 'part')) cells += `<td><strong>${getVal(r, 'PART') || '-'}</strong></td>`;
+                // Part # coloring: Molding/Snap Pad use inventory check
+                const partVal = getVal(r, 'PART') || '-';
+                const cat = getCategory(r);
+                let partCell;
+                if ((cat === 'molding' || cat === 'snappad') && partVal !== '-') {
+                    const enough = hasEnoughInventory(r);
+                    partCell = enough ? `<strong style="color:#48bb78;">${partVal}</strong>` : `<strong style="color:#fc8181;font-weight:900;">${partVal}</strong>`;
+                } else {
+                    partCell = `<strong>${partVal}</strong>`;
+                }
+                // Tire coloring: Roll Tech only — green if in stock, red if missing
+                const tireVal = getVal(r, 'TIRE') || '-';
+                let tireCell;
+                if (isRollTech) {
+                    if (tireVal === '-' || !tireVal) { tireCell = '<span style="color:var(--text-secondary);">-</span>'; }
+                    else { tireCell = hasTire(r) ? `<span style="color:#48bb78;">${tireVal}</span>` : `<strong style="color:#fc8181;">${tireVal}</strong>`; }
+                } else {
+                    tireCell = '<span style="color:var(--text-secondary);">N/A</span>';
+                }
+                // Hub coloring: Roll Tech only
+                const hubVal = getVal(r, 'HUB') || '-';
+                let hubCell;
+                if (isRollTech) {
+                    if (hubVal === '-' || !hubVal) { hubCell = '<span style="color:var(--text-secondary);">-</span>'; }
+                    else { hubCell = hasHub(r) ? `<span style="color:#48bb78;">${hubVal}</span>` : `<strong style="color:#fc8181;">${hubVal}</strong>`; }
+                } else {
+                    hubCell = '<span style="color:var(--text-secondary);">N/A</span>';
+                }
+                if (!isColumnHidden('ordersData', 'part')) cells += `<td>${partCell}</td>`;
                 if (!isColumnHidden('ordersData', 'qty')) cells += `<td>${formatNumber(parseNumber(getVal(r, 'QTY')))}</td>`;
-                if (!isColumnHidden('ordersData', 'tire')) cells += `<td>${formatComponentForCategory(getVal(r, 'TIRE'))}</td>`;
-                if (!isColumnHidden('ordersData', 'hub')) cells += `<td>${formatComponentForCategory(getVal(r, 'HUB'))}</td>`;
+                if (!isColumnHidden('ordersData', 'tire')) cells += `<td>${tireCell}</td>`;
+                if (!isColumnHidden('ordersData', 'hub')) cells += `<td>${hubCell}</td>`;
                 if (!isColumnHidden('ordersData', 'bearings')) cells += `<td>${formatComponentForCategory(getVal(r, 'BEARINGS'))}</td>`;
                 if (!isColumnHidden('ordersData', 'status')) cells += `<td>${getStatusBadge(status)}</td>`;
                 
