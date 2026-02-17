@@ -5334,18 +5334,16 @@
         }
 
         async function fetchSupabase(table, mapping) {
-            // PostgREST caps at 1000 rows by default — paginate to get all
+            // PostgREST max-rows defaults to 1000. Paginate with limit+offset.
             let allRows = [];
             let offset = 0;
-            const pageSize = 10000;
+            const pageSize = 1000;
             while (true) {
-                const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=id`;
+                const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=id&limit=${pageSize}&offset=${offset}`;
                 const res = await fetch(url, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'Range': `${offset}-${offset + pageSize - 1}`,
-                        'Range-Unit': 'items'
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     }
                 });
                 if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
