@@ -6199,10 +6199,12 @@
                 if (!isColumnHidden('ordersData', 'daysUntil')) cells += `<td class="${daysClass}">${daysUntil || '-'}</td>`;
                 if (!isColumnHidden('ordersData', 'customer')) cells += `<td>${getVal(r, 'CUSTOMER') || '-'}</td>`;
                 // Part # coloring: Molding/Snap Pad use inventory check
+                // Skip color coding for staged/ready to ship/shipped/completed — materials already allocated
                 const partVal = getVal(r, 'PART') || '-';
                 const cat = getCategory(r);
+                const skipColorCoding = ['staged', 'ready to ship', 'shipped', 'completed'].includes((status || '').toLowerCase());
                 let partCell;
-                if ((cat === 'molding' || cat === 'snappad') && partVal !== '-') {
+                if (!skipColorCoding && (cat === 'molding' || cat === 'snappad') && partVal !== '-') {
                     const enough = hasEnoughInventory(r);
                     partCell = enough ? `<strong style="color:#48bb78;">${partVal}</strong>` : `<strong style="color:#fc8181;font-weight:900;">${partVal}</strong>`;
                 } else {
@@ -6211,18 +6213,22 @@
                 // Tire coloring: Roll Tech only — green if in stock, red if missing
                 const tireVal = getVal(r, 'TIRE') || '-';
                 let tireCell;
-                if (isRollTech) {
+                if (isRollTech && !skipColorCoding) {
                     if (tireVal === '-' || !tireVal) { tireCell = '<span style="color:var(--text-secondary);">-</span>'; }
                     else { tireCell = hasTire(r) ? `<span style="color:#48bb78;">${tireVal}</span>` : `<strong style="color:#fc8181;">${tireVal}</strong>`; }
+                } else if (isRollTech) {
+                    tireCell = tireVal === '-' || !tireVal ? '<span style="color:var(--text-secondary);">-</span>' : `<span>${tireVal}</span>`;
                 } else {
                     tireCell = '<span style="color:var(--text-secondary);">N/A</span>';
                 }
                 // Hub coloring: Roll Tech only
                 const hubVal = getVal(r, 'HUB') || '-';
                 let hubCell;
-                if (isRollTech) {
+                if (isRollTech && !skipColorCoding) {
                     if (hubVal === '-' || !hubVal) { hubCell = '<span style="color:var(--text-secondary);">-</span>'; }
                     else { hubCell = hasHub(r) ? `<span style="color:#48bb78;">${hubVal}</span>` : `<strong style="color:#fc8181;">${hubVal}</strong>`; }
+                } else if (isRollTech) {
+                    hubCell = hubVal === '-' || !hubVal ? '<span style="color:var(--text-secondary);">-</span>' : `<span>${hubVal}</span>`;
                 } else {
                     hubCell = '<span style="color:var(--text-secondary);">N/A</span>';
                 }
@@ -6233,7 +6239,7 @@
                 if (!isColumnHidden('ordersData', 'bearings')) cells += `<td>${formatComponentForCategory(getVal(r, 'BEARINGS'))}</td>`;
                 if (!isColumnHidden('ordersData', 'status')) cells += `<td>${getStatusBadge(status)}</td>`;
                 
-                return `<tr class="${rowClass}" ${rowClick} style="${isMissing ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
+                return `<tr class="${rowClass}" ${rowClick} style="${(isMissing && !skipColorCoding) ? 'background:rgba(229,62,62,0.1);' : ''}">${cells}</tr>`;
             }).join('');
             
             updateClearAllButton('ordersData');
@@ -15042,12 +15048,14 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const isRollTech = cat === 'rolltech';
             
             // Tire/Hub stock colors (green if have, red if don't) - only for Roll Tech
+            // Skip color coding for staged/ready to ship/shipped/completed
+            const skipMobileColor = ['staged', 'ready to ship', 'shipped', 'completed'].includes((status || '').toLowerCase());
             const tireHasStock = hasTire(row);
             const hubHasStock = hasHub(row);
-            const tireColor = isRollTech ? (tireHasStock ? '#48bb78' : '#fc8181') : 'inherit';
-            const hubColor = isRollTech ? (hubHasStock ? '#48bb78' : '#fc8181') : 'inherit';
-            const tireFontWeight = isRollTech && !tireHasStock ? 'bold' : 'normal';
-            const hubFontWeight = isRollTech && !hubHasStock ? 'bold' : 'normal';
+            const tireColor = (isRollTech && !skipMobileColor) ? (tireHasStock ? '#48bb78' : '#fc8181') : 'inherit';
+            const hubColor = (isRollTech && !skipMobileColor) ? (hubHasStock ? '#48bb78' : '#fc8181') : 'inherit';
+            const tireFontWeight = (isRollTech && !skipMobileColor && !tireHasStock) ? 'bold' : 'normal';
+            const hubFontWeight = (isRollTech && !skipMobileColor && !hubHasStock) ? 'bold' : 'normal';
             
             let cardClass = 'mobile-order-card';
             if (urgent) cardClass += ' urgent';
@@ -15471,12 +15479,14 @@ Always end by redirecting to something production-related. Be helpful AND fun!`;
             const isRollTech = cat === 'rolltech';
             
             // Tire/Hub stock colors (green if have, red if don't) - only for Roll Tech
+            // Skip color coding for staged/ready to ship/shipped/completed
+            const skipMobileColor = ['staged', 'ready to ship', 'shipped', 'completed'].includes((status || '').toLowerCase());
             const tireHasStock = hasTire(row);
             const hubHasStock = hasHub(row);
-            const tireColor = isRollTech ? (tireHasStock ? '#48bb78' : '#fc8181') : 'inherit';
-            const hubColor = isRollTech ? (hubHasStock ? '#48bb78' : '#fc8181') : 'inherit';
-            const tireFontWeight = isRollTech && !tireHasStock ? 'bold' : 'normal';
-            const hubFontWeight = isRollTech && !hubHasStock ? 'bold' : 'normal';
+            const tireColor = (isRollTech && !skipMobileColor) ? (tireHasStock ? '#48bb78' : '#fc8181') : 'inherit';
+            const hubColor = (isRollTech && !skipMobileColor) ? (hubHasStock ? '#48bb78' : '#fc8181') : 'inherit';
+            const tireFontWeight = (isRollTech && !skipMobileColor && !tireHasStock) ? 'bold' : 'normal';
+            const hubFontWeight = (isRollTech && !skipMobileColor && !hubHasStock) ? 'bold' : 'normal';
             
             let cardClass = 'mobile-order-card';
             if (urgent) cardClass += ' urgent';
