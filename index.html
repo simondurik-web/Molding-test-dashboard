@@ -2052,7 +2052,7 @@
             <button class="zoom-reset-btn" onclick="resetZoom()" data-i18n="ui.reset">Reset (100%)</button>
         </div>
         <div class="data-info" id="dataInfo"><strong>Loading...</strong></div>
-        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.31.0</div>
+        <div style="color:#718096;font-size:10px;margin-top:8px;text-align:center;">Dashboard v7.32.0-db</div>
     </div>
 
     <div class="main-content">
@@ -5270,8 +5270,81 @@
         });
 
         // ============================================================
-        // DATA LOADING
+        // DATA LOADING — SUPABASE MIGRATION
         // ============================================================
+        const SUPABASE_URL = 'https://mqfjmzqeccufqhisqpij.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_gO51ZRONL1i-osIr7u2m2A_gkxjtSaz';
+        let USE_SUPABASE = true; // Toggle: true = Supabase, false = Google Sheets fallback
+
+        // DB column → Sheet header mapping (reverse of sync script)
+        const DB_TO_SHEET_ORDERS = {
+            line: 'Line', category: 'Category', date_of_request: 'Date of Request',
+            priority_level: 'Priority Level', urgent_override: 'Urgent Override',
+            if_number: 'IF #', if_status_fusion: 'IF Status in Fusion',
+            work_order_status: 'Work order Internal Status', po_number: 'PO #',
+            customer: 'Customer', customer_in_reference: 'Customer is in Reference data table',
+            part_number: 'Part #', enough_inventory: 'Enought inventory for current order',
+            fusion_inventory: 'Fusion inventory', cumulative_demand: 'Cummulative demand for the item',
+            order_qty: 'Order Qty', packaging: 'Packaging', parts_per_package: 'Parts per package',
+            number_of_packages: 'Number of packages', est_weight_per_pallet: 'Estimated weight per pallet',
+            est_weight_for_order: 'Estimated weight for the order', daily_capacity: 'Daily Capacity',
+            requested_completion_date: 'Requested Completion Date', days_until_promise: 'Days until promise date.',
+            weight: 'Weight', dimensions: 'Dimensions', tire: 'Tire', have_tire: 'Have Tire?',
+            total_tire_inventory: 'Total tire inventory', tire_cumulative_demand: 'Tire Cumulative demand',
+            hub: 'Hub', have_hub: 'Have Hub?', total_hub_inventory: 'Total hub inventory',
+            hub_cumulative_demand: 'Hub Cumulative demand', hub_style: 'Hub Style', hub_mold: 'Hub Mold',
+            bearings: 'Bearings', unit_price: 'Unit Price', contribution_level: 'Contribution Level',
+            variable_cost: 'Variable Cost', total_cost: 'Total Cost',
+            sales_target_20: 'Sales Target with 20%', profit_per_part: 'Profit per part',
+            pl: 'P/L', revenue: 'Revenue', shipped_date: 'Shipped Date',
+            printed_by: 'Printed by:', assigned_to: 'Assigned to:', date_assigned: 'Date assigned',
+            label_emailed: 'label emailed', pickup_date: 'pickupDate. delete?',
+            qty_picked: 'qtyPicked Delete?', item_weight: 'itemWeight', tare_weight: 'tareWeight',
+            containers: 'containers', shipping_cost: 'shippingCost', discount: 'discount',
+            shipping_notes: 'shippingNotes', picking_notes: 'pickingNotes',
+            internal_notes: 'internalNotes', bill_to_address: 'billToAddress',
+            ship_to_address: 'shipToAddress', date_exported: 'dateExported',
+            customer_number: 'customerNumber', time_exported: 'timeExported',
+            min_inventory_target: 'Minimum inventory Target',
+            pickup_email_sent: 'Pickup Email Sent', pickup_email_date: 'Pickup Email Date',
+            quote_request_sent: 'Quote Request Sent', quote_request_date: 'Quote Request Date'
+        };
+
+        const DB_TO_SHEET_INVENTORY = {
+            item_number: 'itemNumber', real_number_value: 'Real number value', target: 'Target'
+        };
+
+        const DB_TO_SHEET_PROD_TOTALS = {
+            part_number: 'Part Number', product: 'Product', quantity_needed: 'Quantity Needed',
+            minimums: 'Minimums', manual_target: 'Manual target', mold_type: 'Mold type',
+            fusion_inventory: 'Fusion inventory', parts_to_be_made: 'Parts to be made',
+            drawing_1_url: 'Drawing 1 URL', drawing_2_url: 'Drawing 2 URL',
+            make_purchased_com: 'Make/Purchased/Com'
+        };
+
+        function mapDbToSheet(rows, mapping) {
+            return rows.map(row => {
+                const obj = {};
+                for (const [dbCol, sheetHeader] of Object.entries(mapping)) {
+                    obj[sheetHeader] = row[dbCol] != null ? String(row[dbCol]) : '';
+                }
+                return obj;
+            });
+        }
+
+        async function fetchSupabase(table, mapping) {
+            const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&limit=50000`;
+            const res = await fetch(url, {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                }
+            });
+            if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
+            const data = await res.json();
+            return mapDbToSheet(data, mapping);
+        }
+
         async function fetchSheetData(gid, captureHeaders = false) {
             // Use CSV export instead of gviz JSON to preserve text values in numeric-looking columns
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
@@ -5399,7 +5472,22 @@
                 // Load PO data from source sheet first (fixes ARRAYFORMULA issue)
                 await loadPOData();
                 
-                const raw = await fetchSheetData(MAIN_DATA_GID, true); // Pass true to capture headers
+                let raw;
+                if (USE_SUPABASE) {
+                    try {
+                        console.time('⚡ Supabase orders fetch');
+                        raw = await fetchSupabase('dashboard_orders', DB_TO_SHEET_ORDERS);
+                        console.timeEnd('⚡ Supabase orders fetch');
+                        // Set headers for All Data page
+                        allRawHeaders = Object.values(DB_TO_SHEET_ORDERS);
+                        console.log(`📊 Loaded ${raw.length} orders from Supabase`);
+                    } catch (e) {
+                        console.warn('Supabase failed, falling back to Sheets:', e);
+                        raw = await fetchSheetData(MAIN_DATA_GID, true);
+                    }
+                } else {
+                    raw = await fetchSheetData(MAIN_DATA_GID, true); // Sheet fallback
+                }
                 
                 // Merge PO # from source sheet into main data
                 raw.forEach(r => {
@@ -5421,7 +5509,8 @@
                 fetchPalletData().catch(e => console.warn('Pallet data load failed:', e));
                 
                 const now = new Date();
-                document.getElementById('lastUpdated').textContent = `Updated: ${now.toLocaleTimeString()}`;
+                const dataSource = USE_SUPABASE ? '⚡DB' : '📊Sheets';
+                document.getElementById('lastUpdated').textContent = `Updated: ${now.toLocaleTimeString()} [${dataSource}]`;
                 document.getElementById('dataInfo').innerHTML = `<strong>Data Loaded</strong>${allData.length} orders<br>${now.toLocaleTimeString()}`;
                 
                 document.getElementById('loadingState').style.display = 'none';
@@ -5435,8 +5524,25 @@
         
         async function loadInventoryData() {
             try {
-                const fusionData = await fetchSheetData(FUSION_EXPORT_GID);
-                const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                let fusionData, prodTotalsData;
+                if (USE_SUPABASE) {
+                    try {
+                        console.time('⚡ Supabase inventory+totals fetch');
+                        [fusionData, prodTotalsData] = await Promise.all([
+                            fetchSupabase('inventory', DB_TO_SHEET_INVENTORY),
+                            fetchSupabase('production_totals', DB_TO_SHEET_PROD_TOTALS)
+                        ]);
+                        console.timeEnd('⚡ Supabase inventory+totals fetch');
+                        console.log(`📊 Loaded ${fusionData.length} inventory + ${prodTotalsData.length} prod totals from Supabase`);
+                    } catch (e) {
+                        console.warn('Supabase inventory failed, falling back to Sheets:', e);
+                        fusionData = await fetchSheetData(FUSION_EXPORT_GID);
+                        prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                    }
+                } else {
+                    fusionData = await fetchSheetData(FUSION_EXPORT_GID);
+                    prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                }
                 const prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
                     let partNum = (row['Part Number'] || '').toString().trim().replace(/[^\x20-\x7E]/g, '');
@@ -6380,8 +6486,18 @@
             // Show loading state
             document.getElementById('prodMakeTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading data...</td></tr>';
             try {
-                // Load production data directly from sheet
-                const prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                // Load production data from Supabase or sheet
+                let prodTotalsData;
+                if (USE_SUPABASE) {
+                    try {
+                        prodTotalsData = await fetchSupabase('production_totals', DB_TO_SHEET_PROD_TOTALS);
+                    } catch (e) {
+                        console.warn('Supabase prod totals fallback:', e);
+                        prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                    }
+                } else {
+                    prodTotalsData = await fetchSheetData(PROD_DATA_TOTALS_GID);
+                }
                 window.prodTotalsMap = {};
                 prodTotalsData.forEach(row => {
                     let partNum = (row['Part Number'] || '').toString().trim();
