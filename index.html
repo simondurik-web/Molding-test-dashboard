@@ -4054,6 +4054,7 @@
         const QUOTES_REGISTRY_GID = '1279128282';  // Quotes Registry
         const STAGED_RECORDS_GID = '1519623398';  // Staged records dashboard
         const SHIPPING_RECORDS_GID = '1752263458';  // Shipping records dashboard
+        const APP_SHIPPING_RECORDS_GID = '240217896';  // App Shipping Records (production app)
         // PO # Source: External "Fulfillment Line Data Import" spreadsheet
         const PO_SOURCE_SHEET_ID = '1bQGG8wcnyJpYUQwksvy6oRB1ZCu5VvGzNFwnRWflDhg';
         const PO_SOURCE_GID = '992200772';  // Fulfillment Line Data Import tab
@@ -13429,12 +13430,36 @@
         async function loadShippingRecordsData() {
             if (shippingRecordsLoaded) return;
             try {
-                // Use proven fetchSheetData function
-                const rawData = await fetchSheetData(SHIPPING_RECORDS_GID);
+                // Fetch from BOTH tabs: old Shipping Records + new App Shipping Records
+                const [rawData, appRawData] = await Promise.all([
+                    fetchSheetData(SHIPPING_RECORDS_GID),
+                    fetchSheetData(APP_SHIPPING_RECORDS_GID).catch(() => [])
+                ]);
+                
+                // Normalize App Shipping Records to match expected format
+                const normalizedAppData = appRawData.map(row => ({
+                    'Timestamp': row['Timestamp'] || '',
+                    'System': row['System'] || '',
+                    'Order ID': row['Order ID'] || '',
+                    'Carrier': row['Carrier'] || '',
+                    'Customer': row['Customer'] || '',
+                    'Shipment Photo': row['Shipment Photo'] || '',
+                    'Paperwork Photo': row['Paperwork Photo'] || '',
+                    'Close-up Photo': row['Close-up Photo'] || '',
+                    'Recorded By': row['Recorded By'] || '',
+                    'IF Number': row['IF Number'] || '',
+                    'Veeqo Orders': row['Veeqo Orders'] || '',
+                    'Line#': row['Line#'] || '',
+                    '_source': 'app'
+                }));
+                
+                // Merge: old data + app data
+                const mergedRawData = [...rawData, ...normalizedAppData];
+                console.log(`Shipping Records: ${rawData.length} old + ${normalizedAppData.length} app = ${mergedRawData.length} total`);
                 console.log('==== SHIPPING RECORDS LOAD DEBUG ====');
-                console.log('Raw data count:', rawData.length);
-                if (rawData.length > 0) {
-                    const headers = Object.keys(rawData[0]);
+                console.log('Raw data count:', mergedRawData.length);
+                if (mergedRawData.length > 0) {
+                    const headers = Object.keys(mergedRawData[0]);
                     console.log('ALL Column headers (' + headers.length + '):', headers);
                     // Show headers that might contain pictures
                     const pictureHeaders = headers.filter(h => 
@@ -13449,7 +13474,7 @@
                         h.toLowerCase().includes('cercana')
                     );
                     console.log('Picture-related headers:', pictureHeaders);
-                    console.log('First row sample:', rawData[0]);
+                    console.log('First row sample:', mergedRawData[0]);
                 }
                 console.log('=====================================');
                 
@@ -13465,7 +13490,7 @@
                 };
                 
                 // Map the original bilingual headers to simplified English headers
-                shippingRecordsData = rawData.map(row => {
+                shippingRecordsData = mergedRawData.map(row => {
                     // Find values by checking multiple possible header names
                     const findVal = (...keys) => {
                         for (const key of keys) {
