@@ -5333,16 +5333,25 @@
         }
 
         async function fetchSupabase(table, mapping) {
-            const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&limit=50000`;
-            const res = await fetch(url, {
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-            if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
-            const data = await res.json();
-            return mapDbToSheet(data, mapping);
+            // PostgREST caps at 1000 rows by default — paginate to get all
+            let allRows = [];
+            let offset = 0;
+            const pageSize = 1000;
+            while (true) {
+                const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=id&offset=${offset}&limit=${pageSize}`;
+                const res = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
+                const page = await res.json();
+                allRows = allRows.concat(page);
+                if (page.length < pageSize) break; // Last page
+                offset += pageSize;
+            }
+            return mapDbToSheet(allRows, mapping);
         }
 
         async function fetchSheetData(gid, captureHeaders = false) {
