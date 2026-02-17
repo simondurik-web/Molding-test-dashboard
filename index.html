@@ -5336,13 +5336,15 @@
             // PostgREST caps at 1000 rows by default — paginate to get all
             let allRows = [];
             let offset = 0;
-            const pageSize = 1000;
+            const pageSize = 10000;
             while (true) {
-                const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=id&offset=${offset}&limit=${pageSize}`;
+                const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=id`;
                 const res = await fetch(url, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Range': `${offset}-${offset + pageSize - 1}`,
+                        'Range-Unit': 'items'
                     }
                 });
                 if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
