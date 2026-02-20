@@ -394,6 +394,15 @@
 </div>
 
 <script>
+  // Mobile/tablet detection — skip straight to redirect
+  const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+  if (isMobile) {
+    document.getElementById('fakeDashboard').style.display = 'none';
+    window.location.href = 'https://entech-dashboard-v2.vercel.app';
+    // Fallback if redirect is slow
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;"><a href="https://entech-dashboard-v2.vercel.app" style="padding:16px 32px;background:linear-gradient(135deg,#3182ce,#4299e1);color:white;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;font-family:system-ui;">Open New Dashboard →</a></div>';
+  }
+
   // Set fake timestamps
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
